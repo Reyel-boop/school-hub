@@ -172,6 +172,45 @@
   svg.locked{filter:brightness(0) opacity(.18)}
   svg.p{width:7rem;height:7rem}
   @media (max-width:640px){ .choices{grid-template-columns:1fr} .sheet ol{columns:1} .qbox{font-size:1.15rem} }
+  /* ===== Storyboard ===== */
+  .storybox{border-radius:1.1rem;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 14px 34px -18px rgba(15,23,42,.45)}
+  .scene{position:relative;height:17rem;overflow:hidden;background:linear-gradient(#7dd3fc,#e0f2fe 58%,#38bdf8 58%,#0ea5e9)}
+  .scene.night{background:linear-gradient(#1e1b4b,#5b21b6 58%,#312e81 58%,#1e1b4b)}
+  .scene .orb{position:absolute;right:2rem;top:1.2rem;width:3rem;height:3rem;border-radius:50%;background:#fde047;box-shadow:0 0 36px #fde047}
+  .scene.night .orb{background:#f1f5f9;box-shadow:0 0 30px #e9d5ff}
+  .scene .isl{position:absolute;bottom:-2.2rem;border-radius:50%;background:var(--land);opacity:.9}
+  .scene .isl.a{left:-4rem;width:22rem;height:6.5rem;background:#fde68a}
+  .scene .isl.b{right:-3rem;width:18rem;height:5.5rem;background:var(--land)}
+  .scene .isl.c{left:40%;bottom:3.6rem;width:5rem;height:1.4rem;background:var(--soft);opacity:.7}
+  .scene.night .isl.a{background:#4c1d95}.scene.night .isl.b{background:#6d28d9}
+  .cast{position:absolute;inset:auto 0 .6rem 0;display:flex;justify-content:center;align-items:flex-end;gap:1.5rem;z-index:1}
+  .cast svg.mon{width:10rem;height:10rem;filter:drop-shadow(0 10px 8px rgba(0,0,0,.25))}
+  .cast .talker svg.mon{width:11.5rem;height:11.5rem;animation:talk 1.4s ease-in-out infinite}
+  .cast .side-c svg.mon{width:7rem;height:7rem;opacity:.95}
+  .cast.crowd svg.mon{width:7.5rem;height:7.5rem;animation:shake 1.6s infinite}
+  @keyframes talk{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-1.5deg)}}
+  .scene .chap{position:absolute;left:.8rem;top:.7rem;z-index:2;background:rgba(15,23,42,.65);color:#fff;border-radius:2rem;padding:.25rem .8rem;font-size:.75rem;font-weight:600}
+  .scene .skip{position:absolute;right:.7rem;bottom:.7rem;z-index:2;background:rgba(255,255,255,.85);border-radius:2rem;padding:.25rem .7rem;font-size:.75rem}
+  .bubble{padding:1.1rem 1.3rem 1rem;position:relative}
+  .bubble::before{content:"";position:absolute;left:50%;top:-.7rem;width:1.4rem;height:1.4rem;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:.2rem}
+  .bubble.narr{background:#fffbeb}.bubble.narr::before{background:#fffbeb}
+  .bubble .who-n{display:inline-block;background:var(--brand);color:#fff;border-radius:2rem;padding:.15rem .7rem;font-size:.78rem;margin-bottom:.4rem}
+  .bubble .say{font-size:1.15rem;line-height:1.55;min-height:3.4rem;animation:sayin .35s ease-out}
+  .bubble.narr .say{font-style:italic}
+  @keyframes sayin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .snav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.8rem}
+  .speech{position:absolute;z-index:2;max-width:13rem;background:#fff;border-radius:.8rem;padding:.45rem .7rem;font-size:.8rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:sayin .4s}
+  .speech::after{content:"";position:absolute;bottom:-.4rem;right:2rem;width:.8rem;height:.8rem;background:#fff;transform:rotate(45deg)}
+  .speech.mon-s{right:1rem;top:2.6rem}
+  .ichap{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+  .storybtn{margin-left:auto;font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:2rem;padding:.25rem .6rem;background:#fff}
+  .storybtn:hover{color:var(--brand);border-color:var(--brand)}
+  .bookrows{display:flex;flex-direction:column}
+  .bookrow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.7rem .2rem;border-bottom:1px solid var(--line)}
+  .bookrow small{color:var(--muted);font-size:.75rem}
+  .bookrow.lockedrow b{color:var(--muted)}
+  .win .monsay{display:inline-block;background:var(--brand-soft);border-radius:.8rem;padding:.4rem .8rem;margin-top:.6rem;font-style:italic;font-size:.9rem}
+  @media (max-width:640px){ .scene{height:13.5rem} .cast svg.mon{width:7rem;height:7rem} .cast .talker svg.mon{width:8.5rem;height:8.5rem} .cast .side-c svg.mon{width:5rem;height:5rem} .cast.crowd svg.mon{width:5.2rem;height:5.2rem} .cast{gap:.6rem} .bubble .say{font-size:1rem} }
 </style>
 </head>
 <body>
@@ -844,8 +883,11 @@ function setBand(b){ pref(P.me.u).band = b; P.save(); P.refresh(); }
 function go(s){ screen = s; P.refresh(); window.scrollTo(0, 0); }
 
 function learn(el){
+  if (STORY) return storyView(el);
   if (S) return battle(el);
   if (isStudent() && !pref(P.me.u).buddy) return buddyPick(el);
+  if (isStudent() && !seenStory('prologue')) return playStory('prologue');
+  if (screen === 'book') return book(el);
   if (screen === 'dex') return dex(el);
   if (screen === 'shop') return shop(el);
   map(el);
@@ -857,20 +899,22 @@ function hud(u){
       <div class="lvl"><b>Level ${levelOf(xp)}</b><div class="xp"><i style="width:${levelPct(xp)}%"></i></div></div>
       <div class="hudbtns">${nx ? `<button class="hbtn go" onclick="startPractice('${nx}')">▶ Play: ${SK[nx].title}</button>` : `<span class="chip">All ${all.length} monsters caught! 🎉</span>`}
         <button class="hbtn ghosty" onclick="go('dex')">Monsters ${all.filter(id => caught(u, id)).length}/${all.length}</button>
-        <button class="hbtn ghosty" onclick="go('shop')">Buddy shop</button></div></div>
+        <button class="hbtn ghosty" onclick="go('shop')">Buddy shop</button>
+        <button class="hbtn ghosty" onclick="go('book')">📖 Story</button></div></div>
     <div class="chips"><span class="chip">${COIN} ${coinsOf(u)}</span><span class="chip">${STAR()} ${totalStars(u)}</span><span class="chip">${FLAME} ${streakOf(u)} day${streakOf(u) === 1 ? '' : 's'}</span></div></div>`;
 }
 function map(el){
   const u = P.me.u, b = bandOf(u), stu = isStudent(), nx = stu ? nextSkill(u, b) : null;
   const islands = BANDS[b].units.map(([name, list], ix) => { const [c, soft] = ISLE[ix % ISLE.length], got = stu ? list.filter(([id]) => caught(u, id)).length : 0;
-    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><h3>${name}</h3>${stu ? `<small>${got}/${list.length} caught</small>` : ''}</div>
+    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Chapter ${ix + 1} · ${ISLAND[b][ix]}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} caught</small>` : ''}
+        ${!stu || seenStory(`${b}-${ix}-intro`) ? `<button class="storybtn" onclick="playStory('${b}-${ix}-intro')">📖 Story</button>` : ''}</div>
       <div class="path">${list.map(([id, ws]) => { const cg = stu && caught(u, id), show = !stu || cg;
         return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}">
           <span class="disc">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
           ${stu ? stars3(starsOf(bestOf(u, id))) : ''}<b>${SK[id].title}</b><small>WS ${ws}</small></button>`; }).join('')}</div></div>`; }).join('');
   const kids = P.usersWith('student').filter(s => bandOf(s.u) === b).map(s => ({s, c: weekCoins(s.u)})).sort((x, y) => y.c - x.c).slice(0, 6);
   el.innerHTML = `<div class="stack">
-    ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div></div></div>`}
+    ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div><button class="btn ghost sm" onclick="go('book')">📖 Read the story</button></div></div>`}
     <div class="homegrid"><div class="stack">
       <div class="card" style="padding:.9rem 1.1rem"><div class="ptop"><div class="grow"><b style="font-weight:600">Monster map</b><br><small style="color:var(--muted)">Each lesson hides a Bilang Monster. Beat it to catch it!</small></div>${bandSwitch(b, 'setBand')}</div></div>
       ${islands}</div>
@@ -890,7 +934,9 @@ function buddyPick(el){
 }
 function chooseBuddy(b){ pref(P.me.u).buddy = b; P.save(); sfx('buy'); P.refresh(); }
 
-function startPractice(id){
+function startPractice(id, skipStory){
+  const sb = bandOf(P.me.u), ix = unitIndex(sb, id);
+  if (isStudent() && !skipStory && ix >= 0 && !seenStory(`${sb}-${ix}-intro`)) return playStory(`${sb}-${ix}-intro`, () => startPractice(id, true));
   S = {id, items: Array.from({length: ITEMS}, () => SK[id].gen()), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
   screen = 'map'; P.tab('learn'); window.scrollTo(0, 0);
 }
@@ -907,7 +953,8 @@ function battle(el){
   el.innerHTML = `<div class="stack">
     <div class="ptop"><button class="btn ghost sm" onclick="leavePractice()">← Map</button><div class="grow"><b style="font-weight:600">${sk.title}</b><br><small style="color:var(--muted)">${BANDS[b].label} · Worksheet ${wsOf(b, S.id) || '—'}</small></div>
       <span class="chip" style="background:var(--brand-soft);color:var(--brand-d)">${COIN} +${S.coins}</span></div>
-    <div class="arena" id="arena"><span class="sun"></span><button class="mute" onclick="toggleMute()">${isMuted() ? '🔇 Sound off' : '🔊 Sound on'}</button>
+    <div class="arena" id="arena"><span class="sun"></span>
+      ${S.i === 0 && !S.answered ? `<span class="speech mon-s">${pick(TAUNT).replace('{topic}', sk.title.toLowerCase())}</span>` : ''}<button class="mute" onclick="toggleMute()">${isMuted() ? '🔇 Sound off' : '🔊 Sound on'}</button>
       ${S.combo >= 2 ? `<span class="combo">Combo ×${S.combo}!</span>` : ''}
       <div class="fighters">
         <div class="fighter" id="fBuddy">${monsterSVG(isStudent() ? buddyOf(P.me.u) : BUDDIES[0], last && !last.ok ? 'hit' : last && last.ok ? 'happy' : 'idle', isStudent() ? pref(P.me.u).wear || [] : [], 'mon')}
@@ -958,12 +1005,16 @@ function winScreen(el){
     S.saved = true; S.lvlUp = stu && levelOf(xpOf(u)) > S.lvl0;
     setTimeout(() => { sfx(S && S.lvlUp ? 'lvl' : nowCaught ? 'win' : 'no'); if (nowCaught) confetti(); }, 150);
   }
-  const nx = stu ? nextSkill(u, bandOf(u)) : null;
+  const nx = stu ? nextSkill(u, bandOf(u)) : null, wb = bandOf(u), wix = unitIndex(wb, S.id);
+  const storyKey = stu && wix >= 0 && islandDone(u, wb, wix) && !seenStory(`${wb}-${wix}-outro`) ? `${wb}-${wix}-outro` : null;
+  if (!S.line) S.line = pick(nowCaught ? THANKS : ESCAPE);
   el.innerHTML = `<div class="stack"><div class="card win">
       <h2 style="font-size:1.5rem">${nowCaught ? (score === ITEMS ? 'Perfect battle!' : 'You caught it!') : st ? 'So close!' : 'The monster got away!'}</h2>
       <div class="bigstars">${[1, 2, 3].map(k => STAR(k <= st)).join('')}</div>
       <div class="big">${score} / ${ITEMS}</div>
       <div class="caughtcard">${monsterSVG('mon-' + S.id, nowCaught ? 'happy' : 'idle', [], 'c')}<div><b>${M.name}</b><br><small>${nowCaught ? (wasCaught ? 'Already in your collection. Nice rematch!' : 'New monster added to your collection!') : `Get ${MASTER} right to catch ${M.name}.`}</small></div></div>
+      <div><span class="monsay">${M.name}: “${S.line}”</span></div>
+      ${storyKey ? `<div style="margin-top:1rem"><span class="pill p-amber">${ISLAND[wb][wix]} is saved!</span><br><button class="btn" style="margin-top:.6rem;background:#ca8a04" onclick="S=null;playStory('${storyKey}')">📖 Continue the story ▶</button></div>` : ''}
       <p style="margin-top:1rem;font-weight:600">${COIN} +${S.coins} coins${score === ITEMS ? ' (includes +20 perfect bonus)' : ''}</p>
       ${S.lvlUp ? `<p style="margin-top:.4rem;font-weight:700;color:#ca8a04">⬆ Level up! You are now Level ${levelOf(xpOf(u))}.</p>` : ''}
       ${stu ? '' : '<p class="hint">Preview only: nothing was saved.</p>'}
@@ -991,6 +1042,163 @@ function shop(el){
 function buyItem(id, price){ const p = pref(P.me.u); if (coinsOf(P.me.u) < price) return;
   p.owned = (p.owned || []).concat(id); p.spent = (p.spent || 0) + price; p.wear = (p.wear || []).concat(id); P.save(); sfx('buy'); P.refresh(); }
 function wearItem(id){ const p = pref(P.me.u), w = p.wear || []; p.wear = w.includes(id) ? w.filter(x => x !== id) : w.concat(id); P.save(); P.refresh(); }
+
+/* ================= STORY: ANG NAWAWALANG BILANG (The Scrambled Numbers) =================
+   An original story told in comic-style panels. The prologue plays once, each island
+   (lesson unit) is a chapter with an intro before its first battle and an outro when all
+   its monsters are caught, and finishing the last island plays the ending. */
+const GULO = 'gulo-95';
+const ISLAND = {
+  '78': ['Isla Hati', 'Isla Tuldok', 'Isla Hugis', 'Isla Takbo', 'Isla Sukat', 'Isla Pili', 'Isla Buumbilang'],
+  '910': ['Isla Buumbilang', 'Isla Halo', 'Isla Kapangyarihan', 'Isla Ugat', 'Isla Salita', 'Isla Hanay', 'Isla Timbangan', 'Isla Salik'],
+};
+// [speaker, mood, text]; speaker: nar | lolo | gulo | buddy | mon (the island's first monster) | crowd
+const CHAPTERS = {
+  '78': [
+    {intro:[['lolo','idle',"Welcome to {island}, where everything is shared in parts. Haring Gulo mixed up all the fractions here!"],['mon','hit',"Grr! Halves, thirds, quarters... I can't tell them apart anymore!"],['buddy','happy',"Don't worry! {name} knows how to add, subtract, multiply and divide fractions. Let's help!"]],
+     outro:[['mon','happy',"Salamat, {name}! Every piece fits together again."],['gulo','idle',"Hmph! You fixed my fractions... but you'll never put the decimal points back!"]]},
+    {intro:[['lolo','idle',"{island} is famous for its tiny decimal points. Haring Gulo moved them all to the wrong places!"],['mon','hit',"Is it 2.5? 25? 0.25? My head is spinning!"],['buddy','happy',"Line up the decimal points and we'll be fine, {name}!"]],
+     outro:[['mon','happy',"Every point is back where it belongs!"],['gulo','idle',"Lucky! Wait until you see my island of shapes..."]]},
+    {intro:[['lolo','idle',"On {island}, the houses are prisms, the hills are pyramids and the fruits are spheres... or they used to be!"],['mon','hit',"I forgot if I'm a cone or a cylinder!"],['buddy','happy',"Count the faces, edges and bases, {name}!"]],
+     outro:[['mon','happy',"I'm a proud solid figure again!"],['gulo','idle',"Grr! Then I'll make everyone run late!"]]},
+    {intro:[['lolo','idle',"The jeepneys and bangkas of {island} can't tell how fast or how far they're going."],['mon','hit',"Vroom! I don't know if I'm early or late!"],['buddy','happy',"Distance equals speed times time. We can do this!"]],
+     outro:[['mon','happy',"Right on schedule, thanks to you!"],['gulo','idle',"Next I'll stretch the land so no one can measure it!"]]},
+    {intro:[['lolo','idle',"Builders on {island} need areas to make gardens, boxes and water tanks."],['mon','hit',"How much paint? How much grass? I'm lost!"],['buddy','happy',"Break the big shapes into small ones, {name}!"]],
+     outro:[['mon','happy',"Every box is wrapped perfectly!"],['gulo','idle',"My next island is full of choices. Hehe, good luck choosing!"]]},
+    {intro:[['lolo','idle',"At the {island} market, everyone is stuck choosing what to buy."],['mon','hit',"Burger or spaghetti? Buko juice or gulaman? How many ways are there?!"],['buddy','happy',"Multiply the choices together, {name}!"]],
+     outro:[['mon','happy',"Now I know all my options!"],['gulo','idle',"Fine! My last island has numbers below zero. Muahaha!"]]},
+    {intro:[['lolo','idle',"This is {island}, Haring Gulo's own island. Positive and negative numbers are fighting everywhere!"],['gulo','happy',"You made it this far, {name}... but can you handle the negatives?"],['buddy','happy',"Same signs, different signs: we know the rules!"]]},
+  ],
+  '910': [
+    {intro:[['lolo','idle',"Welcome back, {name}! Haring Gulo has new tricks for the high school islands. First stop: {island}, where negative numbers ran wild."],['mon','hit',"Plus a minus, minus a minus... which is which?!"],['buddy','happy',"Remember the sign rules and we're unstoppable!"]],
+     outro:[['mon','happy',"Positives and negatives are friends again!"],['gulo','idle',"Hah! Now try mixing fractions AND decimals!"]]},
+    {intro:[['lolo','idle',"On {island}, Haring Gulo mixed fractions and decimals together like halo-halo!"],['mon','hit',"Is 0.75 the same as three-fourths? I'm all mixed up!"],['buddy','happy',"Change the decimals to fractions first, {name}!"]],
+     outro:[['mon','happy',"Now I'm as neat as a fresh halo-halo!"],['gulo','idle',"Then let's see you handle POWER!"]]},
+    {intro:[['lolo','idle',"The towers of {island} grow by powers. Haring Gulo knocked the exponents over!"],['mon','hit',"Two to the fifth... is that ten? Or thirty-two?"],['buddy','happy',"Multiply the base by itself, {name}!"]],
+     outro:[['mon','happy',"My towers are standing tall again!"],['gulo','idle',"Grr! Then let's dig down to the roots..."]]},
+    {intro:[['lolo','idle',"Deep in the forest of {island}, the old trees have square roots. Haring Gulo tangled them all."],['mon','hit',"Which number times itself makes me? I forgot!"],['buddy','happy',"Find the pairs of factors, {name}!"]],
+     outro:[['mon','happy',"My roots are strong again!"],['gulo','idle',"Hmph. Can you even read my riddles?"]]},
+    {intro:[['lolo','idle',"The people of {island} speak in words, but Haring Gulo turned their math into riddles."],['mon','hit',"'Four less than x'... is that x minus 4 or 4 minus x?!"],['buddy','happy',"Read slowly and translate word by word!"]],
+     outro:[['mon','happy',"My words and my symbols match again!"],['gulo','idle',"Next: my polynomial maze!"]]},
+    {intro:[['lolo','idle',"In {island}, terms stand in neat rows. Haring Gulo shuffled every like term!"],['mon','hit',"x squared, x, plain numbers... who goes with whom?"],['buddy','happy',"Only like terms can be combined, {name}!"]],
+     outro:[['mon','happy',"Every term is back in its row!"],['gulo','idle',"Let's see if you can keep things balanced..."]]},
+    {intro:[['lolo','idle',"{island} is famous for its giant balance scale. Haring Gulo tipped it over!"],['mon','hit',"Left side, right side... nothing is equal anymore!"],['buddy','happy',"Whatever we do to one side, we do to the other!"]],
+     outro:[['mon','happy',"Balanced at last!"],['gulo','idle',"Fine. Come to my castle on Isla Salik... if you dare!"]]},
+    {intro:[['lolo','idle',"This is {island}, Haring Gulo's castle. Everything here is multiplied together and hidden."],['gulo','happy',"Welcome, {name}. Can you break my numbers back into factors?"],['buddy','happy',"Let's factor everything, one step at a time!"]]},
+  ],
+};
+const PROLOGUE = [
+  ['nar','idle',"Far across the sea lies Kapuluan Bilang, a chain of islands where numbers live in peace.", 'island'],
+  ['gulo','happy',"Hahaha! I am Haring Gulo, the King of Chaos! I scrambled every number on every island!", 'night'],
+  ['crowd','hit',"The friendly Bilang Monsters got so confused that they started causing trouble everywhere.", 'night'],
+  ['lolo','idle',"Oh no! Only someone good at math can calm them down. I am Lolo Pawikan. Will you help us, {name}?"],
+  ['buddy','happy',"Let's go together, {name}! Every right answer helps a monster remember who it really is!"],
+];
+const ENDING = [
+  ['gulo','hit',"Wait... you fixed everything? But... I only scrambled the numbers because nobody wanted to play with me.", 'night'],
+  ['buddy','happy',"Then play with us! Math is more fun with friends."],
+  ['gulo','happy',"Really? Then I'm not Haring Gulo anymore. From now on, call me Haring Galing!"],
+  ['lolo','happy',"Congratulations, {name}! Kapuluan Bilang is in harmony again. You are a true Bilang Hero!"],
+  ['nar','idle',"THE END... for now! Keep playing to earn 3 stars on every monster.", 'island'],
+];
+const TAUNT = ["Grr! Nobody can beat my {topic}!", "Hehe, my {topic} will scramble your brain!", "You want to pass? Beat my {topic} first!", "I bet you can't answer ten {topic} questions!"];
+const THANKS = ["Whoa... my numbers make sense again! Salamat!", "I remember who I am now! Let's be friends!", "You did it! I feel so much better!"];
+const ESCAPE = ["Hehe! Practice a little more and come back!", "Not this time! Read the lesson and try again!", "So close! Come back and try again!"];
+
+// Lolo Pawikan: a wise old sea turtle with a salakot hat
+function turtleSVG(mood = 'idle', cls = 'mon'){
+  const eye = x => mood === 'happy' ? `<path d="M${x - 4} 47Q${x} 41 ${x + 4} 47" stroke="#1a2e05" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
+    : `<circle cx="${x}" cy="46" r="3.6" fill="#1a2e05"/><circle cx="${x + 1}" cy="45" r="1.1" fill="#fff"/>`;
+  return `<svg class="${cls}" viewBox="-10 -16 140 136" aria-hidden="true">
+    <ellipse cx="40" cy="104" rx="12" ry="7" fill="#65a30d" stroke="#365314" stroke-width="2.5"/><ellipse cx="92" cy="104" rx="12" ry="7" fill="#65a30d" stroke="#365314" stroke-width="2.5"/>
+    <path d="M18 92C18 56 40 38 70 38C100 38 118 58 118 92Z" fill="#a16207" stroke="#713f12" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M50 46L58 66L82 66L90 46M58 66L50 90M82 66L90 90M30 72L50 72M90 72L110 72" stroke="#713f12" stroke-width="2.5" fill="none"/>
+    <rect x="14" y="88" width="108" height="10" rx="5" fill="#ca8a04" stroke="#713f12" stroke-width="2.5"/>
+    <path d="M30 70C26 62 22 58 20 56" stroke="#4d7c0f" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="22" cy="50" r="18" fill="#84cc16" stroke="#365314" stroke-width="3"/>
+    ${eye(16)}${eye(28)}
+    <path d="M11 40Q15.5 35 20 39M24 39Q28.5 35 33 40" stroke="#f8fafc" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M14 57Q22 ${mood === 'happy' ? 64 : 61} 30 57" stroke="#1a2e05" stroke-width="2.5" fill="${mood === 'happy' ? '#7f1d1d' : 'none'}" stroke-linecap="round"/>
+    <path d="M-2 34L22 14L46 34Z" fill="#fde68a" stroke="#a16207" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 30L22 18L36 30" stroke="#d97706" stroke-width="1.5" fill="none"/>
+  </svg>`;
+}
+const ROLE_NAME = {lolo:'Lolo Pawikan', gulo:'Haring Gulo'};
+let STORY = null;
+const seenStory = k => !!(pref(P.me.u).seen || {})[k];
+const unitIndex = (b, id) => BANDS[b].units.findIndex(([, list]) => list.some(([s]) => s === id));
+const islandDone = (u, b, ix) => BANDS[b].units[ix][1].every(([id]) => caught(u, id));
+function storyPanels(key){
+  if (key === 'prologue') return {title:'Prologue', panels: PROLOGUE};
+  const [b, ix, part] = key.split('-'), i = +ix;
+  if (part === 'end') return {title:'The Ending', panels: ENDING, b};
+  const ch = CHAPTERS[b][i], last = i === BANDS[b].units.length - 1;
+  return {title:`Chapter ${i + 1}: ${ISLAND[b][i]}`, b, i, panels: part === 'outro' ? (last ? ENDING : ch.outro) : ch.intro};
+}
+function playStory(key, after){
+  const s = storyPanels(key); STORY = Object.assign(s, {key, k:0, after: after || null}); P.tab('learn'); window.scrollTo(0, 0);
+}
+function storyStep(d){
+  STORY.k += d;
+  if (STORY.k < 0) STORY.k = 0;
+  if (STORY.k >= STORY.panels.length) return endStory();
+  P.refresh();
+}
+function endStory(){
+  if (isStudent()) { const p = pref(P.me.u); p.seen = Object.assign(p.seen || {}, {[STORY.key]: true}); P.save(); }
+  const after = STORY.after; STORY = null;
+  if (after) after(); else { screen = 'map'; P.refresh(); }
+}
+function castSVG(who, mood, b, i){
+  const u = P.me.u;
+  if (who === 'lolo') return turtleSVG(mood, 'mon');
+  if (who === 'gulo') return monsterSVG(GULO, mood, ['crown', 'cape'], 'mon');
+  if (who === 'buddy') return isStudent() ? buddySVG(u, mood, 'mon') : monsterSVG(BUDDIES[0], mood, [], 'mon');
+  if (who === 'mon') return monsterSVG('mon-' + BANDS[b || '78'].units[i || 0][1][0][0], mood, [], 'mon');
+  if (who === 'crowd') return ['f-add-sim', 'd-add', 'g-solids'].map(id => monsterSVG('mon-' + id, mood, [], 'mon sm')).join('');
+  return '';
+}
+function speakerName(who, b, i){
+  if (who === 'buddy') return isStudent() ? monsterOf(buddyOf(P.me.u)).name : 'Your buddy';
+  if (who === 'mon') return monName(BANDS[b || '78'].units[i || 0][1][0][0]);
+  return ROLE_NAME[who] || '';
+}
+const fillText = (t, b, i) => t.replace(/\{name\}/g, esc(P.me.name.split(' ')[0])).replace(/\{island\}/g, b != null && i != null ? ISLAND[b][i] : 'the islands');
+function storyView(el){
+  const s = STORY, [who, mood, text, scene] = s.panels[s.k], b = s.b, i = s.i;
+  const [c, soft] = i != null ? ISLE[i % ISLE.length] : ['#0ea5e9', '#e0f2fe'];
+  const night = scene === 'night', last = s.k === s.panels.length - 1;
+  // keep the buddy on stage with whoever is talking, like a comic panel
+  const cast = who === 'nar' && scene === 'island' ? '' : who === 'buddy' || who === 'crowd' || who === 'nar' ? castSVG(who, mood, b, i)
+    : `<div class="side-c">${castSVG('buddy', 'idle', b, i)}</div><div class="talker">${castSVG(who, mood, b, i)}</div>`;
+  el.innerHTML = `<div class="stack"><div class="storybox">
+    <div class="scene ${night ? 'night' : ''}" style="--land:${c};--soft:${soft}">
+      <span class="orb"></span><span class="isl a"></span><span class="isl b"></span><span class="isl c"></span>
+      <div class="cast ${who === 'crowd' ? 'crowd' : ''}">${cast}</div>
+      <span class="chap">${s.title}</span>
+      <button class="skip" onclick="endStory()">Skip ⏭</button>
+    </div>
+    <div class="bubble ${who === 'nar' || who === 'crowd' ? 'narr' : ''}">
+      ${speakerName(who, b, i) ? `<b class="who-n">${speakerName(who, b, i)}</b>` : ''}
+      <p class="say">${fillText(text, b, i)}</p>
+      <div class="snav"><button class="btn ghost sm" onclick="storyStep(-1)" ${s.k ? '' : 'disabled style="visibility:hidden"'}>◀ Back</button>
+        <div class="dots">${s.panels.map((_, k) => `<i class="${k < s.k ? 'ok' : k === s.k ? 'cur' : ''}"></i>`).join('')}</div>
+        <button class="btn" id="storyNext" onclick="storyStep(1)">${last ? (s.after ? "Let's go! ▶" : 'Done') : 'Next ▶'}</button></div>
+    </div></div></div>`;
+  $('storyNext').focus();
+}
+function book(el){
+  const u = P.me.u, b = bandOf(u), stu = isStudent(), units = BANDS[b].units;
+  const row = (key, title, sub, open) => `<div class="bookrow ${open ? '' : 'lockedrow'}"><div><b>${title}</b><br><small>${sub}</small></div>
+    ${open ? `<button class="btn ghost sm" onclick="playStory('${key}')">▶ Watch</button>` : '<small>🔒 Keep playing</small>'}</div>`;
+  el.innerHTML = `<div class="stack"><div class="card"><div class="ptop"><button class="btn ghost sm" onclick="go('map')">← Map</button><div class="grow"><h2>📖 Storybook</h2><small style="color:var(--muted)">Ang Nawawalang Bilang: The Scrambled Numbers · ${BANDS[b].label}</small></div>${bandSwitch(b, 'setBand')}</div></div>
+    <div class="card"><div class="bookrows">
+      ${row('prologue', 'Prologue', 'Haring Gulo scrambles the numbers', true)}
+      ${units.map(([name], ix) => { const last = ix === units.length - 1;
+        return row(`${b}-${ix}-intro`, `Chapter ${ix + 1}: ${ISLAND[b][ix]}`, name, !stu || seenStory(`${b}-${ix}-intro`))
+          + (last ? '' : row(`${b}-${ix}-outro`, `Chapter ${ix + 1} ending`, `${ISLAND[b][ix]} is saved`, !stu || seenStory(`${b}-${ix}-outro`))); }).join('')}
+      ${row(`${b}-${units.length - 1}-outro`, 'The Ending', 'A new friend', !stu || seenStory(`${b}-${units.length - 1}-outro`))}
+    </div></div></div>`;
+}
 
 /* ================= MY PROGRESS (learner) ================= */
 function progress(el){
