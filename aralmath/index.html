@@ -172,36 +172,122 @@
   svg.locked{filter:brightness(0) opacity(.18)}
   svg.p{width:7rem;height:7rem}
   @media (max-width:640px){ .choices{grid-template-columns:1fr} .sheet ol{columns:1} .qbox{font-size:1.15rem} }
-  /* ===== Storyboard ===== */
-  .storybox{border-radius:1.1rem;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 14px 34px -18px rgba(15,23,42,.45)}
-  .scene{position:relative;height:17rem;overflow:hidden;background:linear-gradient(#7dd3fc,#e0f2fe 58%,#38bdf8 58%,#0ea5e9)}
-  .scene.night{background:linear-gradient(#1e1b4b,#5b21b6 58%,#312e81 58%,#1e1b4b)}
-  .scene .orb{position:absolute;right:2rem;top:1.2rem;width:3rem;height:3rem;border-radius:50%;background:#fde047;box-shadow:0 0 36px #fde047}
-  .scene.night .orb{background:#f1f5f9;box-shadow:0 0 30px #e9d5ff}
-  .scene .isl{position:absolute;bottom:-2.2rem;border-radius:50%;background:var(--land);opacity:.9}
-  .scene .isl.a{left:-4rem;width:22rem;height:6.5rem;background:#fde68a}
-  .scene .isl.b{right:-3rem;width:18rem;height:5.5rem;background:var(--land)}
-  .scene .isl.c{left:40%;bottom:3.6rem;width:5rem;height:1.4rem;background:var(--soft);opacity:.7}
-  .scene.night .isl.a{background:#4c1d95}.scene.night .isl.b{background:#6d28d9}
-  .cast{position:absolute;inset:auto 0 .6rem 0;display:flex;justify-content:center;align-items:flex-end;gap:1.5rem;z-index:1}
-  .cast svg.mon{width:10rem;height:10rem;filter:drop-shadow(0 10px 8px rgba(0,0,0,.25))}
-  .cast .talker svg.mon{width:11.5rem;height:11.5rem;animation:talk 1.4s ease-in-out infinite}
-  .cast .side-c svg.mon{width:7rem;height:7rem;opacity:.95}
-  .cast.crowd svg.mon{width:7.5rem;height:7.5rem;animation:shake 1.6s infinite}
-  @keyframes talk{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-1.5deg)}}
-  .scene .chap{position:absolute;left:.8rem;top:.7rem;z-index:2;background:rgba(15,23,42,.65);color:#fff;border-radius:2rem;padding:.25rem .8rem;font-size:.75rem;font-weight:600}
-  .scene .skip{position:absolute;right:.7rem;bottom:.7rem;z-index:2;background:rgba(255,255,255,.85);border-radius:2rem;padding:.25rem .7rem;font-size:.75rem}
-  .bubble{padding:1.1rem 1.3rem 1rem;position:relative}
-  .bubble::before{content:"";position:absolute;left:50%;top:-.7rem;width:1.4rem;height:1.4rem;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:.2rem}
-  .bubble.narr{background:#fffbeb}.bubble.narr::before{background:#fffbeb}
-  .bubble .who-n{display:inline-block;background:var(--brand);color:#fff;border-radius:2rem;padding:.15rem .7rem;font-size:.78rem;margin-bottom:.4rem}
-  .bubble .say{font-size:1.15rem;line-height:1.55;min-height:3.4rem;animation:sayin .35s ease-out}
-  .bubble.narr .say{font-style:italic}
-  @keyframes sayin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .snav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.8rem}
+  /* ===== Storyboard (animated) ===== */
+  .eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.2s infinite}
+  @keyframes blink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}96%{transform:scaleY(1)}}
+  .storybox{border-radius:1.2rem;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 18px 40px -20px rgba(15,23,42,.55)}
+  .scene{position:relative;height:19rem;overflow:hidden;isolation:isolate;--land:#22c55e;--soft:#dcfce7}
+  .scene .world{position:absolute;inset:0;animation:kenburns 18s ease-in-out infinite alternate;transform-origin:50% 70%}
+  @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.06)}}
+  .sky{position:absolute;inset:0;background:linear-gradient(#38bdf8,#bae6fd 55%,#e0f2fe 62%);transition:opacity 1s}
+  .sky.n{background:linear-gradient(#0b0820,#2e1065 50%,#5b21b6 62%);opacity:0}
+  .scene.night .sky.n{opacity:1}
+  .stars{position:absolute;inset:0 0 40% 0;opacity:0;transition:opacity 1s}
+  .scene.night .stars{opacity:1}
+  .stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:twinkle 2.4s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.2)}}
+  .orb{position:absolute;right:2.2rem;top:1.3rem;width:3.4rem;height:3.4rem;border-radius:50%;background:#fde047;box-shadow:0 0 40px 8px rgba(253,224,71,.7);transition:background 1s,box-shadow 1s}
+  .orb::before{content:"";position:absolute;inset:-1.2rem;border-radius:50%;background:repeating-conic-gradient(rgba(253,224,71,.55) 0 10deg,transparent 10deg 30deg);animation:spin 24s linear infinite;z-index:-1}
+  .scene.night .orb{background:#f5f3ff;box-shadow:0 0 34px 6px rgba(196,181,253,.7)}
+  .scene.night .orb::before{opacity:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .cloud{position:absolute;height:1.5rem;background:#fff;border-radius:2rem;opacity:.92;animation:drift linear infinite;transition:background 1s}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+  .cloud::before{width:55%;height:180%;left:12%;bottom:30%}.cloud::after{width:40%;height:150%;right:12%;bottom:25%}
+  .cloud.c1{top:2.2rem;width:7rem;animation-duration:46s;animation-delay:-10s}
+  .cloud.c2{top:4.6rem;width:5rem;animation-duration:34s;animation-delay:-25s;opacity:.75}
+  .cloud.c3{top:1.2rem;width:4rem;animation-duration:58s;animation-delay:-40s;opacity:.6}
+  .scene.night .cloud{background:#4c1d95;opacity:.55}
+  @keyframes drift{from{transform:translateX(-10rem)}to{transform:translateX(60rem)}}
+  .birds{position:absolute;top:3.2rem;left:0;width:3.4rem;animation:fly 20s linear infinite;transition:opacity 1s}
+  .scene.night .birds{opacity:0}
+  .birds path{animation:flap .5s ease-in-out infinite alternate;transform-origin:center;transform-box:fill-box}
+  @keyframes fly{from{transform:translate(-4rem,0)}50%{transform:translate(28rem,-1rem)}to{transform:translate(62rem,.5rem)}}
+  @keyframes flap{to{transform:scaleY(.4)}}
+  .sea{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(#0ea5e9,#0369a1);transition:background 1s;overflow:hidden}
+  .scene.night .sea{background:linear-gradient(#3b0764,#1e1b4b)}
+  .wave{position:absolute;left:0;width:200%;height:2.4rem}
+  .wave.w1{top:-.6rem;animation:waves 9s linear infinite;opacity:.55}
+  .wave.w2{top:.6rem;animation:waves 14s linear infinite reverse;opacity:.35}
+  @keyframes waves{to{transform:translateX(-50%)}}
+  .land{position:absolute;bottom:-2.5rem;border-radius:50% 50% 0 0;transition:background 1s}
+  .land.l1{left:-3rem;width:24rem;height:7.5rem;background:#fde68a}
+  .land.l2{right:-4rem;width:20rem;height:6.5rem;background:var(--land)}
+  .scene.night .land.l1{background:#5b21b6}.scene.night .land.l2{background:#7c3aed}
+  .palm{position:absolute;bottom:4.4rem;left:2.2rem;width:5.5rem;transform-origin:50% 100%;animation:sway 4s ease-in-out infinite}
+  .palm.p2{left:auto;right:3.5rem;bottom:3.6rem;width:4.4rem;animation-delay:-2s}
+  @keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+  .gloom{position:absolute;inset:0;background:radial-gradient(circle at 70% 60%,transparent 20%,rgba(46,16,101,.75));opacity:0;transition:opacity .8s;z-index:2;pointer-events:none}
+  .scene.gloomy .gloom{opacity:1}
+  .chaos{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .6s}
+  .chaos.on{opacity:1}
+  .chaos span{position:absolute;bottom:-2rem;font-weight:800;color:#fde047;text-shadow:0 0 8px rgba(250,204,21,.8);animation:chaos 4s linear infinite}
+  @keyframes chaos{0%{transform:translateY(0) rotate(0);opacity:0}15%{opacity:1}100%{transform:translateY(-22rem) rotate(540deg);opacity:0}}
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:5;pointer-events:none}
+  .flash.go{animation:flash .7s}
+  @keyframes flash{0%,40%{opacity:0}45%{opacity:.9}55%{opacity:.1}62%{opacity:.75}100%{opacity:0}}
+  .scene.quake{animation:quake .6s}
+  @keyframes quake{0%,100%{transform:none}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+  .cast{position:absolute;left:0;right:0;bottom:.4rem;display:flex;justify-content:center;align-items:flex-end;gap:1rem;z-index:3}
+  .actor{position:relative;display:flex;justify-content:center}
+  .actor svg.mon{width:9rem;height:9rem;filter:drop-shadow(0 12px 8px rgba(0,0,0,.28));transform-origin:50% 92%;animation:breathe 2.6s ease-in-out infinite}
+  .actor.talker svg.mon{width:11.5rem;height:11.5rem}
+  .actor.side svg.mon{width:7.5rem;height:7.5rem}
+  .actor.crowd svg.mon{width:7rem;height:7rem}
+  .actor.talking svg.mon{animation:talk .28s ease-in-out infinite alternate}
+  .actor.dim{filter:saturate(.9)}
+  @keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,.975)}}
+  @keyframes talk{from{transform:scale(1,1) translateY(0)}to{transform:scale(1.035,.95) translateY(-4px)}}
+  .actor.in-r{animation:inR .7s cubic-bezier(.2,.9,.3,1.25) both}
+  .actor.in-l{animation:inL .7s cubic-bezier(.2,.9,.3,1.25) both}
+  .actor.in-pop{animation:inPop .8s cubic-bezier(.2,.9,.3,1.4) both}
+  @keyframes inR{from{transform:translateX(26rem)}to{transform:none}}
+  @keyframes inL{from{transform:translateX(-26rem)}to{transform:none}}
+  @keyframes inPop{0%{transform:scale(0) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
+  .actor.walk{animation:hop .45s ease-in-out infinite alternate}
+  .actor.walk:nth-child(2){animation-delay:-.15s}.actor.walk:nth-child(3){animation-delay:-.3s}
+  .actor.panic{animation:panic .7s ease-in-out infinite}
+  .actor.panic:nth-child(2){animation-delay:-.25s}.actor.panic:nth-child(3){animation-delay:-.45s}
+  @keyframes hop{to{transform:translateY(-12px)}}
+  @keyframes panic{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-14px) rotate(-8deg)}75%{transform:translateX(14px) rotate(8deg)}}
+  .emote{position:absolute;top:-.6rem;left:50%;width:0;height:0;z-index:4}
+  .emote span{position:absolute;font-weight:800;font-size:1.3rem}
+  .emote.dizzy span{color:#f97316;animation:orbit 1.6s linear infinite;text-shadow:0 1px 0 #fff}
+  .emote.dizzy span:nth-child(2){animation-delay:-.53s;color:#a855f7}.emote.dizzy span:nth-child(3){animation-delay:-1.06s;color:#06b6d4}
+  @keyframes orbit{from{transform:rotate(0) translateX(2.4rem) rotate(0)}to{transform:rotate(360deg) translateX(2.4rem) rotate(-360deg)}}
+  .emote.love span{color:#f43f5e;animation:floatup 1.8s ease-out infinite;opacity:0}
+  .emote.evil span{color:#facc15;text-shadow:0 0 8px #a855f7}
+  .emote.love span:nth-child(1){left:-2rem}.emote.love span:nth-child(2){left:.6rem;animation-delay:.6s;color:#facc15}.emote.love span:nth-child(3){left:2.2rem;animation-delay:1.2s}
+  @keyframes floatup{0%{transform:translateY(1rem) scale(.5);opacity:0}25%{opacity:1}100%{transform:translateY(-2.6rem) scale(1.2);opacity:0}}
+  .titlecard{position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(15,23,42,.55);color:#fff;text-align:center;animation:tcard 2.3s forwards;pointer-events:none}
+  .titlecard small{display:block;letter-spacing:.3em;font-size:.75rem;opacity:.85;text-transform:uppercase}
+  .titlecard b{display:block;font-size:2rem;font-weight:800;text-shadow:0 4px 18px rgba(0,0,0,.4);animation:tzoom 2.3s forwards}
+  @keyframes tcard{0%,70%{opacity:1}100%{opacity:0;visibility:hidden}}
+  @keyframes tzoom{0%{transform:scale(.6);opacity:0}20%{transform:scale(1.05);opacity:1}30%{transform:scale(1)}100%{transform:scale(1.08)}}
+  .scene .chap{position:absolute;left:.8rem;top:.7rem;z-index:5;background:rgba(15,23,42,.6);color:#fff;border-radius:2rem;padding:.25rem .8rem;font-size:.75rem;font-weight:600;backdrop-filter:blur(4px)}
+  .scene .skip{position:absolute;right:.7rem;top:.7rem;z-index:5;background:rgba(255,255,255,.88);border-radius:2rem;padding:.25rem .75rem;font-size:.75rem;font-weight:500}
+  .bubble{padding:1rem 1.3rem 1rem;position:relative;background:#fff}
+  .bubble::before{content:"";position:absolute;left:var(--tail,50%);top:-.7rem;width:1.4rem;height:1.4rem;background:inherit;transform:translateX(-50%) rotate(45deg);border-radius:.2rem;transition:left .4s}
+  .bubble.narr{background:#fffbeb}
+  .whorow{display:flex;align-items:center;gap:.5rem;min-height:2rem}
+  .avatar{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--brand-soft);overflow:hidden;display:grid;place-items:center;flex:none}
+  .avatar svg{width:2.6rem;height:2.6rem;margin-top:.5rem}
+  .who-n{background:var(--brand);color:#fff;border-radius:2rem;padding:.15rem .75rem;font-size:.8rem}
+  .say{font-size:1.18rem;line-height:1.55;min-height:3.7rem;margin-top:.4rem}
+  .bubble.narr .say{font-style:italic;color:#78350f}
+  .caret{display:inline-block;width:.55rem;height:1.05rem;margin-left:2px;vertical-align:-.12rem;background:var(--brand);animation:caret .8s steps(1) infinite}
+  .caret.off{display:none}
+  @keyframes caret{50%{opacity:0}}
+  .snav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.7rem}
+  .snav .mid{display:flex;align-items:center;gap:.8rem}
+  .tts{font-size:.75rem;border:1px solid var(--line);border-radius:2rem;padding:.25rem .65rem;color:var(--muted);background:#fff}
+  .tts.on{border-color:var(--brand);color:var(--brand-d);background:var(--brand-soft)}
+  #storyNext.pulse{animation:nudge 1.2s ease-in-out infinite}
+  @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
   .speech{position:absolute;z-index:2;max-width:13rem;background:#fff;border-radius:.8rem;padding:.45rem .7rem;font-size:.8rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:sayin .4s}
   .speech::after{content:"";position:absolute;bottom:-.4rem;right:2rem;width:.8rem;height:.8rem;background:#fff;transform:rotate(45deg)}
   .speech.mon-s{right:1rem;top:2.6rem}
+  @keyframes sayin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .ichap{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
   .storybtn{margin-left:auto;font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:2rem;padding:.25rem .6rem;background:#fff}
   .storybtn:hover{color:var(--brand);border-color:var(--brand)}
@@ -210,7 +296,8 @@
   .bookrow small{color:var(--muted);font-size:.75rem}
   .bookrow.lockedrow b{color:var(--muted)}
   .win .monsay{display:inline-block;background:var(--brand-soft);border-radius:.8rem;padding:.4rem .8rem;margin-top:.6rem;font-style:italic;font-size:.9rem}
-  @media (max-width:640px){ .scene{height:13.5rem} .cast svg.mon{width:7rem;height:7rem} .cast .talker svg.mon{width:8.5rem;height:8.5rem} .cast .side-c svg.mon{width:5rem;height:5rem} .cast.crowd svg.mon{width:5.2rem;height:5.2rem} .cast{gap:.6rem} .bubble .say{font-size:1rem} }
+  @media (max-width:640px){ .scene{height:15rem} .actor svg.mon{width:6.5rem;height:6.5rem} .actor.talker svg.mon{width:8.5rem;height:8.5rem} .actor.side svg.mon{width:5.2rem;height:5.2rem} .actor.crowd svg.mon{width:5rem;height:5rem} .cast{gap:.3rem} .say{font-size:1.02rem} .titlecard b{font-size:1.4rem} .palm{width:4rem} .palm.p2{display:none} }
+  @media (prefers-reduced-motion: reduce){ .scene *, .scene{animation-duration:0s!important;animation-iteration-count:1!important} }
 </style>
 </head>
 <body>
@@ -783,7 +870,7 @@ function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
     ${M.spots ? `<circle cx="32" cy="62" r="5" fill="${dk}" opacity=".3"/><circle cx="88" cy="66" r="4" fill="${dk}" opacity=".3"/><circle cx="82" cy="40" r="3" fill="${dk}" opacity=".3"/>` : ''}
     <ellipse cx="60" cy="88" rx="23" ry="15" fill="${bl}"/>
     <ellipse cx="44" cy="109" rx="11" ry="6" fill="${dk}"/><ellipse cx="76" cy="109" rx="11" ry="6" fill="${dk}"/>
-    ${ex.map(eye).join('')}${mouth}
+    <g class="eyes" style="animation-delay:-${(hashS(seed) % 4000) / 1000}s">${ex.map(eye).join('')}</g>${mouth}
     ${has('glasses') ? `<circle cx="45" cy="52" r="13" fill="rgba(255,255,255,.25)" stroke="#0f172a" stroke-width="3"/><circle cx="75" cy="52" r="13" fill="rgba(255,255,255,.25)" stroke="#0f172a" stroke-width="3"/><path d="M58 51h4" stroke="#0f172a" stroke-width="3"/>` : ''}
     ${has('bowtie') ? `<path d="M60 98L45 90V106ZM60 98L75 90V106Z" fill="#e11d48" stroke="#9f1239" stroke-width="1.5"/><circle cx="60" cy="98" r="4" fill="#9f1239"/>` : ''}
     ${has('flower') ? `<g transform="translate(88 24)">${[0, 72, 144, 216, 288].map(a => `<circle cx="${7 * Math.cos(a * Math.PI / 180)}" cy="${7 * Math.sin(a * Math.PI / 180)}" r="5.5" fill="#fff" stroke="#cbd5e1"/>`).join('')}<circle r="4" fill="#facc15"/></g>` : ''}
@@ -1116,7 +1203,7 @@ function turtleSVG(mood = 'idle', cls = 'mon'){
     <rect x="14" y="88" width="108" height="10" rx="5" fill="#ca8a04" stroke="#713f12" stroke-width="2.5"/>
     <path d="M30 70C26 62 22 58 20 56" stroke="#4d7c0f" stroke-width="14" stroke-linecap="round"/>
     <circle cx="22" cy="50" r="18" fill="#84cc16" stroke="#365314" stroke-width="3"/>
-    ${eye(16)}${eye(28)}
+    <g class="eyes" style="animation-delay:-1.7s">${eye(16)}${eye(28)}</g>
     <path d="M11 40Q15.5 35 20 39M24 39Q28.5 35 33 40" stroke="#f8fafc" stroke-width="3" fill="none" stroke-linecap="round"/>
     <path d="M14 57Q22 ${mood === 'happy' ? 64 : 61} 30 57" stroke="#1a2e05" stroke-width="2.5" fill="${mood === 'happy' ? '#7f1d1d' : 'none'}" stroke-linecap="round"/>
     <path d="M-2 34L22 14L46 34Z" fill="#fde68a" stroke="#a16207" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 30L22 18L36 30" stroke="#d97706" stroke-width="1.5" fill="none"/>
@@ -1135,15 +1222,121 @@ function storyPanels(key){
   return {title:`Chapter ${i + 1}: ${ISLAND[b][i]}`, b, i, panels: part === 'outro' ? (last ? ENDING : ch.outro) : ch.intro};
 }
 function playStory(key, after){
-  const s = storyPanels(key); STORY = Object.assign(s, {key, k:0, after: after || null}); P.tab('learn'); window.scrollTo(0, 0);
+  stopStoryAudio();
+  const s = storyPanels(key); STORY = Object.assign(s, {key, k:0, after: after || null, onStage: []}); P.tab('learn'); window.scrollTo(0, 0);
+}
+/* ---- read-aloud (each character gets a voice) + typing blips ---- */
+const ttsOn = () => { try { return localStorage.getItem('aralmath-tts') === '1'; } catch (e) { return false; } };
+function toggleTTS(){ try { localStorage.setItem('aralmath-tts', ttsOn() ? '0' : '1'); } catch (e) {} const b = $('ttsBtn'); if (b) { b.classList.toggle('on', ttsOn()); b.textContent = ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'; } if (ttsOn()) speakPanel(); else stopStoryAudio(); }
+const VOICE = {gulo:[.55, .85], lolo:[.75, .85], buddy:[1.6, 1.05], mon:[1.35, 1.1], nar:[1, .95], crowd:[1, .95]};
+function speakPanel(){
+  if (!ttsOn() || !STORY || !('speechSynthesis' in window)) return;
+  try { const [who, , text] = STORY.panels[STORY.k], [pitch, rate] = VOICE[who] || [1, 1], s = new SpeechSynthesisUtterance(fillText(text, STORY.b, STORY.i).replace(/&amp;/g, '&'));
+    s.pitch = pitch; s.rate = rate; speechSynthesis.cancel(); speechSynthesis.speak(s); } catch (e) {}
+}
+function stopStoryAudio(){ try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} if (STORY && STORY.timer) { clearInterval(STORY.timer); STORY.timer = null; } }
+function blip(who){
+  if (isMuted() || ttsOn()) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = 'square'; o.frequency.value = (who === 'gulo' ? 140 : who === 'lolo' ? 260 : who === 'nar' ? 420 : 560) + Math.random() * 40;
+    g.gain.setValueAtTime(.025, t); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + .05); } catch (e) {}
+}
+/* ---- stage ---- */
+const PALM = `<svg viewBox="0 0 80 110"><path d="M40 108C38 80 40 55 44 34" stroke="#92400e" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M40 100h5M41 88h5M41 76h5M42 64h5M43 52h5" stroke="#78350f" stroke-width="1.5"/>
+  <path d="M44 34C30 22 14 24 4 34C18 30 30 32 44 34Z" fill="#16a34a"/><path d="M44 34C56 20 72 20 78 30C66 28 56 30 44 34Z" fill="#15803d"/><path d="M44 34C42 18 32 8 20 6C30 14 38 22 44 34Z" fill="#22c55e"/><path d="M44 34C50 18 60 10 72 10C60 18 52 24 44 34Z" fill="#16a34a"/><path d="M44 34C36 40 30 52 30 62C36 52 40 44 44 34Z" fill="#15803d"/>
+  <circle cx="42" cy="36" r="3.5" fill="#78350f"/><circle cx="47" cy="37" r="3.5" fill="#78350f"/></svg>`;
+const WAVE = `<svg class="wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0 10Q25 0 50 10T100 10T150 10T200 10T250 10T300 10T350 10T400 10V20H0Z" fill="#fff"/></svg>`;
+function storyView(el){
+  const s = STORY, [c, soft] = s.i != null ? ISLE[s.i % ISLE.length] : ['#22c55e', '#dcfce7'];
+  const stars = Array.from({length: 26}, () => `<i style="left:${R(0, 100)}%;top:${R(0, 100)}%;animation-delay:-${R(0, 24) / 10}s"></i>`).join('');
+  el.innerHTML = `<div class="stack"><div class="storybox">
+    <div class="scene" id="scene" style="--land:${c};--soft:${soft}">
+      <div class="world"><div class="sky"></div><div class="sky n"></div><div class="stars">${stars}</div><span class="orb"></span>
+        <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+        <svg class="birds" viewBox="0 0 60 24"><path d="M2 12Q9 4 16 12Q23 4 30 12" stroke="#334155" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M34 18Q39 13 44 18Q49 13 54 18" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <div class="sea">${WAVE.replace('wave', 'wave w1')}${WAVE.replace('wave', 'wave w2')}</div>
+        <div class="land l1"></div><div class="land l2"></div><div class="palm">${PALM}</div><div class="palm p2">${PALM}</div></div>
+      <div class="gloom"></div><div class="chaos" id="chaos">${Array.from({length: 16}, () => `<span style="left:${R(2, 96)}%;font-size:${R(10, 22) / 10}rem;animation-delay:-${R(0, 40) / 10}s;animation-duration:${R(30, 55) / 10}s">${pick(['7', '½', '×', '÷', '3', '%', '−', '+', '9', '¾', '0.5', 'x²', '√', '='])}</span>`).join('')}</div>
+      <div class="cast" id="cast"></div><div class="flash" id="flash"></div>
+      <span class="chap">${s.title}</span><button class="skip" onclick="endStory()">Skip ⏭</button>
+      <div class="titlecard"><div><small>${s.key === 'prologue' ? 'Ang Nawawalang Bilang' : s.i != null ? (/outro/.test(s.key) ? 'Chapter ending' : 'Chapter ' + (s.i + 1)) : ''}</small><b>${s.key === 'prologue' ? 'The Scrambled Numbers' : s.i != null ? ISLAND[s.b][s.i] : s.title}</b></div></div>
+    </div>
+    <div class="bubble" id="bubble"><div class="whorow"><span class="avatar" id="avatar"></span><b class="who-n" id="whoN"></b></div>
+      <p class="say"><span id="say"></span><i class="caret" id="caret"></i></p>
+      <div class="snav"><button class="btn ghost sm" id="storyBack" onclick="storyStep(-1)">◀ Back</button>
+        <div class="mid"><div class="dots" id="sdots"></div><button class="tts ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button></div>
+        <button class="btn" id="storyNext" onclick="storyStep(1)">Next ▶</button></div>
+    </div></div></div>`;
+  s.onStage = [];
+  setTimeout(() => STORY === s && renderPanel(), s.k === 0 ? 900 : 0); // let the title card show first
+  document.onkeydown = e => { if (!STORY || (e.target.closest && e.target.closest('input,textarea,button'))) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); storyStep(1); } else if (e.key === 'ArrowLeft') storyStep(-1); else if (e.key === 'Escape') endStory(); };
+}
+function actorHTML(id, mood, role, b, i, enter, emote){
+  const svg = id.startsWith('crowd:') ? monsterSVG('mon-' + id.slice(6), mood, [], 'mon') : castSVG(id, mood, b, i);
+  const em = emote === 'dizzy' ? '<div class="emote dizzy"><span>?</span><span>✶</span><span>?</span></div>' : emote === 'love' ? '<div class="emote love"><span>♥</span><span>★</span><span>♥</span></div>'
+    : emote === 'evil' ? '<div class="emote love evil"><span>⚡</span><span>✖</span><span>⚡</span></div>' : '';
+  return `<div class="actor ${role} ${enter}" data-id="${id}">${em}${svg}</div>`;
+}
+function renderPanel(){
+  const s = STORY; if (!s || !$('cast')) return;
+  stopStoryAudio();
+  const [who, mood, text, scene] = s.panels[s.k], b = s.b, i = s.i, night = scene === 'night';
+  const sc = $('scene');
+  sc.classList.toggle('night', night);
+  sc.classList.toggle('gloomy', who === 'gulo' && !night);
+  $('chaos').classList.toggle('on', who === 'gulo' || (night && who === 'crowd'));
+  // who is on stage for this panel
+  let actors;
+  if (who === 'crowd' || (who === 'nar' && scene === 'island')) actors = ['f-add-sim', 'd-add', 'g-solids'].map(id => ({id:'crowd:' + id, mood, role:'crowd ' + (mood === 'hit' ? 'panic' : 'walk')}));
+  else if (who === 'buddy' || who === 'nar') actors = [{id:'buddy', mood, role:'talker'}];
+  else actors = [{id:'buddy', mood: who === 'gulo' ? 'hit' : 'idle', role:'side dim'}, {id: who, mood, role:'talker'}];
+  const prev = s.onStage;
+  $('cast').innerHTML = actors.map(a => actorHTML(a.id, a.mood, a.role, b, i,
+    prev.includes(a.id) ? '' : a.id === 'gulo' ? 'in-pop' : a.role.startsWith('side') || a.id === 'buddy' ? 'in-l' : 'in-r',
+    a.role === 'talker' ? (mood === 'hit' ? 'dizzy' : mood === 'happy' ? (a.id === 'gulo' && night ? 'evil' : 'love') : a.id === 'gulo' ? 'evil' : '') : a.role.includes('panic') ? 'dizzy' : '')).join('');
+  s.onStage = actors.map(a => a.id);
+  if (who === 'gulo' && !prev.includes('gulo')) { const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); sc.classList.remove('quake'); void sc.offsetWidth; sc.classList.add('quake'); }
+  // speech bubble
+  const name = speakerName(who, b, i), narr = who === 'nar' || who === 'crowd';
+  $('bubble').classList.toggle('narr', narr);
+  $('bubble').style.setProperty('--tail', actors.length === 2 ? '62%' : '50%');
+  $('whoN').style.display = name ? '' : 'none'; $('whoN').textContent = name;
+  $('avatar').style.display = name ? '' : 'none'; $('avatar').innerHTML = name ? castSVG(who, 'idle', b, i).replace('class="mon"', '') : '';
+  $('sdots').innerHTML = s.panels.map((_, k) => `<i class="${k < s.k ? 'ok' : k === s.k ? 'cur' : ''}"></i>`).join('');
+  $('storyBack').style.visibility = s.k ? 'visible' : 'hidden';
+  const last = s.k === s.panels.length - 1;
+  $('storyNext').textContent = last ? (s.after ? "Let's go! ▶" : 'The end ✓') : 'Next ▶';
+  $('storyNext').classList.remove('pulse');
+  // typewriter
+  const full = fillText(text, b, i).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  let n = 0; s.typing = true; $('say').textContent = ''; $('caret').classList.remove('off');
+  const talker = document.querySelector('.actor.talker') || document.querySelector('.actor');
+  if (talker && !narr) talker.classList.add('talking');
+  s.timer = setInterval(() => { if (STORY !== s) return clearInterval(s.timer);
+    n = Math.min(full.length, n + 2); $('say').textContent = full.slice(0, n); if (n % 6 === 0) blip(who);
+    if (n >= full.length) finishTyping(); }, 28);
+  speakPanel();
+}
+function finishTyping(){
+  const s = STORY; if (!s) return;
+  if (s.timer) { clearInterval(s.timer); s.timer = null; }
+  const [who, , text] = s.panels[s.k];
+  $('say').textContent = fillText(text, s.b, s.i).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  s.typing = false; $('caret').classList.add('off'); $('storyNext').classList.add('pulse');
+  document.querySelectorAll('.actor.talking').forEach(a => a.classList.remove('talking'));
 }
 function storyStep(d){
+  if (!STORY) return;
+  if (d > 0 && STORY.typing) return finishTyping();
   STORY.k += d;
   if (STORY.k < 0) STORY.k = 0;
   if (STORY.k >= STORY.panels.length) return endStory();
-  P.refresh();
+  renderPanel();
 }
 function endStory(){
+  if (!STORY) return;
+  stopStoryAudio(); document.onkeydown = null;
   if (isStudent()) { const p = pref(P.me.u); p.seen = Object.assign(p.seen || {}, {[STORY.key]: true}); P.save(); }
   const after = STORY.after; STORY = null;
   if (after) after(); else { screen = 'map'; P.refresh(); }
@@ -1154,7 +1347,6 @@ function castSVG(who, mood, b, i){
   if (who === 'gulo') return monsterSVG(GULO, mood, ['crown', 'cape'], 'mon');
   if (who === 'buddy') return isStudent() ? buddySVG(u, mood, 'mon') : monsterSVG(BUDDIES[0], mood, [], 'mon');
   if (who === 'mon') return monsterSVG('mon-' + BANDS[b || '78'].units[i || 0][1][0][0], mood, [], 'mon');
-  if (who === 'crowd') return ['f-add-sim', 'd-add', 'g-solids'].map(id => monsterSVG('mon-' + id, mood, [], 'mon sm')).join('');
   return '';
 }
 function speakerName(who, b, i){
@@ -1163,29 +1355,6 @@ function speakerName(who, b, i){
   return ROLE_NAME[who] || '';
 }
 const fillText = (t, b, i) => t.replace(/\{name\}/g, esc(P.me.name.split(' ')[0])).replace(/\{island\}/g, b != null && i != null ? ISLAND[b][i] : 'the islands');
-function storyView(el){
-  const s = STORY, [who, mood, text, scene] = s.panels[s.k], b = s.b, i = s.i;
-  const [c, soft] = i != null ? ISLE[i % ISLE.length] : ['#0ea5e9', '#e0f2fe'];
-  const night = scene === 'night', last = s.k === s.panels.length - 1;
-  // keep the buddy on stage with whoever is talking, like a comic panel
-  const cast = who === 'nar' && scene === 'island' ? '' : who === 'buddy' || who === 'crowd' || who === 'nar' ? castSVG(who, mood, b, i)
-    : `<div class="side-c">${castSVG('buddy', 'idle', b, i)}</div><div class="talker">${castSVG(who, mood, b, i)}</div>`;
-  el.innerHTML = `<div class="stack"><div class="storybox">
-    <div class="scene ${night ? 'night' : ''}" style="--land:${c};--soft:${soft}">
-      <span class="orb"></span><span class="isl a"></span><span class="isl b"></span><span class="isl c"></span>
-      <div class="cast ${who === 'crowd' ? 'crowd' : ''}">${cast}</div>
-      <span class="chap">${s.title}</span>
-      <button class="skip" onclick="endStory()">Skip ⏭</button>
-    </div>
-    <div class="bubble ${who === 'nar' || who === 'crowd' ? 'narr' : ''}">
-      ${speakerName(who, b, i) ? `<b class="who-n">${speakerName(who, b, i)}</b>` : ''}
-      <p class="say">${fillText(text, b, i)}</p>
-      <div class="snav"><button class="btn ghost sm" onclick="storyStep(-1)" ${s.k ? '' : 'disabled style="visibility:hidden"'}>◀ Back</button>
-        <div class="dots">${s.panels.map((_, k) => `<i class="${k < s.k ? 'ok' : k === s.k ? 'cur' : ''}"></i>`).join('')}</div>
-        <button class="btn" id="storyNext" onclick="storyStep(1)">${last ? (s.after ? "Let's go! ▶" : 'Done') : 'Next ▶'}</button></div>
-    </div></div></div>`;
-  $('storyNext').focus();
-}
 function book(el){
   const u = P.me.u, b = bandOf(u), stu = isStudent(), units = BANDS[b].units;
   const row = (key, title, sub, open) => `<div class="bookrow ${open ? '' : 'lockedrow'}"><div><b>${title}</b><br><small>${sub}</small></div>
