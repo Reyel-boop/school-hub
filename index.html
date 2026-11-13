@@ -49,6 +49,10 @@
   /* full-bleed logos (Momo, CampusShield, Lab Kiosk) get the same treatment on the logo itself */
   .sys:hover .tile[data-full],.sys:focus-visible .tile[data-full]{animation:tileZoom 1.8s ease-in-out infinite}
   .sys:hover .tile[data-full]::before,.sys:focus-visible .tile[data-full]::before{opacity:.3}
+  /* "still" tiles (Momo, Tuon): on hover only the color glow shows; nothing grows, zooms, spins or sweeps */
+  .sys:hover .tile[data-still],.sys:focus-visible .tile[data-still]{transform:none;animation:none}
+  .sys:hover .tile[data-still]::before,.sys:focus-visible .tile[data-still]::before{animation:none}
+  .sys:hover .tile[data-still]::after,.sys:focus-visible .tile[data-still]::after{opacity:0;animation:none}
   @keyframes tileSpin{to{transform:rotate(360deg)}}
   @keyframes tileShine{0%{left:-75%}60%,100%{left:130%}}
   @keyframes tilePop{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.14) rotate(-6deg)}50%{transform:scale(1.08) rotate(5deg)}75%{transform:scale(1.12) rotate(-2deg)}}
@@ -248,12 +252,12 @@ const ICONS = {
   data:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
 };
 const SYSTEMS = [
-  {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', bg:'#12285e', url:'https://momo-smart.vercel.app'},
+  {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', still:true, bg:'#12285e', url:'https://momo-smart.vercel.app'},
   {id:'bless',     name:'Bless Praise',      logo:'logos/bless.png', mode:'badge', crop:'background-size:150%;background-position:50% 62%', bg:'linear-gradient(135deg,#1c3a7a,#0e1f4d)', url:'https://reyel-boop.github.io/bless-praise-portal/'},
   {id:'campus',    name:'CampusShield Pro',  logo:'logos/campusshield.png', mode:'full', bg:'#f5a00f', url:'https://campusshieldpro.onrender.com'},
   {id:'inventory', name:'Inventory System',  icon:'box',    bg:'linear-gradient(135deg,#f59e0b,#d9480f)', url:'https://svnhs-property.vercel.app', embed:false},
   {id:'complab',   name:'JHS Lab Kiosk',     logo:'logos/complab.png', mode:'full', bg:'#1d4ed8', url:'https://jhs-complab.vercel.app'},
-  {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
+  {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', still:true, bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
   {id:'aralread', name:'Aral Reading',      icon:'read',   bg:'linear-gradient(135deg,#ec4899,#9d174d)', url:null},
   {id:'aralmath',  name:'Aral Math',         icon:'math',   bg:'linear-gradient(135deg,#06b6d4,#4338ca)', url:null},
   {id:'idsys',     name:'ID System',         icon:'idcard', bg:'linear-gradient(135deg,#64748b,#1e293b)', url:'idsystem/index.html'},
@@ -301,7 +305,7 @@ const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 // Landing tiles
 document.getElementById('grid').innerHTML = SYSTEMS.map(s => `
   <button class="sys" data-id="${s.id}" aria-describedby="hovertip" onclick="openSys('${s.id}')">
-    <div class="tile" ${s.mode==='full' ? 'data-full' : ''} style="${tileBg(s)}">${art(s)}${s.url?'':'<span class="badge">Soon</span>'}</div>
+    <div class="tile" ${s.mode==='full' ? 'data-full' : ''} ${s.still ? 'data-still' : ''} style="${tileBg(s)}">${art(s)}${s.url?'':'<span class="badge">Soon</span>'}</div>
     <div class="name">${s.name}</div>
   </button>`).join('');
 
