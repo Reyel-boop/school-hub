@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121417; --bg2:#1b1f24; --text:#f2f4f7; --muted:#8b93a1; --line:#2c323a;
+    --accent:#f5b301; --tile:7.5rem;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:Poppins,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ---------- Landing ---------- */
+  #landing{min-height:100vh;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:.6rem;padding:1.25rem 2rem}
+  .brand .seal{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:#1b1f24;
+    display:grid;place-items:center;font-weight:700;font-size:.8rem}
+  .brand b{font-size:1.05rem;letter-spacing:.02em}
+  .brand span{color:var(--muted);font-size:.8rem;display:block;line-height:1}
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1rem 3rem}
+  h1{font-weight:500;font-size:clamp(1.7rem,4vw,3rem);margin-bottom:.4rem;text-align:center}
+  .sub{color:var(--muted);margin-bottom:2.2rem;text-align:center;font-size:.95rem}
+  .grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1.6rem 1.1rem;max-width:calc(9 * var(--tile) + 8 * 1.1rem)}
+  .sys{display:flex;flex-direction:column;align-items:center;gap:.7rem;width:var(--tile);outline:none}
+  .sys .tile{width:var(--tile);height:var(--tile);border-radius:.5rem;display:grid;place-items:center;position:relative;
+    border:3px solid transparent;transition:border-color .15s, transform .15s;overflow:hidden}
+  .logo-badge{width:74%;aspect-ratio:1;border-radius:50%;background-color:#fff;background-repeat:no-repeat;background-position:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .sys .tile svg{width:46%;height:46%;color:#fff;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+  .sys .name{color:var(--muted);font-size:.95rem;transition:color .15s;text-align:center;line-height:1.25}
+  .sys:hover .tile,.sys:focus-visible .tile{border-color:var(--text);transform:scale(1.04)}
+  .sys:hover .name,.sys:focus-visible .name{color:var(--text)}
+  /* Hover animation inside each tile: turning rainbow glow, a sweeping shine, and a little icon pop */
+  .sys .tile::before{content:"";position:absolute;inset:-60%;z-index:1;pointer-events:none;opacity:0;transition:opacity .25s;
+    background:conic-gradient(from 0deg,#ff2d75,#ff9f1c,#ffe74c,#3ddc84,#2ec4ff,#7b61ff,#ff2d75)}
+  .sys .tile::after{content:"";position:absolute;top:0;bottom:0;left:-75%;width:55%;z-index:2;pointer-events:none;opacity:0;
+    background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%);transform:skewX(-18deg)}
+  .sys .tile > svg,.sys .tile > .logo-badge{position:relative;z-index:3;transition:transform .2s}
+  .sys .tile > .badge{z-index:4}
+  .sys:hover .tile::before,.sys:focus-visible .tile::before{opacity:.55;animation:tileSpin 2.4s linear infinite}
+  .sys:hover .tile::after,.sys:focus-visible .tile::after{opacity:1;animation:tileShine 1.4s ease-in-out infinite}
+  .sys:hover .tile > svg,.sys:hover .tile > .logo-badge,.sys:focus-visible .tile > svg,.sys:focus-visible .tile > .logo-badge{animation:tilePop .9s ease-in-out infinite}
+  .sys:hover .tile,.sys:focus-visible .tile{box-shadow:0 0 0 1px rgba(255,255,255,.15),0 8px 28px -6px rgba(123,97,255,.55),0 6px 22px -8px rgba(255,45,117,.5)}
+  /* full-bleed logos (Momo, CampusShield, Lab Kiosk) get the same treatment on the logo itself */
+  .sys:hover .tile[data-full],.sys:focus-visible .tile[data-full]{animation:tileZoom 1.8s ease-in-out infinite}
+  .sys:hover .tile[data-full]::before,.sys:focus-visible .tile[data-full]::before{opacity:.3}
+  @keyframes tileSpin{to{transform:rotate(360deg)}}
+  @keyframes tileShine{0%{left:-75%}60%,100%{left:130%}}
+  @keyframes tilePop{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.14) rotate(-6deg)}50%{transform:scale(1.08) rotate(5deg)}75%{transform:scale(1.12) rotate(-2deg)}}
+  @keyframes tileZoom{0%,100%{background-size:100%}50%{background-size:112%}}
+  @media (prefers-reduced-motion: reduce){
+    .sys:hover .tile::before,.sys:hover .tile::after,.sys:hover .tile > *,.sys:hover .tile[data-full],
+    .sys:focus-visible .tile::before,.sys:focus-visible .tile::after,.sys:focus-visible .tile > *,.sys:focus-visible .tile[data-full]{animation:none}
+  }
+  .hovertip{position:fixed;z-index:30;max-width:17rem;background:#f8fafc;color:#0f172a;border-radius:.6rem;padding:.7rem .85rem;font-size:.82rem;line-height:1.45;
+    box-shadow:0 12px 32px rgba(0,0,0,.45);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+  .hovertip.on{opacity:1;transform:none}
+  .hovertip b{display:block;font-size:.9rem;margin-bottom:.2rem}
+  .hovertip small{display:block;margin-top:.35rem;color:#64748b;font-size:.72rem}
+  .badge{position:absolute;top:.45rem;right:.45rem;background:rgba(0,0,0,.55);color:#fff;font-size:.62rem;
+    padding:.15rem .45rem;border-radius:1rem;letter-spacing:.04em;text-transform:uppercase}
+  .sys.noaccess,.switch button.noaccess{display:none} /* systems this account can't use are not shown at all */
+  .manage{margin-top:3rem;border:1px solid var(--muted);color:var(--muted);padding:.55rem 1.6rem;
+    letter-spacing:.18em;font-size:.8rem;text-transform:uppercase}
+  .manage:hover{color:var(--text);border-color:var(--text)}
+  .foot{color:var(--muted);opacity:.75;font-size:.75rem;text-align:center;padding:1rem}
+  body,.bar,.soon{transition:background-color .25s}
+  .picker{margin-top:2.5rem;background:var(--bg2);border:1px solid var(--line);border-radius:.9rem;padding:1rem 1.4rem;max-width:100%;text-align:center}
+  .picker b{font-weight:500;font-size:.9rem}
+  .picker small{display:block;color:var(--muted);font-size:.78rem;margin-top:.5rem}
+  .swatches{display:flex;flex-wrap:nowrap;justify-content:safe center;gap:.5rem;margin-top:.8rem;padding:7px 6px;overflow-x:auto}
+  .sw{flex:none;width:2rem;height:2rem;border-radius:50%;border:2px solid rgba(255,255,255,.55);box-shadow:0 1px 4px rgba(0,0,0,.35);transition:transform .12s}
+  .sw:hover{transform:scale(1.12)}
+  .sw[aria-checked="true"]{outline:3px solid var(--accent);outline-offset:2px}
+
+  /* ---------- Login ---------- */
+  #login{min-height:100vh;display:flex;flex-direction:column}
+  #login .stage{padding-bottom:2rem}
+  .lcard{width:100%;max-width:24rem;background:var(--bg2);border:1px solid var(--line);border-radius:1rem;padding:2rem 1.6rem;box-shadow:0 18px 50px -20px rgba(0,0,0,.6)}
+  .lcard .lseal{width:4rem;height:4rem;border-radius:50%;background:var(--accent);color:#1b1f24;display:grid;place-items:center;font-weight:700;font-size:1.2rem;margin:0 auto 1rem}
+  .brand .seal svg{width:58%;height:58%}
+  .lcard .lseal svg{width:55%;height:55%}
+  .lcard h1{font-size:1.5rem;margin-bottom:.2rem}
+  .lcard .sub{margin-bottom:1.4rem;font-size:.85rem}
+  .lcard form{display:flex;flex-direction:column;gap:.9rem}
+  .lcard label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.3rem}
+  .lcard input{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:.5rem;padding:.65rem .8rem;outline:none}
+  .lcard input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent)}
+  .pw{position:relative}
+  .pw input{padding-right:3.6rem}
+  .pw button{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);padding:.3rem .5rem}
+  .pw button:hover{color:var(--text)}
+  .lbtn{margin-top:.3rem;background:var(--accent);color:#1b1f24;font-weight:600;padding:.7rem;border-radius:.5rem}
+  .lbtn:hover{filter:brightness(1.08)}
+  .lerr{background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.5);color:#fda4af;font-size:.82rem;padding:.55rem .7rem;border-radius:.5rem}
+  .demo{margin-top:1.4rem;font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padding-top:1rem}
+  .demo b{color:var(--text);font-weight:500}
+  .demo button{display:block;width:100%;text-align:left;margin-top:.4rem;padding:.45rem .6rem;border:1px dashed var(--line);border-radius:.4rem;color:var(--muted)}
+  .demo button:hover{color:var(--text);border-color:var(--muted)}
+  .user{margin-left:auto;display:flex;align-items:center;gap:.7rem}
+  .user .who{text-align:right;line-height:1.2}
+  .user .who b{font-size:.85rem;font-weight:500}
+  .user .who small{display:block;color:var(--muted);font-size:.72rem}
+  .av{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:#1b1f24;display:grid;place-items:center;font-weight:600;font-size:.8rem;flex:none}
+  .out{border:1px solid var(--line);color:var(--muted);padding:.4rem .8rem;border-radius:.4rem;font-size:.8rem;white-space:nowrap}
+  .out:hover{color:var(--text);border-color:var(--text)}
+  #landing{display:none}
+  body.authed #login{display:none}
+  body.authed #landing{display:flex}
+
+  /* ---------- App shell ---------- */
+  #shell{display:none;height:100vh;flex-direction:column}
+  body.authed.in-app #landing{display:none}
+  body.authed.in-app #shell{display:flex}
+  body:not(.authed) #shell{display:none}
+  .bar{height:3.25rem;flex:none;display:flex;align-items:center;gap:.75rem;padding:0 .75rem;background:var(--bg2);border-bottom:1px solid var(--line)}
+  .home{display:flex;align-items:center;gap:.45rem;padding:.4rem .8rem;border-radius:.4rem;background:var(--accent);color:#1b1f24;font-weight:600;font-size:.85rem}
+  .home:hover{filter:brightness(1.08)}
+  .home svg{width:1.1rem;height:1.1rem}
+  .cur{display:flex;align-items:center;gap:.5rem;min-width:0}
+  .cur i{width:1.6rem;height:1.6rem;border-radius:.3rem;flex:none;display:grid;place-items:center;overflow:hidden}
+  .cur i svg{width:60%;height:60%;color:#fff}
+  .cur b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .spacer{flex:1}
+  .switch{display:flex;gap:.35rem}
+  .switch button{width:1.9rem;height:1.9rem;border-radius:.3rem;border:2px solid transparent;opacity:.6;display:grid;place-items:center;overflow:hidden}
+  .switch button svg{width:60%;height:60%;color:#fff}
+  .cur .logo-badge,.switch .logo-badge{box-shadow:none;width:84%}
+  .switch button:hover{opacity:1}
+  .switch button.on{border-color:var(--text);opacity:1}
+  .ext{color:var(--muted);font-size:.8rem;padding:.4rem .6rem;border:1px solid var(--line);border-radius:.4rem;text-decoration:none;white-space:nowrap}
+  .ext:hover{color:var(--text)}
+  .view{flex:1;position:relative;background:#fff}
+  .view iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .soon{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:2rem}
+  .soon .tile{width:7rem;height:7rem;border-radius:.5rem;display:grid;place-items:center}
+  .soon .tile svg{width:46%;height:46%;color:#fff}
+  .soon h2{font-weight:500}
+  .soon p{color:var(--muted);max-width:30rem;font-size:.9rem}
+
+  @media (max-width:640px){
+    :root{--tile:6.2rem}
+    .brand{padding:1rem}
+    .grid{gap:1.2rem .9rem;max-width:calc(3 * var(--tile) + 2 * .9rem)}
+    .stage{padding:1rem}
+    .switch,.ext span{display:none}
+    .home span{display:none}
+    .picker{padding:.8rem .5rem;width:100%}
+    .swatches{gap:2px;padding:6px 4px}
+    .sw{flex:1 1 0;min-width:0;max-width:1.3rem;width:auto;height:auto;aspect-ratio:1;border-width:1px}
+    .sw[aria-checked="true"]{outline-width:2px;outline-offset:1px}
+    .user .who{display:none}
+    .lcard{padding:1.6rem 1.1rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<section id="login">
+  <header class="brand">
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
+    <div><b>School Hub</b><span>All your school systems in one place</span></div>
+  </header>
+  <main class="stage">
+    <div class="lcard">
+      <div class="lseal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
+      <h1>Welcome</h1>
+      <p class="sub">Sign in to open the School Hub</p>
+      <form id="loginForm" autocomplete="on">
+        <div id="loginErr" class="lerr" hidden></div>
+        <div><label for="lu">Username</label><input id="lu" name="u" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+        <div><label for="lp">Password</label>
+          <div class="pw"><input id="lp" name="p" type="password" required autocomplete="current-password"><button type="button" id="pwToggle" aria-label="Show password">Show</button></div>
+        </div>
+        <button class="lbtn" type="submit">Sign in</button>
+      </form>
+      <div class="demo" id="demo"><b>Prototype demo accounts</b> (tap to fill in)</div>
+    </div>
+  </main>
+  <div class="foot">Prototype made by Reyel · accounts are for demo only</div>
+</section>
+
+<!-- ================= LANDING ================= -->
+<section id="landing">
+  <header class="brand">
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
+    <div><b>School Hub</b><span>All your school systems in one place</span></div>
+    <div class="user">
+      <div class="who"><b id="whoName"></b><small id="whoPos"></small></div>
+      <div class="av" id="whoAv"></div>
+      <button class="out" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+  <main class="stage">
+    <h1>Which system are you using?</h1>
+    <p class="sub">All school systems in one place. Pick one to begin.</p>
+    <div class="grid" id="grid"></div>
+    <div class="picker" id="picker">
+      <b>Background color</b>
+      <div class="swatches" id="swatches" role="radiogroup" aria-label="Background color"></div>
+      <small id="bgName"></small>
+    </div>
+  </main>
+  <div class="foot">Prototype made by Reyel · press a number key 1–9 or 0 to jump to a system</div>
+</section>
+
+<!-- ================= APP SHELL ================= -->
+<section id="shell">
+  <div class="bar">
+    <button class="home" onclick="goHome()" title="Back to the Hub (Esc)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+      <span>Home</span>
+    </button>
+    <div class="cur"><i id="curIcon"></i><b id="curName"></b></div>
+    <div class="spacer"></div>
+    <div class="switch" id="switch"></div>
+    <a class="ext" id="ext" target="_blank" rel="noopener">↗ <span>Open in new tab</span></a>
+    <button class="out" onclick="logout()" title="Sign out of the Hub">Sign out</button>
+  </div>
+  <div class="view" id="view"></div>
+</section>
+
+<script>
+const ICONS = {
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M8 7h7M8 11h5"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  shield:'<path d="M12 3l8 3v6c0 4.5-3.3 8.3-8 9-4.7-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  box:'<path d="M21 8l-9-5-9 5 9 5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 10v4M18 10v4"/>',
+  idcard:'<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h4.5M14 13.5h3"/>',
+  enroll:'<path d="M9 4h6v3H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><circle cx="12" cy="11.5" r="2"/><path d="M8.5 17.5c.6-1.6 1.9-2.5 3.5-2.5s2.9.9 3.5 2.5"/>',
+  guide:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M12 15.5l-2.6-2.5a1.7 1.7 0 0 1 2.6-2.2 1.7 1.7 0 0 1 2.6 2.2z"/>',
+  ict:'<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M12 7.5v4.5M12 14.3v.1"/>',
+  tools:'<path d="M3 17.5L14.5 6l3.5 3.5L6.5 21H3z"/><path d="M12.5 8l3.5 3.5"/><path d="M15 3.5l5.5 5.5"/><path d="M4 4h5v5H4z"/>',
+  clinic:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
+  acct:'<rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M8 6.5h8M8 11h2M15.5 11h.5M8 14.5h2M15.5 14.5h.5M8 18h2M12 18h4"/>',
+  reg:'<path d="M6 2.5h8l4 4V21a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 21z"/><path d="M14 2.5V7h4M9 11h6M9 14.5h4"/><circle cx="15" cy="18" r="2"/>',
+  hr:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.6c2.6-.4 4.6 1.1 5 4.4"/>',
+  rpms:'<path d="M4 19V5a2 2 0 0 1 2-2h12v14H6a2 2 0 0 0-2 2zm0 0a2 2 0 0 0 2 2h12"/><path d="M9 8l1.6 1.6L14 6.5"/><path d="M9 13h5"/>',
+  read:'<path d="M2 5c3-1.3 6.5-1.3 10 1 3.5-2.3 7-2.3 10-1v14c-3-1.3-6.5-1.3-10 1-3.5-2.3-7-2.3-10-1z"/><path d="M12 6v14"/>',
+  math:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8.5h4M9 6.5v4M13.5 8.5h4M7 15l3 3M10 15l-3 3M13.5 15.2h4M13.5 17.8h4"/>',
+  data:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
+};
+const SYSTEMS = [
+  {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', bg:'#12285e', url:'https://momo-smart.vercel.app'},
+  {id:'bless',     name:'Bless Praise',      logo:'logos/bless.png', mode:'badge', crop:'background-size:150%;background-position:50% 62%', bg:'linear-gradient(135deg,#1c3a7a,#0e1f4d)', url:'https://reyel-boop.github.io/bless-praise-portal/'},
+  {id:'campus',    name:'CampusShield Pro',  logo:'logos/campusshield.png', mode:'full', bg:'#f5a00f', url:'https://campusshieldpro.onrender.com'},
+  {id:'inventory', name:'Inventory System',  icon:'box',    bg:'linear-gradient(135deg,#f59e0b,#d9480f)', url:'https://svnhs-property.vercel.app', embed:false},
+  {id:'complab',   name:'JHS Lab Kiosk',     logo:'logos/complab.png', mode:'full', bg:'#1d4ed8', url:'https://jhs-complab.vercel.app'},
+  {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
+  {id:'aralread', name:'Aral Reading',      icon:'read',   bg:'linear-gradient(135deg,#ec4899,#9d174d)', url:null},
+  {id:'aralmath',  name:'Aral Math',         icon:'math',   bg:'linear-gradient(135deg,#06b6d4,#4338ca)', url:null},
+  {id:'idsys',     name:'ID System',         icon:'idcard', bg:'linear-gradient(135deg,#64748b,#1e293b)', url:'idsystem/index.html'},
+  {id:'enroll',    name:'Enrollment System', icon:'enroll', bg:'linear-gradient(135deg,#a855f7,#6b21a8)', url:'enrollment/index.html'},
+  {id:'registrar', name:'Registrar',         icon:'reg',    bg:'linear-gradient(135deg,#d946ef,#86198f)', url:'registrar/index.html'},
+  {id:'guidance',  name:'E-Guidance',        icon:'guide',  bg:'linear-gradient(135deg,#10b981,#0f766e)', url:'guidance/index.html'},
+  {id:'ict',       name:'ICT Concerns',      icon:'ict',    bg:'linear-gradient(135deg,#f43f5e,#9f1239)', url:'ict/index.html'},
+  {id:'tools',     name:'Teacher Tools',     icon:'tools',  bg:'linear-gradient(135deg,#eab308,#a16207)', url:'teachertools/index.html'},
+  {id:'rpms',      name:'IPCR · LAC · Test Bank', icon:'rpms', bg:'linear-gradient(135deg,#ec4899,#831843)', url:'rpms/index.html'},
+  {id:'clinic',    name:'E-Clinic',          icon:'clinic', bg:'linear-gradient(135deg,#0ea5e9,#0c4a6e)', url:'clinic/index.html'},
+  {id:'accounting',name:'Accounting System', icon:'acct',   bg:'linear-gradient(135deg,#6366f1,#312e81)', url:'accounting/index.html'},
+  {id:'cashier',   name:'Cashiering System', icon:'cash',   bg:'linear-gradient(135deg,#22c55e,#14532d)', url:'cashiering/index.html'},
+  {id:'hr',        name:'HR',                icon:'hr',     bg:'linear-gradient(135deg,#14b8a6,#134e4a)', url:'hr/index.html'},
+];
+// What each system does — shown when hovering or focusing a tile.
+const DESC = {
+  momo:'Learning management system: classes, lessons, assignments, assessments, grading, and attendance for teachers and students.',
+  bless:'PRAISE awards portal: employee award nominations and evaluation (Best Adviser, Perfect Attendance, and more), monthly attendance reports, activity designs, and ILAW lesson planning.',
+  campus:'Campus safety: QR entry terminal at the gate, learner attendance roster and SF2, parent messaging, emergency console, and audit log.',
+  inventory:'Property custodian system: school equipment and supplies, property numbers and labels, issuance to employees, and inventory reports.',
+  complab:'Computer lab kiosk: learners time in and out of the JHS computer lab; teachers see who used which PC and when.',
+  tuon:'Five-minute lessons in languages, school subjects, money, career, AI, and life skills, with daily streaks and Mata the tarsier.',
+  aralread:'Reading support for the ARAL program: reading levels, remedial sessions, and learner progress. Coming soon.',
+  aralmath:'Math support for the ARAL program: numeracy levels, remedial sessions, and learner progress. Coming soon.',
+  idsys:'School IDs: students and staff apply with a photo, the ID Office approves and prints cards with QR codes, and guards can verify any ID.',
+  enroll:'Online enrollment: learners or parents fill out the form, the Registrar checks requirements and assigns sections, and advisers get their class lists.',
+  registrar:'Document requests: Form 137 (SF10), report card copies, certificates of enrollment and graduation, diplomas, and CAV, with a release logbook.',
+  guidance:'Guidance Office: teachers refer learners, learners ask for counseling or a Good Moral Certificate, and the counselor schedules sessions and keeps private notes.',
+  ict:'Report computer, internet, printer, or account problems. Each concern gets a ticket number, and the ICT admin updates its status.',
+  tools:'ILAW lesson plan maker, PowerPoint maker (downloads a real .pptx), and a live quiz game with a join code and leaderboard.',
+  rpms:'Teacher performance and growth: IPCR with self and rater ratings, LAC sessions with attendance and certificates, and a shared test bank with item analysis.',
+  clinic:'School clinic: clinic passes from teachers, visit logs with vital signs, learner health profiles and allergies, and medicine stock.',
+  accounting:'School finances: MOOE, canteen, and other funds; collections and disbursements; fund requests with Principal approval; and monthly cash-flow reports.',
+  cashier:'Cashier: issue official receipts (cash, GCash, bank), close the day, and remit collections straight to the Accounting System.',
+  hr:'Human resources: employee 201 files, leave applications with Principal approval, leave credits, and Certificates of Employment and Service Records.',
+};
+
+// Tile background + inner art. 'full' logos are already app icons, so they fill the tile;
+// 'badge' logos are round seals shown in a white circle on the brand color.
+const tileBg = s => s.mode==='full' ? `background:${s.bg} url(${s.logo}) center/cover no-repeat` : `background:${s.bg}`;
+const art = s => s.mode==='full' ? '' : s.mode==='badge'
+  ? `<span class="logo-badge" style="background-image:url(${s.logo});${s.crop}"></span>` : svg(s.icon);
+const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
+
+// Landing tiles
+document.getElementById('grid').innerHTML = SYSTEMS.map(s => `
+  <button class="sys" data-id="${s.id}" aria-describedby="hovertip" onclick="openSys('${s.id}')">
+    <div class="tile" ${s.mode==='full' ? 'data-full' : ''} style="${tileBg(s)}">${art(s)}${s.url?'':'<span class="badge">Soon</span>'}</div>
+    <div class="name">${s.name}</div>
+  </button>`).join('');
+
+// Hover / keyboard-focus description card, kept inside the window
+const tip = document.createElement('div'); tip.className = 'hovertip'; tip.id = 'hovertip'; tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+function showTip(btn){
+  const s = SYSTEMS.find(x => x.id === btn.dataset.id); if (!s) return;
+  tip.innerHTML = `<b>${s.name}</b>${DESC[s.id] || ''}${!s.url ? '<small>Not available yet</small>' : s.embed === false ? '<small>Opens in a new tab</small>' : ''}`;
+  const r = btn.querySelector('.tile').getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = r.left + r.width / 2 - w / 2; left = Math.max(8, Math.min(left, innerWidth - w - 8));
+  let top = btn.getBoundingClientRect().bottom + 8;  // below the tile and its name
+  if (top + h > innerHeight - 8) top = r.top - h - 8; // not enough room: show above
+  tip.style.left = left + 'px'; tip.style.top = top + 'px'; tip.classList.add('on');
+}
+const hideTip = () => tip.classList.remove('on');
+document.querySelectorAll('#grid .sys').forEach(b => {
+  b.addEventListener('mouseenter', () => showTip(b)); b.addEventListener('mouseleave', hideTip);
+  b.addEventListener('focus', () => showTip(b)); b.addEventListener('blur', hideTip);
+  b.addEventListener('click', hideTip);
+});
+window.addEventListener('scroll', hideTip, {passive:true});
+
+// Background colors (Manage Systems). Light ones switch the text to dark so it stays readable.
+const BACKGROUNDS = [
+  // dark
+  ['Midnight','#121417'], ['Charcoal','#2a2d33'], ['Navy','#0f1e3d'], ['Royal Blue','#1e3a8a'], ['Ocean Teal','#0f4c5c'],
+  ['Emerald','#064e3b'], ['Maroon','#4a0e1c'], ['Crimson','#7f1d1d'], ['Royal Purple','#3b0764'], ['Chocolate','#3e2723'],
+  // light (text switches to dark)
+  ['White Smoke','#f5f6f8', true], ['Light Gray','#e2e5ea', true], ['Cream','#f7f1e3', true], ['Sky','#dbeefe', true], ['Mint','#d9f7e4', true],
+  ['Seafoam','#cff7f0', true], ['Lavender','#e9e5fd', true], ['Blush','#fbe4ef', true], ['Peach','#ffe8d2', true], ['Lemon','#fdf6c8', true],
+];
+function applyBg(i){
+  const [name, c, light] = BACKGROUNDS[i] || BACKGROUNDS[0], r = document.documentElement.style;
+  r.setProperty('--bg', c);
+  r.setProperty('--bg2', `color-mix(in srgb, ${c} ${light ? '90%, #000' : '86%, #fff'})`);
+  r.setProperty('--line', `color-mix(in srgb, ${c} ${light ? '78%, #000' : '72%, #fff'})`);
+  r.setProperty('--text', light ? '#0f172a' : '#f2f4f7');
+  r.setProperty('--muted', light ? '#475569' : 'rgba(255,255,255,.72)');
+  document.querySelectorAll('#swatches .sw').forEach((b, j) => b.setAttribute('aria-checked', String(j === i)));
+  const n = document.getElementById('bgName'); if (n) n.textContent = name;
+}
+document.getElementById('swatches').innerHTML = BACKGROUNDS.map(([name, c], i) =>
+  `<button class="sw" role="radio" aria-checked="false" title="${name}" aria-label="${name}" style="background:${c}" onclick="pickBg(${i})"></button>`).join('');
+function pickBg(i){ applyBg(i); try { localStorage.setItem('svnhs-hub-bg', BACKGROUNDS[i][0]); } catch(e) {} }
+let savedBg = 0; try { const v = localStorage.getItem('svnhs-hub-bg'); savedBg = Math.max(0, BACKGROUNDS.findIndex(b => b[0] === v)); } catch(e) {}
+applyBg(savedBg);
+
+// Quick-switch strip in the top bar
+document.getElementById('switch').innerHTML = SYSTEMS.map(s =>
+  `<button data-id="${s.id}" title="${s.name} — ${(DESC[s.id] || '').replace(/"/g, '&quot;')}" style="${tileBg(s)}" onclick="openSys('${s.id}')">${art(s)}</button>`).join('');
+
+const frames = {}; // keep each system loaded so switching back is instant
+
+// Single sign-in: which account each Hub user opens in each built-in system (no second password).
+// null = this Hub user has no access to that system. Online systems (Momo, CampusShield, ...) keep their own sign-in.
+const ACCESS = {
+  //            admin         principal     teacher      staff        student
+  accounting: {admin:'bookkeeper', principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
+  cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:'student'},
+  clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:'student'},
+  enroll:     {admin:'registrar',  principal:'registrar', teacher:'teacher', staff:'registrar', student:null},
+  guidance:   {admin:'counselor',  principal:'counselor', teacher:'teacher', staff:'teacher',   student:'student'},
+  hr:         {admin:'hr',         principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
+  ict:        {admin:'admin',      principal:'teacher',   teacher:'teacher', staff:'registrar', student:null},
+  idsys:      {admin:'idadmin',    principal:'idadmin',   teacher:'teacher', staff:'teacher',   student:null},
+  registrar:  {admin:'registrar',  principal:'registrar', teacher:null,      staff:'registrar', student:'student'},
+  rpms:       {admin:'principal',  principal:'principal', teacher:'teacher', staff:null,        student:null},
+  tools:      {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:null},
+};
+// Online systems (they have no row above) that a Hub account may not open.
+const BLOCKED_ONLINE = {
+  student: ['bless', 'inventory'],
+};
+const hasAccess = s => !me || (!(BLOCKED_ONLINE[me.u] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][me.u]));
+const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent(ACCESS[s.id][me.u]) : s.url;
+function markAccess(){
+  document.querySelectorAll('#grid .sys, #switch button').forEach(b => {
+    const s = SYSTEMS.find(x => x.id === b.dataset.id); b.classList.toggle('noaccess', !hasAccess(s));
+  });
+}
+
+function render(){
+  const id = location.hash.replace('#/','');
+  if(!me){ document.title = 'Sign in · School Hub'; return; } // stay on the sign-in screen; open the system after sign-in
+  // a system this account can't use doesn't exist for them: a link to it just lands on the Hub
+  const s = SYSTEMS.find(x => x.id === id && hasAccess(x));
+  if(id && !s) history.replaceState(null, '', location.pathname);
+  document.body.classList.toggle('in-app', !!s);
+  if(!s){ document.title='School Hub'; return; }
+
+  document.title = s.name + ' · School Hub';
+  document.getElementById('curName').textContent = s.name;
+  const ci=document.getElementById('curIcon'); ci.style.cssText = tileBg(s); ci.innerHTML = art(s);
+  document.querySelectorAll('#switch button').forEach(b => b.classList.toggle('on', b.dataset.id===id));
+  const ext = document.getElementById('ext');
+  ext.style.display = s.url ? '' : 'none';
+  if(s.url) ext.href = sysUrl(s);
+
+  const view = document.getElementById('view');
+  [...view.children].forEach(c => c.style.display='none');
+  if(!frames[id]){
+    let el;
+    if(s.url && s.embed!==false){
+      el = document.createElement('iframe');
+      el.src = sysUrl(s); el.title = s.name;
+      el.allow = 'camera; microphone; clipboard-write';
+    } else if(s.url){
+      el = document.createElement('div');
+      el.className = 'soon';
+      el.innerHTML = `<div class="tile" style="${tileBg(s)}">${art(s)}</div>
+        <h2>${s.name}</h2>
+        <p>For security, this system only runs in its own tab. Open it below, then come back to this tab or press Home to return to the Hub.</p>
+        <a class="home" href="${sysUrl(s)}" target="_blank" rel="noopener" style="text-decoration:none">Open ${s.name} ↗</a>`;
+    } else {
+      el = document.createElement('div');
+      el.className = 'soon';
+      el.innerHTML = `<div class="tile" style="${tileBg(s)}">${art(s)}</div>
+        <h2>${s.name}</h2>
+        <p>This system is still being built. When it's ready, it will open here, and the Home button above will always bring you back to the Hub.</p>
+        <button class="home" onclick="goHome()">${'Back to Hub'}</button>`;
+    }
+    frames[id] = el; view.appendChild(el);
+  }
+  frames[id].style.display = '';
+}
+function openSys(id){ location.hash = '#/' + id; }
+function goHome(){ location.hash = ''; history.replaceState(null,'',location.pathname); render(); }
+
+// ---------- Hub sign-in (PROTOTYPE: demo accounts, plain-text passwords, session kept per browser tab) ----------
+const HUB_USERS = [
+  {u:'admin',     p:'admin123',   name:'School Admin',     pos:'System Administrator'},
+  {u:'principal', p:'principal123', name:'School Principal', pos:'Principal'},
+  {u:'teacher',   p:'teacher123', name:'Juan Dela Cruz',   pos:'Teacher'},
+  {u:'staff',     p:'staff123',   name:'Maria Santos',     pos:'Office Staff'},
+  {u:'student',   p:'student123', name:'Ana Reyes',        pos:'Student'},
+];
+const SESSION_KEY = 'svnhs-hub-session';
+let me = null;
+const escH = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+document.getElementById('demo').insertAdjacentHTML('beforeend', HUB_USERS.map(a =>
+  `<button type="button" data-u="${a.u}" data-p="${a.p}">${escH(a.pos)} — ${a.u} / ${a.p}</button>`).join(''));
+document.querySelectorAll('#demo button').forEach(b => b.onclick = () => {
+  const f = document.getElementById('loginForm'); f.u.value = b.dataset.u; f.p.value = b.dataset.p; f.p.focus();
+});
+document.getElementById('pwToggle').onclick = e => {
+  const i = document.getElementById('lp'), show = i.type === 'password';
+  i.type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show';
+  e.target.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+};
+document.getElementById('loginForm').onsubmit = e => {
+  e.preventDefault();
+  const f = e.target, u = f.u.value.trim().toLowerCase();
+  const acc = HUB_USERS.find(x => x.u === u && x.p === f.p.value);
+  const err = document.getElementById('loginErr');
+  if(!acc){ err.textContent = 'Wrong username or password.'; err.hidden = false; f.p.select(); return; }
+  err.hidden = true; f.reset(); signIn(acc);
+};
+function signIn(acc){
+  me = acc; try { sessionStorage.setItem(SESSION_KEY, acc.u); } catch(e) {}
+  document.getElementById('whoName').textContent = acc.name;
+  document.getElementById('whoPos').textContent = acc.pos;
+  document.getElementById('whoAv').textContent = acc.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  document.body.classList.add('authed');
+  markAccess(); render();
+}
+function logout(){
+  me = null; try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+  // close every open system so the next person starts fresh under their own account
+  for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
+  hideTip(); goHome();
+  document.body.classList.remove('authed');
+  document.title = 'Sign in · School Hub';
+  setTimeout(() => document.getElementById('lu').focus(), 0);
+}
+
+window.addEventListener('hashchange', render);
+document.addEventListener('keydown', e => {
+  if(!me) return;
+  if(e.target.closest('input,textarea')) return;
+  if(e.key === 'Escape' && document.body.classList.contains('in-app')) goHome();
+  if(!document.body.classList.contains('in-app') && /^[0-9]$/.test(e.key)){ const i = e.key==='0' ? 9 : e.key-1; const vis = SYSTEMS.filter(hasAccess); if(vis[i]) openSys(vis[i].id); }
+});
+let savedUser = null; try { savedUser = sessionStorage.getItem(SESSION_KEY); } catch(e) {}
+const savedAcc = savedUser && HUB_USERS.find(x => x.u === savedUser);
+if(savedAcc) signIn(savedAcc); else { render(); document.getElementById('lu').focus(); }
+</script>
+</body>
+</html>

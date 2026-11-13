@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+  :root{--brand:#b45309;--brand-d:#78350f;--brand-soft:#fef3c7;--grad:linear-gradient(135deg,#eab308,#a16207)}
+  .toolgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .tool{background:#fff;border:1px solid var(--line);border-radius:.9rem;padding:1.3rem;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:.6rem}
+  .tool:hover{border-color:var(--brand);box-shadow:0 6px 18px rgba(120,53,15,.08)}
+  .tool .ti{width:3rem;height:3rem;border-radius:.7rem;display:grid;place-items:center;color:#fff}
+  .tool .ti svg{width:1.6rem;height:1.6rem}
+  .tool b{font-size:1.05rem;font-weight:600}
+  .tool p{color:var(--muted);font-size:.85rem}
+  .tool small{color:var(--brand-d);font-weight:500;font-size:.8rem}
+  .side{display:grid;grid-template-columns:16rem 1fr;gap:1rem;align-items:start}
+  .mylist{display:flex;flex-direction:column;gap:.4rem}
+  .mylist button{text-align:left;border:1px solid var(--line);background:#fff;border-radius:.5rem;padding:.55rem .7rem;font-size:.84rem}
+  .mylist button.on{border-color:var(--brand);background:var(--brand-soft)}
+  .mylist button small{display:block;color:var(--muted);font-size:.72rem}
+  /* ILAW editor */
+  .part{border:1px solid var(--line);border-radius:.7rem;margin-top:1rem;overflow:hidden}
+  .part > h3{background:#f1f5f9;padding:.6rem .9rem;font-size:.9rem;font-weight:600}
+  .prow{padding:.7rem .9rem;border-top:1px solid var(--line)}
+  .prow > label{font-size:.82rem}
+  .prow .help{color:var(--muted);font-size:.72rem;margin:-.15rem 0 .4rem;white-space:pre-line}
+  .sess{display:grid;gap:.5rem}
+  .sess textarea{min-height:6rem;font-size:.83rem}
+  .sess small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:.15rem}
+  .focusrows{display:grid;gap:.4rem}
+  /* slides */
+  .slides{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.8rem}
+  .slide{aspect-ratio:16/9;border-radius:.4rem;overflow:hidden;position:relative;container-type:inline-size;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .slide .in{position:absolute;inset:0;padding:6cqw 7cqw;display:flex;flex-direction:column}
+  .slide h4{font-size:6cqw;line-height:1.15;font-weight:700;margin-bottom:3cqw}
+  .slide ul{font-size:3.6cqw;line-height:1.45;padding-left:4cqw}
+  .slide.title .in{justify-content:center}
+  .slide.title h4{font-size:8cqw}
+  .slide.title p{font-size:4cqw;opacity:.85}
+  .slide .bar{position:absolute;left:0;bottom:0;height:2.2cqw;width:100%}
+  .slide .num{position:absolute;right:3cqw;bottom:3.5cqw;font-size:2.6cqw;opacity:.6}
+  .themes{display:flex;gap:.5rem;flex-wrap:wrap}
+  .themes label{margin:0;cursor:pointer;border:2px solid transparent;border-radius:.5rem;padding:2px}
+  .themes label:has(input:checked){border-color:var(--brand)}
+  .themes input{display:none}
+  .themes span{display:block;width:4.2rem;height:2.4rem;border-radius:.35rem}
+  .outline{font-family:ui-monospace,Consolas,monospace;font-size:.83rem;min-height:18rem}
+  #show{position:fixed;inset:0;background:#000;z-index:50;display:none;align-items:center;justify-content:center}
+  #show.on{display:flex}
+  #show .slide{width:min(100vw,177.7vh);box-shadow:none;border-radius:0}
+  #show .ctl{position:fixed;bottom:1rem;right:1rem;display:flex;gap:.5rem}
+  #show .ctl button{background:rgba(255,255,255,.15);color:#fff;border-radius:.4rem;padding:.4rem .8rem}
+  /* quiz */
+  .qcard{border:1px solid var(--line);border-radius:.7rem;padding:1rem;background:#fff}
+  .qcard .opts{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+  .opt{display:flex;gap:.5rem;align-items:center}
+  .opt input[type=radio]{width:auto;accent-color:#16a34a}
+  .shape{width:1.6rem;height:1.6rem;border-radius:.3rem;display:grid;place-items:center;color:#fff;font-size:.8rem;flex:none}
+  .c0{background:#e11d48}.c1{background:#2563eb}.c2{background:#ca8a04}.c3{background:#16a34a}
+  .stage{background:#1f1147;color:#fff;border-radius:.9rem;padding:1.5rem;min-height:28rem;display:flex;flex-direction:column;gap:1rem}
+  .stage .code{font-size:3.2rem;font-weight:700;letter-spacing:.3em}
+  .stage .players{display:flex;flex-wrap:wrap;gap:.5rem}
+  .stage .players span{background:rgba(255,255,255,.14);padding:.3rem .8rem;border-radius:1rem}
+  .stage .qtext{font-size:1.6rem;font-weight:600;text-align:center;background:#fff;color:#1f1147;border-radius:.6rem;padding:1rem}
+  .stage .answers{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .stage .ans{border-radius:.5rem;padding:1rem;font-size:1.15rem;font-weight:600;display:flex;gap:.7rem;align-items:center}
+  .stage .ans.dim{opacity:.35}
+  .stage .ans .n{margin-left:auto;background:rgba(0,0,0,.25);border-radius:1rem;padding:.1rem .6rem;font-size:.9rem}
+  .stage .timer{width:4rem;height:4rem;border-radius:50%;background:#7c3aed;display:grid;place-items:center;font-size:1.5rem;font-weight:700}
+  .stage .row2{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+  .stage .btn{background:#fff;color:#1f1147}
+  .lb{display:flex;flex-direction:column;gap:.4rem}
+  .lb div{display:flex;justify-content:space-between;background:rgba(255,255,255,.1);border-radius:.4rem;padding:.5rem .8rem}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:.8rem;margin-top:1rem}
+  .podium > div{background:rgba(255,255,255,.15);border-radius:.5rem .5rem 0 0;width:9rem;text-align:center;padding:.8rem .4rem}
+  .podium b{display:block;font-size:1.1rem}
+  @media (max-width:760px){ .toolgrid,.side{grid-template-columns:1fr} .qcard .opts,.stage .answers{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div id="show"></div>
+<script src="ilaw.js"></script>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5L14.5 6l3.5 3.5L6.5 21H3z"/><path d="M12.5 8l3.5 3.5"/><path d="M15 3.5l5.5 5.5"/><path d="M4 4h5v5H4z"/></svg>';
+const AREAS = ['Science','Math','English','Filipino','Araling Panlipunan','TLE','Values Education','MAPEH'];
+const SHAPES = ['▲','◆','●','■'];
+
+const SAMPLE_QUIZ = {id:1, title:'Science Review: The Cell', updated:Date.now(), questions:[
+  {q:'What is the basic unit of life?', c:['Atom','Cell','Tissue','Organ'], a:1, t:20},
+  {q:'Which part controls the activities of the cell?', c:['Nucleus','Cell wall','Cytoplasm','Vacuole'], a:0, t:20},
+  {q:'Which organelle makes food in plant cells?', c:['Mitochondria','Ribosome','Chloroplast','Golgi body'], a:2, t:20},
+  {q:'Which is found in plant cells but NOT in animal cells?', c:['Cell membrane','Nucleus','Cytoplasm','Cell wall'], a:3, t:30},
+]};
+
+const CFG = {
+  key:'svnhs-tt', title:'Teacher Tools', subtitle:'SVNHS', icon:ICON,
+  roles:{ teacher:{tagline:'Lesson plans, slides, and live quizzes in one place.',
+    tabs:[['home','All Tools'],['ilaw','ILAW Lesson Plan'],['ppt','PowerPoint Maker'],['quiz','Live Quiz']]} },
+  signup:{roles:[['teacher','Teacher']], posLabel:{teacher:'Position'}, posHint:{teacher:'e.g. Teacher I'}},
+  demo:[['teacher','teacher123','Teacher']],
+  sampleUsers:[{u:'teacher', p:'teacher123', name:'Grade 9 Adviser', pos:'Teacher I', role:'teacher'}],
+  data:{ plans:[], decks:[], quizzes:[SAMPLE_QUIZ] },
+  views:{home, ilaw: ilawView, ppt: pptView, quiz: quizView},
+};
+const mine = k => P.db[k].filter(x => !x.by || x.by === P.me.u);
+const newId = k => P.db[k].reduce((m, x) => Math.max(m, x.id), 0) + 1;
+
+/* ================= HOME ================= */
+function home(el){
+  const tool = (tab, bg, svg, name, text, count) => `<button class="tool" onclick="P.tab('${tab}')"><div class="ti" style="background:${bg}">${svg}</div><b>${name}</b><p>${text}</p><small>${count}</small></button>`;
+  el.innerHTML = `<div class="toolgrid">
+    ${tool('ilaw','linear-gradient(135deg,#f59e0b,#b45309)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg>',
+      'ILAW Lesson Plan','Make a draft in the school\'s Daily Lesson Log ILAW format, edit it, and print or save as PDF.', mine('plans').length + ' saved plan(s)')}
+    ${tool('ppt','linear-gradient(135deg,#f97316,#c2410c)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v4M8 21h8M7 8h6M7 12h10"/></svg>',
+      'PowerPoint Maker','Type an outline or use your ILAW plan. Preview, present, and download a real .pptx file.', mine('decks').length + ' saved deck(s)')}
+    ${tool('quiz','linear-gradient(135deg,#8b5cf6,#5b21b6)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9M12 17.2v.1"/></svg>',
+      'Live Quiz','Host a timed quiz game. Learners join with a code and race for points on the leaderboard.', mine('quizzes').length + ' quiz(zes)')}
+  </div>`;
+}
+
+/* ================= ILAW ================= */
+let curPlan = null, curPlanId = null;
+function ilawView(el){
+  const plans = mine('plans').sort((a,b) => b.updated - a.updated);
+  el.innerHTML = `<div class="side">
+    <div class="card"><h3 class="sec">My lesson plans</h3><div class="mylist">
+      <button class="${!curPlan ? 'on' : ''}" onclick="curPlan=null;curPlanId=null;P.refresh()">＋ New lesson plan</button>
+      ${plans.map(p => `<button class="${curPlanId === p.id ? 'on' : ''}" onclick="openPlan(${p.id})">${esc(p.plan.title || 'Untitled')}<small>${esc(p.plan.area)} · ${esc(p.plan.gradeSection)} · ${ago(p.updated)}</small></button>`).join('')}
+    </div></div>
+    <div id="ilawMain"></div></div>`;
+  curPlan ? planEditor($('ilawMain')) : planForm($('ilawMain'));
+}
+function openPlan(id){ const p = P.db.plans.find(x => x.id === id); curPlan = clone(p.plan); curPlanId = id; P.refresh(); }
+function planForm(el){
+  el.innerHTML = `<div class="card"><h2>New ILAW lesson plan</h2>
+    <p class="hint">Fill in the basics and the tool writes a first draft for every part of the ILAW template. You then edit it to fit your class.</p>
+    <form class="form" id="gf">
+      <div class="full"><label>Lesson title / topic <i>*</i></label><input name="title" required placeholder="e.g. Parts and Functions of the Cell"></div>
+      <div><label>Learning area <i>*</i></label><select name="area">${AREAS.map(a => `<option>${a}</option>`).join('')}</select></div>
+      <div><label>Grade level &amp; section <i>*</i></label><input name="gradeSection" required placeholder="e.g. Grade 7 – Sampaguita"></div>
+      <div class="full"><label>Learning competency (from the curriculum guide)</label><textarea name="competency" style="min-height:4rem" placeholder="Paste the competency and its code, if you have it"></textarea></div>
+      <div><label>Number of sessions</label><select name="sessions" id="nSess">${[1,2,3,4,5].map(n => `<option>${n}</option>`).join('')}</select></div>
+      <div><label>Name of teacher</label><input name="teacher" value="${esc(P.me.name)}"></div>
+      <div class="full"><label>Focus of each session (optional)</label><div class="focusrows" id="focus"></div></div>
+      <div class="full"><label>Learner context (optional)</label><textarea name="context" style="min-height:4rem" placeholder="Your observations of the class: strengths, interests, difficulties"></textarea></div>
+      <div class="full actions"><button class="btn">Generate draft</button></div>
+    </form></div>`;
+  const syncFocus = () => { const n = +$('nSess').value; $('focus').innerHTML = Array.from({length:n}, (_, i) => `<input name="focus${i}" placeholder="Session ${i + 1} focus, e.g. ${['Introduction and key terms','Guided practice','Application / performance task','Review','Assessment'][i]}">`).join(''); };
+  $('nSess').onchange = syncFocus; syncFocus();
+  $('gf').onsubmit = e => {
+    e.preventDefault(); const d = Object.fromEntries(new FormData(e.target));
+    curPlan = generatePlan({...d, focus: Array.from({length:+d.sessions}, (_, i) => d['focus' + i])});
+    curPlanId = null; P.refresh();
+  };
+}
+function planEditor(el){
+  const p = curPlan, n = p.sessions.length;
+  const area = v => `<textarea data-k="${v}" style="min-height:3rem">${esc(p[v])}</textarea>`;
+  el.innerHTML = `<div class="card">
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
+      <div><h2>${esc(p.title || 'Lesson plan')}</h2><p class="hint" style="margin:0">Edit any box. Remember to save.</p></div>
+      <div class="actions"><span class="saved" id="planSaved" hidden>✓ Saved</span>
+        <button class="btn ghost" onclick="printPlan()">Print / PDF</button>
+        <button class="btn ghost" onclick="slidesFromPlan()">Make slides</button>
+        ${curPlanId ? `<button class="btn ghost" onclick="deletePlan()">Delete</button>` : ''}
+        <button class="btn" onclick="savePlan()">Save</button></div></div>
+    <div class="form" style="margin-top:1rem">
+      ${ILAW_HEAD.map(([k, label]) => `<div class="${k === 'references' || k === 'aiUse' ? 'full' : ''}"><label>${label}</label>${k === 'references' || k === 'aiUse' ? area(k) : `<input data-k="${k}" value="${esc(p[k])}">`}</div>`).join('')}
+    </div>
+    ${planRows(p).map(part => `<div class="part"><h3>${part.title}</h3>
+      ${part.rows.map(r => `<div class="prow"><label>${esc(r.label)}</label>${r.help ? `<div class="help">${esc(r.help.split('\n')[0])}</div>` : ''}
+        <div class="sess" style="grid-template-columns:repeat(${Math.min(n, 3)},1fr)">${p.sessions.map((s, i) => `<div><small>${esc(s)}</small><textarea data-cell="${r.key}" data-i="${i}">${esc((p.cells[r.key] || [])[i] || '')}</textarea></div>`).join('')}</div></div>`).join('')}
+    </div>`).join('')}
+  </div>`;
+  el.querySelectorAll('[data-k]').forEach(x => x.oninput = () => { p[x.dataset.k] = x.value; });
+  el.querySelectorAll('[data-cell]').forEach(x => x.oninput = () => { (p.cells[x.dataset.cell] = p.cells[x.dataset.cell] || [])[+x.dataset.i] = x.value; });
+}
+function savePlan(){
+  if (curPlanId) { const s = P.db.plans.find(x => x.id === curPlanId); s.plan = clone(curPlan); s.updated = Date.now(); }
+  else { curPlanId = newId('plans'); P.db.plans.push({id:curPlanId, by:P.me.u, plan:clone(curPlan), updated:Date.now()}); }
+  P.save(); P.refresh(); $('planSaved').hidden = false;
+}
+function deletePlan(){ if (!confirm('Delete this lesson plan?')) return; P.db.plans = P.db.plans.filter(x => x.id !== curPlanId); curPlan = null; curPlanId = null; P.save(); P.refresh(); }
+function printPlan(){
+  const html = ilawPrint(curPlan, {esc, baseUrl:'', checkedBy:''});
+  const w = window.open(URL.createObjectURL(new Blob([html], {type:'text/html'})), '_blank');
+  if (!w) alert('Your browser blocked the print window. Allow pop-ups for this page and try again.');
+}
+
+/* ================= POWERPOINT ================= */
+const THEMES = {
+  classic:{name:'Classic Blue', bg:'1E3A8A', title:'FFFFFF', text:'E0E7FF', accent:'F5B301', cbg:'FFFFFF', ctitle:'1E3A8A', ctext:'1F2937'},
+  sunrise:{name:'Sunrise', bg:'C2410C', title:'FFFFFF', text:'FFEDD5', accent:'FDE68A', cbg:'FFF7ED', ctitle:'9A3412', ctext:'292524'},
+  forest:{name:'Forest', bg:'14532D', title:'FFFFFF', text:'DCFCE7', accent:'A3E635', cbg:'F7FEE7', ctitle:'14532D', ctext:'1C1917'},
+  night:{name:'Night', bg:'111827', title:'FFFFFF', text:'D1D5DB', accent:'38BDF8', cbg:'1F2937', ctitle:'F9FAFB', ctext:'E5E7EB'},
+};
+let deck = null, deckId = null;
+const blankDeck = () => ({title:'', subtitle:P.me.name, theme:'classic', outline:'# Learning objectives\n- \n- \n\n# Let\'s review\n- \n\n# Activity\n- \n'});
+function parseOutline(t){
+  const S = []; let cur = null;
+  for (const raw of String(t).split('\n')) {
+    const line = raw.trim(); if (!line) continue;
+    if (line.startsWith('#')) { cur = {title: line.replace(/^#+\s*/, ''), bullets: []}; S.push(cur); }
+    else { if (!cur) { cur = {title:'', bullets:[]}; S.push(cur); } const b = line.replace(/^[-•*\d.)\s]+/, '').trim(); if (b) cur.bullets.push(b); }
+  }
+  return S;
+}
+function slideHTML(th, s, i){
+  const T = THEMES[th];
+  if (s.kind === 'title') return `<div class="slide title" style="background:#${T.bg};color:#${T.title}"><div class="in"><h4>${esc(s.title || 'Presentation title')}</h4><p style="color:#${T.text}">${esc(s.sub || '')}</p></div><div class="bar" style="background:#${T.accent}"></div></div>`;
+  return `<div class="slide" style="background:#${T.cbg}"><div class="in"><h4 style="color:#${T.ctitle}">${esc(s.title)}</h4><ul style="color:#${T.ctext}">${s.bullets.slice(0, 8).map(b => `<li>${esc(b)}</li>`).join('')}</ul></div><div class="bar" style="background:#${T.bg}"></div><div class="num" style="color:#${T.ctext}">${i}</div></div>`;
+}
+const allSlides = d => [{kind:'title', title:d.title, sub:d.subtitle}].concat(parseOutline(d.outline).map(s => ({kind:'content', ...s})));
+function pptView(el){
+  if (!deck) deck = blankDeck();
+  const decks = mine('decks').sort((a,b) => b.updated - a.updated), plans = mine('plans');
+  el.innerHTML = `<div class="side">
+    <div class="card"><h3 class="sec">My slide decks</h3><div class="mylist">
+      <button class="${!deckId ? 'on' : ''}" onclick="deck=null;deckId=null;P.refresh()">＋ New deck</button>
+      ${decks.map(d => `<button class="${deckId === d.id ? 'on' : ''}" onclick="openDeck(${d.id})">${esc(d.deck.title || 'Untitled')}<small>${allSlides(d.deck).length} slides · ${ago(d.updated)}</small></button>`).join('')}
+    </div>
+    ${plans.length ? `<h3 class="sec" style="margin-top:1rem">From a lesson plan</h3><div class="mylist">${plans.map(p => `<button onclick="slidesFromPlan(${p.id})">${esc(p.plan.title || 'Untitled')}<small>Make slides from this plan</small></button>`).join('')}</div>` : ''}
+    </div>
+    <div class="stack">
+      <div class="card"><div class="form">
+        <div><label>Title</label><input id="dTitle" value="${esc(deck.title)}" placeholder="e.g. Parts of the Cell"></div>
+        <div><label>Subtitle / teacher</label><input id="dSub" value="${esc(deck.subtitle)}"></div>
+        <div class="full"><label>Theme</label><div class="themes">${Object.entries(THEMES).map(([k, t]) => `<label title="${t.name}"><input type="radio" name="th" value="${k}" ${deck.theme === k ? 'checked' : ''}><span style="background:linear-gradient(135deg,#${t.bg} 50%,#${t.cbg} 50%)"></span></label>`).join('')}</div></div>
+        <div class="full"><label>Slides outline — start each slide with <b>#</b>, then one bullet per line</label><textarea id="dOut" class="outline">${esc(deck.outline)}</textarea></div>
+        <div class="full actions"><span class="saved" id="deckSaved" hidden>✓ Saved</span>
+          ${deckId ? '<button class="btn ghost" onclick="deleteDeck()">Delete</button>' : ''}
+          <button class="btn ghost" onclick="present(0)">▶ Present</button>
+          <button class="btn ghost" onclick="saveDeck()">Save</button>
+          <button class="btn" onclick="downloadPptx()">Download .pptx</button></div>
+      </div></div>
+      <div class="card"><h3 class="sec">Preview (<span id="nSlides"></span> slides)</h3><div class="slides" id="preview"></div></div>
+    </div></div>`;
+  const sync = () => {
+    deck.title = $('dTitle').value; deck.subtitle = $('dSub').value; deck.outline = $('dOut').value;
+    deck.theme = (el.querySelector('input[name=th]:checked') || {}).value || 'classic';
+    const S = allSlides(deck); $('nSlides').textContent = S.length;
+    $('preview').innerHTML = S.map((s, i) => `<div onclick="present(${i})" style="cursor:pointer">${slideHTML(deck.theme, s, i)}</div>`).join('');
+  };
+  el.querySelectorAll('input,textarea').forEach(x => { x.oninput = sync; x.onchange = sync; });
+  sync();
+}
+function openDeck(id){ deck = clone(P.db.decks.find(x => x.id === id).deck); deckId = id; P.refresh(); }
+function saveDeck(){
+  if (deckId) { const s = P.db.decks.find(x => x.id === deckId); s.deck = clone(deck); s.updated = Date.now(); }
+  else { deckId = newId('decks'); P.db.decks.push({id:deckId, by:P.me.u, deck:clone(deck), updated:Date.now()}); }
+  P.save(); P.refresh(); $('deckSaved').hidden = false;
+}
+function deleteDeck(){ if (!confirm('Delete this slide deck?')) return; P.db.decks = P.db.decks.filter(x => x.id !== deckId); deck = null; deckId = null; P.save(); P.refresh(); }
+// Turn an ILAW plan into a teaching deck (uses Session 1 for session-specific parts).
+function slidesFromPlan(id){
+  const p = id ? P.db.plans.find(x => x.id === id).plan : curPlan;
+  const cell = k => ((p.cells[k] || [])[0] || '');
+  const bullets = t => String(t).split('\n').map(s => s.replace(/^[-•*\s]*(\d+\.\s*)?([a-z]\.\s*)?/i, '').trim()).filter(s => s && !/^focus:/i.test(s) && !/^at the end of the session/i.test(s) && !/^to be completed/i.test(s));
+  const flow = bullets(cell('flow')).map(s => s.replace(/\s*\(\d+\s*min\)/, ''));
+  const sec = (t, list) => list.length ? `# ${t}\n${list.map(b => '- ' + b).join('\n')}\n` : '';
+  deck = {title:p.title, subtitle:[p.area, p.gradeSection, p.teachers].filter(Boolean).join(' · '), theme:'classic',
+    outline:[sec('Learning objectives', bullets(cell('objectives'))), sec('Let\'s get ready', bullets(cell('prelesson'))),
+      ...flow.map((f, i) => sec(f.split(':')[0] || 'Activity ' + (i + 1), [f.includes(':') ? f.split(':').slice(1).join(':').trim() : f])),
+      sec('Check your understanding', bullets(cell('formative')).slice(0, 3)), sec('Reflection', ['Why does this lesson matter to me?', 'What do I still want to learn?']),
+      sec('Assignment', bullets(cell('extended')))].join('\n')};
+  deckId = null; P.tab('ppt');
+}
+function downloadPptx(){
+  if (!window.PptxGenJS) { alert('The PowerPoint library did not load. Check the internet connection and reload.'); return; }
+  const T = THEMES[deck.theme], pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_WIDE'; pptx.title = deck.title || 'Presentation';
+  allSlides(deck).forEach((s, i) => {
+    const sl = pptx.addSlide();
+    if (s.kind === 'title') {
+      sl.background = {color:T.bg};
+      sl.addText(s.title || 'Presentation title', {x:0.8, y:2.3, w:11.7, h:1.6, fontSize:44, bold:true, color:T.title, fontFace:'Arial'});
+      sl.addText(s.sub || '', {x:0.8, y:3.9, w:11.7, h:0.8, fontSize:22, color:T.text, fontFace:'Arial'});
+      sl.addShape(pptx.ShapeType.rect, {x:0, y:7.2, w:13.33, h:0.3, fill:{color:T.accent}, line:{color:T.accent}});
+    } else {
+      sl.background = {color:T.cbg};
+      sl.addText(s.title, {x:0.7, y:0.45, w:11.9, h:1.0, fontSize:34, bold:true, color:T.ctitle, fontFace:'Arial'});
+      if (s.bullets.length) sl.addText(s.bullets.map(b => ({text:b, options:{bullet:true, breakLine:true}})), {x:0.9, y:1.6, w:11.5, h:5.3, fontSize:22, color:T.ctext, fontFace:'Arial', valign:'top', paraSpaceAfter:8});
+      sl.addShape(pptx.ShapeType.rect, {x:0, y:7.3, w:13.33, h:0.2, fill:{color:T.bg}, line:{color:T.bg}});
+      sl.addText(String(i), {x:12.3, y:6.85, w:0.7, h:0.35, fontSize:12, color:T.ctext, align:'right'});
+    }
+  });
+  pptx.writeFile({fileName:(deck.title || 'presentation').replace(/[^\w\- ]+/g, '').trim() + '.pptx'});
+}
+let showI = 0;
+function present(i){
+  const S = allSlides(deck); showI = Math.max(0, Math.min(S.length - 1, i));
+  $('show').innerHTML = slideHTML(deck.theme, S[showI], showI) + `<div class="ctl"><button onclick="present(${showI - 1})">‹ Prev</button><span style="color:#fff;align-self:center;font-size:.85rem">${showI + 1} / ${S.length}</span><button onclick="present(${showI + 1})">Next ›</button><button onclick="endShow()">✕ Exit</button></div>`;
+  $('show').classList.add('on');
+}
+function endShow(){ $('show').classList.remove('on'); }
+document.addEventListener('keydown', e => {
+  if (!$('show').classList.contains('on')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') present(showI + 1);
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') present(showI - 1);
+  if (e.key === 'Escape') endShow();
+});
+
+/* ================= LIVE QUIZ ================= */
+let qEdit = null, qEditId = null, game = null, poll = null, lastSig = "";
+const LKEY = c => 'svnhs-live-' + c, PKEY = c => 'svnhs-livep-' + c + '-';
+const readJSON = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
+function quizView(el){
+  if (game) return hostView(el);
+  if (qEdit) return quizEditor(el);
+  const Q = mine('quizzes').sort((a,b) => b.updated - a.updated);
+  el.innerHTML = `<div class="stack">
+    <div class="card" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
+      <div><h2>Live Quiz</h2><p class="hint" style="margin:0">Make a quiz, then press <b>Host</b> to play it with your class.</p></div>
+      <button class="btn" onclick="qEdit={title:'',questions:[{q:'',c:['','','',''],a:0,t:20}]};qEditId=null;P.refresh()">＋ New quiz</button></div>
+    <div class="list">${Q.length ? Q.map(q => `<div class="tk" style="cursor:default"><span class="no">${q.questions.length} Qs</span><span class="ttl">${esc(q.title)}</span>
+      <span class="actions"><button class="btn ghost sm" onclick="editQuiz(${q.id})">Edit</button><button class="btn sm" onclick="hostQuiz(${q.id})">▶ Host</button></span>
+      <span class="meta">Updated ${ago(q.updated)}</span></div>`).join('') : '<div class="empty">No quizzes yet.</div>'}</div></div>`;
+}
+function editQuiz(id){ const q = P.db.quizzes.find(x => x.id === id); qEdit = clone(q); qEditId = id; P.refresh(); }
+function quizEditor(el){
+  const Q = qEdit;
+  el.innerHTML = `<div class="card"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+      <h2>${qEditId ? 'Edit quiz' : 'New quiz'}</h2>
+      <div class="actions"><button class="btn ghost" onclick="qEdit=null;P.refresh()">Back</button>${qEditId ? '<button class="btn ghost" onclick="deleteQuiz()">Delete</button>' : ''}<button class="btn" onclick="saveQuiz()">Save quiz</button></div></div>
+    <div id="qErr" class="err" hidden style="margin-bottom:.8rem"></div>
+    <label>Quiz title</label><input id="qTitle" value="${esc(Q.title)}" placeholder="e.g. Science Review: The Cell" style="margin-bottom:1rem">
+    <div class="stack">${Q.questions.map((q, i) => `<div class="qcard">
+      <div style="display:flex;gap:.6rem;align-items:center"><b>Q${i + 1}</b><input data-q="${i}" value="${esc(q.q)}" placeholder="Type the question">
+        <select data-t="${i}" style="width:auto">${[10,20,30,60].map(t => `<option value="${t}" ${q.t === t ? 'selected' : ''}>${t} s</option>`).join('')}</select>
+        ${Q.questions.length > 1 ? `<button class="btn ghost sm" onclick="Q_remove(${i})">✕</button>` : ''}</div>
+      <div class="opts">${q.c.map((c, j) => `<div class="opt"><span class="shape c${j}">${SHAPES[j]}</span><input data-c="${i}-${j}" value="${esc(c)}" placeholder="Answer ${j + 1}"><input type="radio" name="a${i}" data-a="${i}-${j}" ${q.a === j ? 'checked' : ''} title="Correct answer"></div>`).join('')}</div>
+      <small class="hint" style="display:block;margin:.4rem 0 0">Tick the circle beside the correct answer.</small></div>`).join('')}</div>
+    <button class="btn ghost" style="margin-top:1rem" onclick="Q_add()">＋ Add question</button></div>`;
+  $('qTitle').oninput = e => Q.title = e.target.value;
+  el.querySelectorAll('[data-q]').forEach(x => x.oninput = () => Q.questions[+x.dataset.q].q = x.value);
+  el.querySelectorAll('[data-t]').forEach(x => x.onchange = () => Q.questions[+x.dataset.t].t = +x.value);
+  el.querySelectorAll('[data-c]').forEach(x => x.oninput = () => { const [i, j] = x.dataset.c.split('-').map(Number); Q.questions[i].c[j] = x.value; });
+  el.querySelectorAll('[data-a]').forEach(x => x.onchange = () => { const [i, j] = x.dataset.a.split('-').map(Number); Q.questions[i].a = j; });
+}
+function Q_add(){ qEdit.questions.push({q:'', c:['','','',''], a:0, t:20}); P.refresh(); }
+function Q_remove(i){ qEdit.questions.splice(i, 1); P.refresh(); }
+function saveQuiz(){
+  const Q = qEdit, bad = Q.questions.findIndex(q => !q.q.trim() || q.c.filter(c => c.trim()).length < 2 || !q.c[q.a].trim());
+  if (!Q.title.trim()) { $('qErr').textContent = 'Give the quiz a title.'; $('qErr').hidden = false; return; }
+  if (bad >= 0) { $('qErr').textContent = `Question ${bad + 1} needs a question, at least 2 answers, and the correct answer filled in.`; $('qErr').hidden = false; return; }
+  Q.updated = Date.now();
+  if (qEditId) { Object.assign(P.db.quizzes.find(x => x.id === qEditId), clone(Q)); }
+  else { Q.id = newId('quizzes'); Q.by = P.me.u; P.db.quizzes.push(clone(Q)); }
+  qEdit = null; P.save(); P.refresh();
+}
+function deleteQuiz(){ if (!confirm('Delete this quiz?')) return; P.db.quizzes = P.db.quizzes.filter(x => x.id !== qEditId); qEdit = null; P.save(); P.refresh(); }
+
+/* ---- hosting: state is shared with player tabs through localStorage ---- */
+function hostQuiz(id){
+  const quiz = clone(P.db.quizzes.find(x => x.id === id));
+  const code = String(Math.floor(1000 + Math.random() * 9000));
+  game = {code, quiz, phase:'lobby', q:-1, startAt:0, endsAt:0, scores:{}, last:{}, names:{}};
+  pushState(); P.refresh();
+  poll = setInterval(tick, 400);
+}
+function pushState(){
+  const g = game, q = g.q >= 0 ? g.quiz.questions[g.q] : null;
+  localStorage.setItem(LKEY(g.code), JSON.stringify({phase:g.phase, title:g.quiz.title, q:g.q, total:g.quiz.questions.length,
+    question: q ? {q:q.q, c:q.c, t:q.t} : null, correct: g.phase === 'reveal' || g.phase === 'final' ? q && q.a : null,
+    startAt:g.startAt, endsAt:g.endsAt, scores:g.scores, last:g.last, names:g.names, ts:Date.now()}));
+}
+function players(){
+  const out = [], pre = PKEY(game.code);
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre)) { const v = readJSON(k); if (v) out.push({id:k.slice(pre.length), ...v}); } }
+  return out;
+}
+function tick(){
+  if (!game) return;
+  const ps = players(); let changed = false;
+  for (const p of ps) if (!game.names[p.id]) { game.names[p.id] = p.name; game.scores[p.id] = game.scores[p.id] || 0; changed = true; }
+  if (game.phase === 'question') {
+    const answered = ps.filter(p => p.answers && p.answers[game.q]).length;
+    if (Date.now() >= game.endsAt || (ps.length && answered >= ps.length)) return reveal();
+  }
+  if (changed) pushState();
+  const sig = [game.phase, game.q, ps.length, ps.filter(p => p.answers && p.answers[game.q]).length, Math.ceil((game.endsAt - Date.now()) / 1000)].join('|');
+  const v = $('view'); if (v && P.current === 'quiz' && sig !== lastSig) { lastSig = sig; hostView(v); }
+}
+function nextQ(){
+  game.q++; if (game.q >= game.quiz.questions.length) return finish();
+  const q = game.quiz.questions[game.q]; game.phase = 'question'; game.startAt = Date.now(); game.endsAt = game.startAt + q.t * 1000; game.last = {};
+  pushState(); hostView($('view'));
+}
+function reveal(){
+  const q = game.quiz.questions[game.q], dur = q.t * 1000;
+  for (const p of players()) {
+    const a = p.answers && p.answers[game.q];
+    const ok = !!a && a.c === q.a;
+    const pts = ok ? Math.round(1000 - 500 * Math.min(1, Math.max(0, (a.at - game.startAt) / dur))) : 0;
+    game.scores[p.id] = (game.scores[p.id] || 0) + pts; game.last[p.id] = {ok, pts, answered: !!a};
+  }
+  game.phase = 'reveal'; pushState(); hostView($('view'));
+}
+function finish(){ game.phase = 'final'; game.q = game.quiz.questions.length - 1; pushState(); hostView($('view')); }
+function endGame(){
+  if (!confirm('End this game for everyone?')) return;
+  clearInterval(poll); const pre = PKEY(game.code);
+  Object.keys(localStorage).filter(k => k.startsWith(pre) || k === LKEY(game.code)).forEach(k => localStorage.removeItem(k));
+  game = null; P.refresh();
+}
+const ranked = () => Object.entries(game.scores).map(([id, s]) => ({id, s, name:game.names[id] || '?'})).sort((a,b) => b.s - a.s);
+function openPlayer(){ window.open('play.html?code=' + game.code, '_blank'); }
+function hostView(el){
+  const g = game, ps = players(), q = g.q >= 0 ? g.quiz.questions[g.q] : null;
+  let body = '';
+  if (g.phase === 'lobby') body = `<div style="text-align:center">Join code</div><div class="code" style="text-align:center">${g.code}</div>
+      <p style="text-align:center;opacity:.85">Players open the <b>player screen</b> and type this code and their name.</p>
+      <div style="text-align:center"><button class="btn" onclick="openPlayer()">Open a player screen (new tab)</button></div>
+      <div><b>${ps.length} player${ps.length === 1 ? '' : 's'} joined</b><div class="players" style="margin-top:.5rem">${ps.map(p => `<span>${esc(p.name)}</span>`).join('') || '<span style="opacity:.6">Waiting for players…</span>'}</div></div>
+      <div class="row2"><span></span><button class="btn" ${ps.length ? '' : 'disabled style="opacity:.5"'} onclick="nextQ()">Start quiz ›</button></div>`;
+  else if (g.phase === 'question' || g.phase === 'reveal') {
+    const counts = q.c.map((_, j) => ps.filter(p => p.answers && p.answers[g.q] && p.answers[g.q].c === j).length);
+    const left = Math.max(0, Math.ceil((g.endsAt - Date.now()) / 1000)), answered = ps.filter(p => p.answers && p.answers[g.q]).length;
+    body = `<div class="row2"><span>Question ${g.q + 1} of ${g.quiz.questions.length}</span>${g.phase === 'question' ? `<div class="timer">${left}</div><span>${answered} / ${ps.length} answered</span>` : '<span></span>'}</div>
+      <div class="qtext">${esc(q.q)}</div>
+      <div class="answers">${q.c.map((c, j) => c.trim() ? `<div class="ans c${j} ${g.phase === 'reveal' && j !== q.a ? 'dim' : ''}"><span>${SHAPES[j]}</span>${esc(c)}${g.phase === 'reveal' ? `<span class="n">${counts[j]}${j === q.a ? ' ✓' : ''}</span>` : ''}</div>` : '').join('')}</div>
+      ${g.phase === 'reveal' ? `<div class="row2"><div class="lb" style="flex:1">${ranked().slice(0, 5).map((r, i) => `<div><span>${i + 1}. ${esc(r.name)}</span><b>${r.s}</b></div>`).join('')}</div>
+        <button class="btn" onclick="nextQ()">${g.q + 1 < g.quiz.questions.length ? 'Next question ›' : 'Show winners ›'}</button></div>` : `<div class="row2"><span></span><button class="btn" onclick="reveal()">Skip timer</button></div>`}`;
+  } else if (g.phase === 'final') {
+    const R = ranked(), top = [R[1], R[0], R[2]];
+    body = `<div style="text-align:center;font-size:1.4rem;font-weight:600">🏆 Final results</div>
+      <div class="podium">${top.map((r, i) => r ? `<div style="height:${[7,9.5,5.5][i]}rem"><b>${esc(r.name)}</b>${r.s} pts<span style="display:block;font-size:1.6rem">${['🥈','🥇','🥉'][i]}</span></div>` : '').join('')}</div>
+      <div class="lb">${R.map((r, i) => `<div><span>${i + 1}. ${esc(r.name)}</span><b>${r.s}</b></div>`).join('')}</div>`;
+  }
+  el.innerHTML = `<div class="stage"><div class="row2"><b>${esc(g.quiz.title)}</b><button class="btn sm" onclick="endGame()">End game</button></div>${body}</div>
+    <p class="hint" style="margin-top:.8rem">Prototype: players must use other tabs or windows of <b>this same browser</b>. Letting learners join from their own phones needs an online server, which the real version would have.</p>`;
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

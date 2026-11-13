@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accounting System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#4f46e5;--brand-d:#312e81;--brand-soft:#e0e7ff;--grad:linear-gradient(135deg,#6366f1,#312e81);
+    --series-in:#2a78d6;--series-out:#eb6834;--grid:#e8ebf0}
+  .funds{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+  .fund{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.8rem 1rem}
+  .fund span{color:var(--muted);font-size:.78rem}
+  .fund b{display:block;font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .amt-in{color:#166534}
+  .amt-out{color:#9a3412}
+  tr.void td{color:#94a3b8;text-decoration:line-through}
+  /* chart */
+  .chartHead{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.6rem}
+  .legend{display:flex;gap:1rem;font-size:.8rem;color:#334155}
+  .legend i{display:inline-block;width:.75rem;height:.75rem;border-radius:3px;margin-right:.35rem;vertical-align:-1px}
+  .chart{position:relative;height:200px;margin:0 0 0 3.2rem}
+  .chart .gl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+  .chart .gl span{position:absolute;right:100%;margin-right:.5rem;top:-.55rem;font-size:.7rem;color:var(--muted);white-space:nowrap}
+  .chart .cols{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:flex-end}
+  .chart .grp{display:flex;gap:2px;align-items:flex-end;height:100%;position:relative}
+  .chart .bar{width:18px;border-radius:4px 4px 0 0;cursor:pointer;position:relative}
+  .chart .bar::after{content:"";position:absolute;inset:-4px -3px 0}
+  .chart .bar:hover{filter:brightness(1.1)}
+  .chart .base{position:absolute;left:0;right:0;bottom:0;border-top:1px solid #94a3b8}
+  .xlab{display:flex;justify-content:space-around;margin-left:3.2rem;font-size:.72rem;color:var(--muted);margin-top:.35rem}
+  .tip{position:fixed;pointer-events:none;background:#0f172a;color:#fff;font-size:.78rem;padding:.4rem .6rem;border-radius:.4rem;z-index:20;white-space:nowrap;display:none}
+  .tip b{font-variant-numeric:tabular-nums}
+  .linkbtn{color:var(--brand);font-size:.8rem;text-decoration:underline}
+  @media (max-width:760px){ .funds{grid-template-columns:1fr 1fr} .chart .bar{width:10px} }
+  @media print{ .printhead{display:block!important} }
+  .printhead{display:none;margin-bottom:1rem}
+</style>
+</head>
+<body>
+<div class="tip" id="tip"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M8 6.5h8M8 11h2M12 11h0M15.5 11h.5M8 14.5h2M12 14.5h0M15.5 14.5h.5M8 18h2M12 18h4"/></svg>';
+const FUNDS = [['mooe','MOOE'],['canteen','Canteen Fund'],['other','Donations & Other Funds'],['pta','PTA Fund (held in trust)']];
+const fundName = k => (FUNDS.find(f => f[0] === k) || [k, k])[1];
+const CAT_IN = ['MOOE release (Division)','Canteen remittance','Donation','PTA collection','Other income'];
+const CAT_OUT = ['Utilities (electric, water, internet)','Office & teaching supplies','Repairs & maintenance','Janitorial supplies','Travel & training','Learner activities','Other expenses'];
+const RSTATUS = {'Pending':'p-amber','Approved':'p-violet','Released':'p-green','Rejected':'p-red'};
+const rPill = s => `<span class="pill ${RSTATUS[s]}">${s === 'Approved' ? 'Approved – for release' : s}</span>`;
+const frNo = n => 'FR-' + String(n).padStart(4,'0');
+const ref = t => (t.kind === 'in' ? 'OR-' : 'DV-') + String(t.ref).padStart(4,'0');
+const monthKey = s => s.slice(0,7);
+const monthName = k => new Date(k + '-01T00:00').toLocaleDateString('en-PH', {month:'long', year:'numeric'});
+const monthShort = k => new Date(k + '-01T00:00').toLocaleDateString('en-PH', {month:'short'});
+const D = 864e5, now = Date.now();
+
+/* ---- sample ledger: the last 6 months, generated so the dates stay current ---- */
+function sampleTx(){
+  const T = []; let rin = 0, rout = 0, no = 0;
+  const add = (kind, d, fund, cat, party, desc, amount) => { if (d > new Date()) return; T.push({no:++no, kind, ref: kind === 'in' ? ++rin : ++rout, date:ymd(d), fund, cat, party, desc, amount, by:'bookkeeper', void:false, at:d.getTime()}); };
+  const base = new Date(); base.setDate(1);
+  const seed = [1.00, 0.93, 1.08, 0.97, 1.05, 0.9];
+  for (let i = 5; i >= 0; i--) {
+    const m = new Date(base.getFullYear(), base.getMonth() - i, 1), y = m.getFullYear(), mo = m.getMonth(), k = seed[i];
+    const day = d => new Date(y, mo, d);
+    add('in', day(5), 'mooe', CAT_IN[0], 'Division Office', 'Monthly MOOE release', 85000);
+    add('in', day(28), 'canteen', CAT_IN[1], 'School Canteen', 'Canteen net income for the month', Math.round(13500 * k));
+    if (i % 2 === 0) add('in', day(15), 'other', CAT_IN[2], 'Barangay San Vicente', 'Donation for learner activities', 10000);
+    if (i === 4) add('in', day(20), 'pta', CAT_IN[3], 'PTA Treasurer', 'PTA funds turned over for safekeeping', 18000);
+    add('out', day(8), 'mooe', CAT_OUT[0], 'Davao Light', 'Electricity bill', Math.round(18200 * k));
+    add('out', day(9), 'mooe', CAT_OUT[0], 'Panabo City Water District', 'Water bill', Math.round(3400 * k));
+    add('out', day(10), 'mooe', CAT_OUT[0], 'Internet provider', 'Internet subscription', 2999);
+    add('out', day(12), 'mooe', CAT_OUT[1], 'Office supply store', 'Bond paper, ink, and office supplies', Math.round(16500 * k));
+    add('out', day(18), 'mooe', CAT_OUT[3], 'Hardware store', 'Cleaning materials', Math.round(4200 * k));
+    if (i % 2 === 1) add('out', day(22), 'mooe', CAT_OUT[2], 'Local contractor', 'Classroom repairs (doors, windows, electrical)', Math.round(26000 * k));
+    if (i % 3 === 0) add('out', day(24), 'mooe', CAT_OUT[4], 'Teachers (reimbursement)', 'Travel to division seminar', 6400);
+    add('out', day(25), 'canteen', CAT_OUT[5], 'Supplier', 'Feeding program supplies', Math.round(7500 * k));
+    if (i % 2 === 0) add('out', day(26), 'other', CAT_OUT[5], 'Supplier', 'Sports and club activity materials', 6800);
+  }
+  return T;
+}
+const SAMPLE_TX = sampleTx();
+const lastRelTx = SAMPLE_TX.filter(t => t.kind === 'out').slice(-1)[0];
+
+const CFG = {
+  key:'svnhs-acct', title:'Accounting System', subtitle:'SVNHS Finance Office', icon:ICON, officeName:'Finance Office',
+  roles:{
+    bookkeeper:{admin:true, tagline:'Collections, disbursements, fund balances, and reports.',
+      tabs:[['dash','Dashboard'],['in','Collections <span class="count" id="cRem"></span>'],['out','Disbursements <span class="count" id="cRel"></span>'],['report','Reports']]},
+    principal:{badge:'PRINCIPAL', tagline:'Approve fund requests and watch the school\'s cash position.',
+      tabs:[['dash','Dashboard'],['approve','Approvals <span class="count" id="cPend"></span>'],['report','Reports']]},
+    teacher:{tagline:'Request funds for school needs and follow your requests.', tabs:[['request','Request Funds'],['myreqs','My Requests']]},
+  },
+  signup:{roles:[['teacher','Teacher']], posLabel:{teacher:'Position'}, posHint:{teacher:'e.g. Teacher I'}},
+  demo:[['bookkeeper','bookkeeper123','Bookkeeper (admin)'],['principal','principal123','Principal'],['teacher','teacher123','Teacher']],
+  sampleUsers:[
+    {u:'bookkeeper', p:'bookkeeper123', name:'School Bookkeeper', pos:'Finance Office', role:'bookkeeper'},
+    {u:'principal', p:'principal123', name:'School Principal', pos:'Principal', role:'principal'},
+    {u:'teacher', p:'teacher123', name:'Grade 9 Adviser', pos:'Teacher I', role:'teacher'},
+    {u:'teacher2', p:'teacher123', name:'Science Coordinator', pos:'Teacher III', role:'teacher'},
+  ],
+  data:{
+    opening:{mooe:42000, canteen:9500, other:6000, pta:12000},
+    recordedRemits:[],   // ids of Cashiering System remittances already recorded here
+    tx: SAMPLE_TX,
+    reqs:[
+      {no:1, by:'teacher', purpose:'Ink and bond paper for quarterly exams', items:'2 bottles printer ink (black)\n3 reams bond paper (A4)', amount:2450, fund:'mooe', cat:CAT_OUT[1], needed:ymd(new Date(now+5*D)), status:'Pending', at:now-1*D,
+        log:[{t:now-1*D, m:'Request submitted', by:'teacher'}]},
+      {no:2, by:'teacher2', purpose:'Repair of electric fan in Science Lab', items:'Fan motor replacement and labor', amount:1200, fund:'mooe', cat:CAT_OUT[2], needed:ymd(new Date(now+3*D)), status:'Approved', at:now-3*D,
+        log:[{t:now-3*D, m:'Request submitted', by:'teacher2'},{t:now-2*D, m:'Approved by the Principal', by:'principal'}]},
+      {no:3, by:'teacher2', purpose:'Materials for school science fair', items:'Cartolina, markers, glue, display boards', amount:3800, fund:'other', cat:CAT_OUT[5], needed:ymd(new Date(now-6*D)), status:'Released', at:now-12*D, tx: lastRelTx ? lastRelTx.no : null,
+        log:[{t:now-12*D, m:'Request submitted', by:'teacher2'},{t:now-11*D, m:'Approved by the Principal', by:'principal'},{t:now-10*D, m:'Funds released', by:'bookkeeper'}]},
+      {no:4, by:'teacher', purpose:'New basketball ring and nets', items:'1 basketball ring set, 2 nets', amount:15000, fund:'mooe', cat:CAT_OUT[5], needed:'', status:'Rejected', at:now-15*D,
+        log:[{t:now-15*D, m:'Request submitted', by:'teacher'},{t:now-14*D, m:'Rejected by the Principal', by:'principal'},{t:now-14*D, m:'Not in this year\'s plan (AIP). Please include it in next year\'s proposal.', by:'principal'}]},
+    ],
+  },
+  counts(){
+    P.setCount('cPend', P.db.reqs.filter(r => r.status === 'Pending').length);
+    P.setCount('cRel', P.db.reqs.filter(r => r.status === 'Approved').length);
+    P.setCount('cRem', pendingRemits().length);
+  },
+  views:{dash, in: collections, out: disbursements, report, approve, request, myreqs},
+};
+
+/* ================= LEDGER MATH ================= */
+const live = () => P.db.tx.filter(t => !t.void);
+const balance = (fund, upto) => (P.db.opening[fund] || 0) + live().filter(t => t.fund === fund && (!upto || t.date < upto)).reduce((s, t) => s + (t.kind === 'in' ? t.amount : -t.amount), 0);
+const totalIn = (list) => list.filter(t => t.kind === 'in').reduce((s, t) => s + t.amount, 0);
+const totalOut = (list) => list.filter(t => t.kind === 'out').reduce((s, t) => s + t.amount, 0);
+const months6 = () => { const r = [], b = new Date(); b.setDate(1); for (let i = 5; i >= 0; i--) { const d = new Date(b.getFullYear(), b.getMonth() - i, 1); r.push(ymd(d).slice(0,7)); } return r; };
+
+/* ================= DASHBOARD ================= */
+let showTable = false;
+function dash(el){
+  const cur = ymd(new Date()).slice(0,7), thisM = live().filter(t => monthKey(t.date) === cur);
+  const cash = FUNDS.reduce((s, [k]) => s + balance(k), 0);
+  const pend = P.db.reqs.filter(r => r.status === 'Pending').length, rel = P.db.reqs.filter(r => r.status === 'Approved').length;
+  const recent = live().slice().sort((a,b) => b.date.localeCompare(a.date) || b.no - a.no).slice(0, 8);
+  el.innerHTML = `<div class="stack">
+    <div class="stats">
+      <div class="stat"><b>${peso(cash)}</b><span>Total cash on hand (all funds)</span></div>
+      <div class="stat"><b class="amt-in">${peso(totalIn(thisM))}</b><span>Collections this month</span></div>
+      <div class="stat"><b class="amt-out">${peso(totalOut(thisM))}</b><span>Disbursements this month</span></div>
+      <div class="stat"><b>${pend} / ${rel}</b><span>Requests pending approval / for release</span></div>
+    </div>
+    <div class="funds">${FUNDS.map(([k, n]) => `<div class="fund"><span>${esc(n)}</span><b>${peso(balance(k))}</b></div>`).join('')}</div>
+    <div class="card">
+      <div class="chartHead"><h3 class="sec" style="margin:0">Cash flow · last 6 months</h3>
+        <div class="legend"><span><i style="background:var(--series-in)"></i>Collections</span><span><i style="background:var(--series-out)"></i>Disbursements</span>
+        <button class="linkbtn" id="tblToggle">${showTable ? 'Show chart' : 'Show as table'}</button></div></div>
+      <div id="flow"></div>
+    </div>
+    <div class="card"><h3 class="sec">Recent transactions</h3>${txTable(recent, false)}</div>
+  </div>`;
+  $('tblToggle').onclick = () => { showTable = !showTable; dash(el); };
+  drawFlow($('flow'));
+}
+function drawFlow(box){
+  const M = months6().map(k => { const L = live().filter(t => monthKey(t.date) === k); return {k, i: totalIn(L), o: totalOut(L)}; });
+  if (showTable) {
+    box.innerHTML = `<div class="tablewrap"><table><tr><th>Month</th><th class="num">Collections</th><th class="num">Disbursements</th><th class="num">Net</th></tr>
+      ${M.map(m => `<tr><td>${monthName(m.k)}</td><td class="num">${peso(m.i)}</td><td class="num">${peso(m.o)}</td><td class="num">${peso(m.i - m.o)}</td></tr>`).join('')}</table></div>`;
+    return;
+  }
+  const max = Math.max(...M.map(m => Math.max(m.i, m.o)), 1);
+  const step = niceStep(max / 4), top = Math.ceil(max / step) * step;
+  const lines = []; for (let v = step; v <= top; v += step) lines.push(v);
+  box.innerHTML = `<div class="chart" role="img" aria-label="Monthly collections and disbursements for the last 6 months">
+      ${lines.map(v => `<div class="gl" style="bottom:${v / top * 100}%"><span>₱${(v/1000).toLocaleString('en-PH')}k</span></div>`).join('')}
+      <div class="base"></div>
+      <div class="cols">${M.map(m => `<div class="grp">
+        <div class="bar" style="height:${m.i / top * 100}%;background:var(--series-in)" data-tip="${esc(monthName(m.k))}|Collections|${m.i}"></div>
+        <div class="bar" style="height:${m.o / top * 100}%;background:var(--series-out)" data-tip="${esc(monthName(m.k))}|Disbursements|${m.o}"></div></div>`).join('')}</div>
+    </div>
+    <div class="xlab">${M.map(m => `<span>${monthShort(m.k)}</span>`).join('')}</div>`;
+  const tip = $('tip');
+  box.querySelectorAll('.bar').forEach(b => {
+    b.onmousemove = e => { const [mn, lab, v] = b.dataset.tip.split('|'); tip.innerHTML = `${mn}<br>${lab}: <b>${peso(+v)}</b>`; tip.style.display = 'block';
+      tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (e.clientY - tip.offsetHeight - 10) + 'px'; };
+    b.onmouseleave = () => tip.style.display = 'none';
+  });
+}
+function niceStep(x){ const p = Math.pow(10, Math.floor(Math.log10(x))), n = x / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+
+function txTable(list, clickable = true){
+  if (!list.length) return '<div class="empty">No transactions.</div>';
+  return `<div class="tablewrap"><table><tr><th>Date</th><th>Ref no.</th><th>Fund</th><th>${'Payor / payee'}</th><th>Particulars</th><th class="num">In</th><th class="num">Out</th></tr>
+    ${list.map(t => `<tr class="${t.void ? 'void' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="viewTx(${t.no})"` : ''}>
+      <td>${fmtDate(t.date)}</td><td>${ref(t)}</td><td>${esc(fundName(t.fund))}</td><td>${esc(t.party)}</td><td>${esc(t.desc)}</td>
+      <td class="num amt-in">${t.kind === 'in' ? peso(t.amount) : ''}</td><td class="num amt-out">${t.kind === 'out' ? peso(t.amount) : ''}</td></tr>`).join('')}</table></div>`;
+}
+
+/* ================= CASHIER REMITTANCES (from the Cashiering System) ================= */
+const cashRemits = () => { try { return JSON.parse(localStorage.getItem('svnhs-cash-remits')) || []; } catch(e) { return []; } };
+const pendingRemits = () => cashRemits().filter(r => !P.db.recordedRemits.includes(r.id));
+const CASH_FUND_CAT = {canteen:CAT_IN[1], pta:CAT_IN[3], other:CAT_IN[4], mooe:CAT_IN[4]};
+function recordRemit(id){
+  const r = cashRemits().find(x => x.id === id); if (!r || P.db.recordedRemits.includes(id)) return;
+  const or = n => String(n).padStart(7, '0');
+  Object.entries(r.byFund).forEach(([fund, amount]) => addTx('in', {date:r.date, fund, cat:CASH_FUND_CAT[fund] || CAT_IN[4], party:"Cashier's Office",
+    desc:`Cashier remittance #${r.id} (OR ${or(r.from)}–${or(r.to)})`, amount}));
+  P.db.recordedRemits.push(id); P.save(); P.refresh();
+}
+
+/* ================= COLLECTIONS & DISBURSEMENTS ================= */
+let fMonth = '', fFund = '';
+function txForm(kind){
+  const cats = kind === 'in' ? CAT_IN : CAT_OUT;
+  return `<form class="form three" id="txForm">
+    <div><label>Date <i>*</i></label><input name="date" type="date" required value="${todayStr()}"></div>
+    <div><label>Fund <i>*</i></label><select name="fund">${FUNDS.map(([k,n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select></div>
+    <div><label>Category <i>*</i></label><select name="cat">${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select></div>
+    <div><label>${kind === 'in' ? 'Received from' : 'Paid to'} <i>*</i></label><input name="party" required></div>
+    <div><label>Particulars <i>*</i></label><input name="desc" required placeholder="${kind === 'in' ? 'e.g. Canteen income for October' : 'e.g. Electricity bill for October'}"></div>
+    <div><label>Amount (₱) <i>*</i></label><input name="amount" type="number" min="0.01" step="0.01" required></div>
+    <div class="full" id="txErr" hidden><div class="err"></div></div>
+    <div class="full actions"><span class="hint" style="margin:0">Next ${kind === 'in' ? 'OR' : 'DV'} no.: <b>${ref({kind, ref: nextRef(kind)})}</b></span><button class="btn">${kind === 'in' ? 'Record collection' : 'Record disbursement'}</button></div>
+  </form>`;
+}
+const nextRef = kind => P.db.tx.filter(t => t.kind === kind).reduce((m, t) => Math.max(m, t.ref), 0) + 1;
+function addTx(kind, d, extraLog){
+  const t = {no: nextNo(P.db.tx), kind, ref: nextRef(kind), date:d.date, fund:d.fund, cat:d.cat, party:d.party.trim(), desc:d.desc.trim(), amount: Math.round(+d.amount * 100) / 100, by:P.me.u, void:false, at:Date.now()};
+  P.db.tx.push(t); return t;
+}
+function ledgerPage(el, kind){
+  const months = [...new Set(P.db.tx.map(t => monthKey(t.date)))].sort().reverse();
+  const L = P.db.tx.filter(t => t.kind === kind && (!fMonth || monthKey(t.date) === fMonth) && (!fFund || t.fund === fFund)).sort((a,b) => b.date.localeCompare(a.date) || b.no - a.no);
+  const approved = kind === 'out' ? P.db.reqs.filter(r => r.status === 'Approved') : [];
+  const remits = kind === 'in' && P.isAdmin() ? pendingRemits() : [];
+  el.innerHTML = `<div class="stack">
+    ${remits.length ? `<div class="card"><h3 class="sec">Remittances from the Cashier waiting to be recorded (${remits.length})</h3><div class="tablewrap"><table>
+      <tr><th>Date</th><th>Cashier OR range</th><th>By fund</th><th class="num">Total</th><th></th></tr>
+      ${remits.map(r => `<tr><td>${fmtDate(r.date)}</td><td>${String(r.from).padStart(7,'0')}–${String(r.to).padStart(7,'0')} (${r.count})</td>
+        <td>${Object.entries(r.byFund).map(([k, v]) => esc(fundName(k)) + ': ' + peso(v)).join('<br>')}</td><td class="num"><b>${peso(r.total)}</b></td>
+        <td><button class="btn sm" onclick="recordRemit(${r.id})">Record</button></td></tr>`).join('')}</table></div></div>` : ''}
+    ${approved.length ? `<div class="card"><h3 class="sec">Approved fund requests waiting for release (${approved.length})</h3><div class="list">${approved.map(reqRow).join('')}</div></div>` : ''}
+    <div class="card"><h3 class="sec">${kind === 'in' ? 'Record a collection (Official Receipt)' : 'Record a disbursement (Disbursement Voucher)'}</h3>${txForm(kind)}</div>
+    <div class="card"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:.7rem">
+      <h3 class="sec" style="margin:0">${kind === 'in' ? 'Collections' : 'Disbursements'} · total ${peso(L.filter(t => !t.void).reduce((s,t) => s + t.amount, 0))}</h3>
+      <div class="tools"><select id="fm"><option value="">All months</option>${months.map(m => `<option value="${m}" ${fMonth===m?'selected':''}>${monthName(m)}</option>`).join('')}</select>
+        <select id="ff"><option value="">All funds</option>${FUNDS.map(([k,n]) => `<option value="${k}" ${fFund===k?'selected':''}>${esc(n)}</option>`).join('')}</select></div></div>
+      ${txTable(L)}</div></div>`;
+  $('fm').onchange = e => { fMonth = e.target.value; ledgerPage(el, kind); };
+  $('ff').onchange = e => { fFund = e.target.value; ledgerPage(el, kind); };
+  $('txForm').onsubmit = e => {
+    e.preventDefault(); const d = Object.fromEntries(new FormData(e.target));
+    if (kind === 'out' && +d.amount > balance(d.fund)) { $('txErr').hidden = false; $('txErr').firstChild.textContent = `Not enough money in ${fundName(d.fund)}. Balance is ${peso(balance(d.fund))}.`; return; }
+    const t = addTx(kind, d); P.save(); ledgerPage(el, kind); viewTx(t.no);
+  };
+}
+function collections(el){ ledgerPage(el, 'in'); }
+function disbursements(el){ ledgerPage(el, 'out'); }
+function viewTx(no){
+  const t = P.db.tx.find(x => x.no === no); if (!t) return;
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${ref(t)}</div><h2>${t.kind === 'in' ? 'Collection' : 'Disbursement'} · ${peso(t.amount)}</h2>
+      ${t.void ? '<span class="pill p-red">VOID</span>' : ''}</div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <dl class="kv"><dt>Date</dt><dd>${fmtDate(t.date)}</dd><dt>Fund</dt><dd>${esc(fundName(t.fund))}</dd><dt>Category</dt><dd>${esc(t.cat)}</dd>
+      <dt>${t.kind === 'in' ? 'Received from' : 'Paid to'}</dt><dd>${esc(t.party)}</dd><dt>Particulars</dt><dd>${esc(t.desc)}</dd>
+      <dt>Recorded by</dt><dd>${esc(P.userOf(t.by).name)} · ${when(t.at)}</dd>${t.voidNote ? `<dt>Void reason</dt><dd>${esc(t.voidNote)}</dd>` : ''}</dl>
+    ${P.isAdmin() && !t.void ? `<div class="box"><h3>Void this entry</h3><p class="hint" style="margin:0 0 .6rem;font-size:.78rem">Use this for mistakes. The entry stays in the records but no longer counts in balances.</p>
+      <input id="voidNote" placeholder="Reason (required)"><div class="actions" style="margin-top:.6rem"><button class="btn red sm" onclick="voidTx(${t.no})">Void</button></div></div>` : ''}`);
+}
+function voidTx(no){
+  const t = P.db.tx.find(x => x.no === no), n = $('voidNote').value.trim(); if (!n) { $('voidNote').focus(); return; }
+  t.void = true; t.voidNote = n; P.save(); viewTx(no); P.refresh();
+}
+
+/* ================= REPORTS ================= */
+let rMonth = '';
+function report(el){
+  const months = [...new Set(P.db.tx.map(t => monthKey(t.date)))].sort().reverse();
+  if (!rMonth || !months.includes(rMonth)) rMonth = months[0] || ymd(new Date()).slice(0,7);
+  const start = rMonth + '-01', nm = new Date(start + 'T00:00'); nm.setMonth(nm.getMonth() + 1); const end = ymd(nm);
+  const L = live().filter(t => monthKey(t.date) === rMonth).sort((a,b) => a.date.localeCompare(b.date) || a.no - b.no);
+  const byCat = CAT_OUT.map(c => [c, L.filter(t => t.kind === 'out' && t.cat === c).reduce((s,t) => s + t.amount, 0)]).filter(x => x[1]);
+  el.innerHTML = `<div class="stack">
+    <div class="card noprint" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
+      <div class="tools"><select id="rm">${months.map(m => `<option value="${m}" ${rMonth===m?'selected':''}>${monthName(m)}</option>`).join('')}</select></div>
+      <div class="actions"><button class="btn ghost" id="csv">Download CSV</button><button class="btn" onclick="window.print()">Print report</button></div></div>
+    <div class="card"><div class="printhead"><b>San Vicente National High School</b><br>Statement of Cash Flow</div>
+      <h2>Cash flow · ${monthName(rMonth)}</h2><p class="hint">Per fund, for the whole month. Voided entries are not counted.</p>
+      <div class="tablewrap"><table><tr><th>Fund</th><th class="num">Beginning</th><th class="num">Collections</th><th class="num">Disbursements</th><th class="num">Ending</th></tr>
+        ${FUNDS.map(([k,n]) => { const b = balance(k, start), F = L.filter(t => t.fund === k), i = totalIn(F), o = totalOut(F);
+          return `<tr><td>${esc(n)}</td><td class="num">${peso(b)}</td><td class="num">${peso(i)}</td><td class="num">${peso(o)}</td><td class="num"><b>${peso(b + i - o)}</b></td></tr>`; }).join('')}
+        <tr><td><b>Total</b></td><td class="num"><b>${peso(FUNDS.reduce((s,[k]) => s + balance(k, start), 0))}</b></td><td class="num"><b>${peso(totalIn(L))}</b></td><td class="num"><b>${peso(totalOut(L))}</b></td><td class="num"><b>${peso(FUNDS.reduce((s,[k]) => s + balance(k, end), 0))}</b></td></tr>
+      </table></div>
+      ${byCat.length ? `<h3 class="sec" style="margin-top:1.4rem">Disbursements by category</h3><div class="tablewrap"><table><tr><th>Category</th><th class="num">Amount</th><th class="num">Share</th></tr>
+        ${byCat.map(([c,a]) => `<tr><td>${esc(c)}</td><td class="num">${peso(a)}</td><td class="num">${Math.round(a / totalOut(L) * 100)}%</td></tr>`).join('')}</table></div>` : ''}
+      <h3 class="sec" style="margin-top:1.4rem">All transactions</h3>${txTable(L, P.isAdmin())}
+      <div style="display:flex;justify-content:space-around;margin-top:2.5rem;font-size:.8rem;text-align:center">
+        <div style="border-top:1px solid #0f172a;padding-top:.3rem;min-width:12rem">Prepared by<br><b>School Bookkeeper</b></div>
+        <div style="border-top:1px solid #0f172a;padding-top:.3rem;min-width:12rem">Approved by<br><b>School Principal</b></div></div>
+    </div></div>`;
+  $('rm').onchange = e => { rMonth = e.target.value; report(el); };
+  $('csv').onclick = () => {
+    const rows = [['Date','Ref no.','Fund','Category','Payor/Payee','Particulars','In','Out']].concat(L.map(t => [t.date, ref(t), fundName(t.fund), t.cat, t.party, t.desc, t.kind === 'in' ? t.amount : '', t.kind === 'out' ? t.amount : '']));
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], {type:'text/csv'})); a.download = 'svnhs-cashflow-' + rMonth + '.csv'; a.click();
+  };
+}
+
+/* ================= FUND REQUESTS ================= */
+const reqRow = r => `<button class="tk" onclick="viewReq(${r.no})"><span class="no">${frNo(r.no)}</span><span class="ttl">${esc(r.purpose)}</span>
+  <span><b style="font-variant-numeric:tabular-nums;margin-right:.5rem">${peso(r.amount)}</b>${rPill(r.status)}</span>
+  <span class="meta">${P.me.role !== 'teacher' ? esc(P.userOf(r.by).name) + ' · ' : ''}${esc(fundName(r.fund))}${r.needed ? ' · needed by ' + fmtDate(r.needed) : ''} · ${ago(r.at)}</span></button>`;
+function approve(el){
+  const pend = P.db.reqs.filter(r => r.status === 'Pending').sort((a,b) => a.at - b.at);
+  const rest = P.db.reqs.filter(r => r.status !== 'Pending').sort((a,b) => b.at - a.at);
+  el.innerHTML = `<div class="stack"><div class="card"><h3 class="sec">Waiting for your approval (${pend.length})</h3><div class="list">${pend.length ? pend.map(reqRow).join('') : '<div class="empty">Nothing to approve.</div>'}</div></div>
+    <div class="card"><h3 class="sec">Decided</h3><div class="list">${rest.map(reqRow).join('') || '<div class="empty">None yet.</div>'}</div></div></div>`;
+}
+function request(el){
+  el.innerHTML = `<div class="card"><h2>Request funds</h2><p class="hint">The Principal approves the request, then the Finance Office releases the money.</p>
+    <form class="form" id="rf">
+      <div class="full"><label>What is it for? <i>*</i></label><input name="purpose" required placeholder="e.g. Materials for Science fair"></div>
+      <div class="full"><label>Items and details <i>*</i></label><textarea name="items" required placeholder="List the items, quantity, and estimated cost"></textarea></div>
+      <div><label>Total amount (₱) <i>*</i></label><input name="amount" type="number" min="1" step="0.01" required></div>
+      <div><label>Needed by</label><input name="needed" type="date"></div>
+      <div><label>Charge to fund</label><select name="fund">${FUNDS.filter(f => f[0] !== 'pta').map(([k,n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select></div>
+      <div><label>Category</label><select name="cat">${CAT_OUT.map(c => `<option>${esc(c)}</option>`).join('')}</select></div>
+      <div class="full actions"><button class="btn">Submit request</button></div></form></div>`;
+  $('rf').onsubmit = e => {
+    e.preventDefault(); const d = Object.fromEntries(new FormData(e.target)), no = nextNo(P.db.reqs);
+    const r = {no, by:P.me.u, purpose:d.purpose.trim(), items:d.items.trim(), amount:+d.amount, fund:d.fund, cat:d.cat, needed:d.needed, status:'Pending', at:Date.now(), log:[]};
+    P.log(r, 'Request submitted'); P.db.reqs.push(r); P.save(); P.counts();
+    el.innerHTML = P.doneCard('Your request was sent to the Principal. Reference number', frNo(no), 'New request', `viewReq(${no})`);
+  };
+}
+function myreqs(el){
+  const R = P.db.reqs.filter(r => r.by === P.me.u).sort((a,b) => b.at - a.at);
+  el.innerHTML = `<div class="list">${R.length ? R.map(reqRow).join('') : '<div class="empty">You have no fund requests yet.</div>'}</div>`;
+}
+function viewReq(no){
+  const r = P.db.reqs.find(x => x.no === no); if (!r) return;
+  const role = P.me.role; if (role === 'teacher' && r.by !== P.me.u) return;
+  const bal = balance(r.fund);
+  const tx = r.tx && P.db.tx.find(t => t.no === r.tx);
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${frNo(r.no)}</div><h2>${esc(r.purpose)}</h2><div style="margin-top:.4rem">${rPill(r.status)}</div></div>
+      <button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <dl class="kv"><dt>Amount</dt><dd><b>${peso(r.amount)}</b></dd><dt>Requested by</dt><dd>${esc(P.userOf(r.by).name)}</dd>
+      <dt>Fund</dt><dd>${esc(fundName(r.fund))}${role !== 'teacher' ? ` <span class="hint">(balance ${peso(bal)})</span>` : ''}</dd><dt>Category</dt><dd>${esc(r.cat)}</dd>
+      ${r.needed ? `<dt>Needed by</dt><dd>${fmtDate(r.needed)}</dd>` : ''}${tx ? `<dt>Released</dt><dd>${ref(tx)} · ${fmtDate(tx.date)}</dd>` : ''}</dl>
+    <div class="desc">${esc(r.items)}</div>
+    ${role === 'principal' && r.status === 'Pending' ? `<div class="box admin"><h3>Your decision</h3>
+      ${r.amount > bal ? `<div class="warn" style="margin-bottom:.6rem">The ${esc(fundName(r.fund))} only has ${peso(bal)}.</div>` : ''}
+      <textarea id="rMsg" style="min-height:3.5rem" placeholder="Remarks to the teacher (required when rejecting)"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn ghost" onclick="decide(${r.no}, false)">Reject</button><button class="btn" onclick="decide(${r.no}, true)">Approve</button></div></div>` : ''}
+    ${role === 'bookkeeper' && r.status === 'Approved' ? `<div class="box admin"><h3>Release funds</h3>
+      ${r.amount > bal ? `<div class="err" style="margin-bottom:.6rem">Not enough money in ${esc(fundName(r.fund))} (${peso(bal)}).</div>` : `<p class="hint" style="margin:0 0 .6rem">This records a disbursement voucher (${ref({kind:'out', ref:nextRef('out')})}) for ${peso(r.amount)} from ${esc(fundName(r.fund))}.</p>`}
+      <div class="actions"><button class="btn" ${r.amount > bal ? 'disabled style="opacity:.5"' : ''} onclick="release(${r.no})">Release ${peso(r.amount)}</button></div></div>` : ''}
+    ${P.timeline(r)}`);
+}
+function decide(no, ok){
+  const r = P.db.reqs.find(x => x.no === no), msg = $('rMsg').value.trim();
+  if (!ok && !msg) { $('rMsg').focus(); $('rMsg').placeholder = 'Please give a reason for rejecting'; return; }
+  r.status = ok ? 'Approved' : 'Rejected'; P.log(r, ok ? 'Approved by the Principal' : 'Rejected by the Principal');
+  if (msg) P.log(r, msg);
+  P.save(); viewReq(no); P.refresh();
+}
+function release(no){
+  const r = P.db.reqs.find(x => x.no === no);
+  if (r.amount > balance(r.fund)) return;
+  const t = addTx('out', {date:todayStr(), fund:r.fund, cat:r.cat, party:P.userOf(r.by).name, desc:r.purpose + ' (' + frNo(r.no) + ')', amount:r.amount});
+  r.status = 'Released'; r.tx = t.no; P.log(r, 'Funds released · ' + ref(t));
+  P.save(); viewReq(no); P.refresh();
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ID System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{--brand:#334155;--brand-d:#0f172a;--brand-soft:#e2e8f0;--grad:linear-gradient(135deg,#64748b,#1e293b)}
+  /* ---- ID card (CR80 portrait, 54 x 85.6 mm) ---- */
+  .cards{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+  .cardview{zoom:1.3}
+  .idcard{width:54mm;height:85.6mm;border-radius:3mm;overflow:hidden;background:#fff;position:relative;box-shadow:0 4px 14px rgba(15,23,42,.18);
+    font-family:Poppins,Arial,sans-serif;color:#0f172a;display:flex;flex-direction:column;align-items:center;border:.2mm solid #cbd5e1}
+  .idcard .band{width:100%;background:linear-gradient(135deg,#1e3a8a,#0f172a);color:#fff;display:flex;align-items:center;gap:1.6mm;padding:2mm 2.4mm}
+  .idcard .band img{width:9mm;height:9mm;border-radius:50%;background:#fff}
+  .idcard .band b{display:block;font-size:2.35mm;line-height:1.15;font-weight:700;letter-spacing:.02em}
+  .idcard .band small{font-size:1.7mm;opacity:.85}
+  .idcard .photo{width:25mm;height:30mm;margin-top:3mm;border:.6mm solid #fff;outline:.3mm solid #cbd5e1;background:#e2e8f0 center/cover no-repeat;display:grid;place-items:center}
+  .idcard .photo svg{width:14mm;height:14mm;color:#94a3b8}
+  .idcard .nm{margin-top:2mm;text-align:center;padding:0 2mm}
+  .idcard .nm b{display:block;font-size:3.2mm;line-height:1.15;font-weight:700;text-transform:uppercase}
+  .idcard .nm span{font-size:2.3mm}
+  .idcard .kind{margin-top:1.6mm;padding:.5mm 4mm;border-radius:1mm;font-size:2.2mm;font-weight:700;letter-spacing:.15em;color:#fff;background:#1d4ed8}
+  .idcard .kind.emp{background:#9f1239}
+  .idcard .meta{margin-top:auto;width:100%;display:flex;justify-content:space-between;padding:1.6mm 2.4mm;background:#f1f5f9;font-size:1.9mm;line-height:1.3}
+  .idcard .meta b{font-size:2.1mm}
+  .idcard.back{justify-content:flex-start;padding:3mm 3mm 2mm;gap:1.5mm;font-size:1.95mm;line-height:1.35;text-align:center}
+  .idcard.back h4{font-size:2.2mm;font-weight:600;margin-top:.5mm}
+  .idcard.back .em{font-size:2.5mm;font-weight:600}
+  .idcard.back dl{display:grid;grid-template-columns:auto 1fr;gap:.3mm 1.5mm;text-align:left;width:100%;margin-top:1mm}
+  .idcard.back dt{color:#64748b}
+  .idcard.back .qr{width:19mm;height:19mm;margin:1mm auto 0}
+  .idcard.back .qr img,.idcard.back .qr canvas{width:19mm!important;height:19mm!important}
+  .idcard.back .sig{margin-top:auto;width:80%;border-top:.25mm solid #0f172a;padding-top:.6mm}
+  .idcard.back .sig b{display:block;font-size:2.1mm}
+  .idcard.back .lost{font-size:1.6mm;color:#64748b}
+  .idcard .stamp{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);border:.6mm solid #dc2626;color:#dc2626;font-weight:700;font-size:4mm;padding:.5mm 2mm;border-radius:1mm;background:rgba(255,255,255,.85);letter-spacing:.1em}
+  .photoPick{display:flex;align-items:center;gap:.8rem}
+  .photoPick .pv{width:4rem;height:5rem;border-radius:.4rem;background:#e2e8f0 center/cover;flex:none;border:1px solid var(--line)}
+  .pq{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:1rem}
+  .pq .item{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.8rem;display:flex;flex-direction:column;gap:.6rem;align-items:center}
+  .pq .item .cards{zoom:.72}
+  #printArea{display:none}
+  @media print{
+    body.printing > *:not(#printArea){display:none!important}
+    body.printing #printArea{display:flex;flex-wrap:wrap;gap:4mm}
+    body.printing .idcard{box-shadow:none;break-inside:avoid}
+    .cardview{zoom:1}
+    @page{margin:10mm}
+  }
+  @media (max-width:760px){ .cardview{zoom:1} }
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h4.5M14 13.5h3"/></svg>';
+const PERSON = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7z"/></svg>';
+const SEAL = '../logos/svnhs-seal.png';
+const STATUS = {'Submitted':'p-blue','Approved':'p-violet','Printed':'p-amber','Released':'p-green','Returned':'p-red'};
+const sPill = s => `<span class="pill ${STATUS[s]}">${s === 'Printed' ? 'Printed – ready to claim' : s === 'Returned' ? 'Returned – please fix' : s}</span>`;
+const rno = n => 'IDR-' + String(n).padStart(4,'0');
+const D = 864e5, now = Date.now();
+const fullName = r => `${r.last}, ${r.first}${r.middle ? ' ' + r.middle[0] + '.' : ''}`;
+
+const sample = (no, by, kind, status, last, first, idNo, unit, cardNo, daysAgo, extra) => Object.assign({
+  no, by, kind, type:'New', reason:'', last, first, middle:'', idNo, unit, birth:'2011-05-14', blood:'O+', address:'San Vicente, Panabo City',
+  emName:'Parent of ' + first, emRel:'Parent', emPhone:'0917 000 00' + pad(no), photo:'', status, cardNo, sy:'2026–2027', at: now - daysAgo*D,
+  log:[{t: now - daysAgo*D, m:'ID request submitted', by}]}, extra || {});
+
+const CFG = {
+  key:'svnhs-id', title:'ID System', subtitle:'SVNHS ID Office', icon:ICON, officeName:'ID Office',
+  roles:{
+    idadmin:{admin:true, tagline:'ID requests, printing, and verification.',
+      tabs:[['requests','Requests <span class="count" id="cReq"></span>'],['print','Print Queue <span class="count" id="cPrint"></span>'],['verify','Verify an ID'],['settings','Settings']]},
+    student:{tagline:'Apply for your school ID and track it.', tabs:[['apply','Apply for ID'],['myid','My ID']]},
+    teacher:{tagline:'Apply for your employee ID and track it.', tabs:[['apply','Apply for ID'],['myid','My ID']]},
+  },
+  signup:{roles:[['student','Student'],['teacher','Teacher / Staff']], posLabel:{student:'Grade & section', teacher:'Position'},
+    posHint:{student:'e.g. Grade 8 – Sampaguita', teacher:'e.g. Teacher I'}},
+  demo:[['idadmin','idadmin123','ID Office (admin)'],['student','student123','Student'],['teacher','teacher123','Teacher']],
+  sampleUsers:[
+    {u:'idadmin', p:'idadmin123', name:'ID Coordinator', pos:'ID Office', role:'idadmin'},
+    {u:'student', p:'student123', name:'Student Demo', pos:'Grade 9 – Rizal', role:'student'},
+    {u:'teacher', p:'teacher123', name:'Grade 9 Adviser', pos:'Teacher I', role:'teacher'},
+  ],
+  data:{
+    settings:{sy:'2026–2027', principal:'(Name of Principal)', nextCard:5},
+    reqs:[
+      sample(1,'student','Student','Released','Demo','Student','123456789012','Grade 9 – Rizal','SV-26-0001',20,
+        {log:[{t:now-20*D,m:'ID request submitted',by:'student'},{t:now-19*D,m:'Approved · ID no. SV-26-0001',by:'idadmin'},{t:now-15*D,m:'Printed – ready to claim at the ID Office',by:'idadmin'},{t:now-14*D,m:'Released',by:'idadmin'}]}),
+      sample(2,'teacher','Employee','Approved','Adviser','Grade 9','EMP-2019-0042','Teacher I','SV-26-0004',2,
+        {birth:'1990-03-02', blood:'A+', emName:'Spouse of Grade 9 Adviser', emRel:'Spouse',
+         log:[{t:now-2*D,m:'ID request submitted',by:'teacher'},{t:now-1*D,m:'Approved · ID no. SV-26-0004',by:'idadmin'}]}),
+      sample(3,'x1','Student','Submitted','Sample','Learner G','100000000011','Grade 7 – Sampaguita','',0.3),
+      sample(4,'x2','Student','Submitted','Sample','Learner H','100000000012','Grade 10 – Narra','',1, {type:'Replacement', reason:'Lost'}),
+      sample(5,'x3','Student','Approved','Sample','Learner I','100000000013','Grade 8 – Ilang-Ilang','SV-26-0003',3),
+      sample(6,'x4','Student','Released','Sample','Learner J','100000000014','Grade 7 – Rosal','SV-26-0002',18),
+    ],
+  },
+  counts(){
+    P.setCount('cReq', P.db.reqs.filter(r => r.status === 'Submitted').length);
+    P.setCount('cPrint', P.db.reqs.filter(r => r.status === 'Approved').length);
+  },
+  views:{requests, print: printQueue, verify, settings, apply, myid},
+};
+
+/* ================= ID CARD ================= */
+function cardHTML(r, opts = {}){
+  const S = P.db.settings, emp = r.kind === 'Employee';
+  const photo = r.photo ? `style="background-image:url('${r.photo}')"` : '';
+  const stamp = opts.stamp ? `<div class="stamp">${opts.stamp}</div>` : '';
+  return `<div class="cards"><div class="idcard">
+      <div class="band"><img src="${SEAL}" alt=""><div><b>SAN VICENTE NATIONAL HIGH SCHOOL</b><small>San Vicente, Panabo City</small></div></div>
+      <div class="photo" ${photo}>${r.photo ? '' : PERSON}</div>
+      <div class="nm"><b>${esc(r.last || 'LAST NAME')}</b><span>${esc(r.first || 'First name')}${r.middle ? ' ' + esc(r.middle[0]) + '.' : ''}</span></div>
+      <div class="kind ${emp ? 'emp' : ''}">${emp ? 'EMPLOYEE' : 'STUDENT'}</div>
+      <div style="font-size:2.3mm;margin-top:1mm">${esc(r.unit || (emp ? 'Position' : 'Grade & section'))}</div>
+      <div class="meta"><div>${emp ? 'Employee no.' : 'LRN'}<br><b>${esc(r.idNo || '—')}</b></div><div style="text-align:right">ID no.<br><b>${esc(r.cardNo || 'pending')}</b></div></div>
+      ${stamp}
+    </div>
+    <div class="idcard back">
+      <h4>In case of emergency, please notify:</h4>
+      <div class="em">${esc(r.emName || '—')}</div>
+      <div>${esc(r.emRel || '')}${r.emPhone ? ' · ' + esc(r.emPhone) : ''}</div>
+      <dl><dt>Address</dt><dd>${esc(r.address || '—')}</dd><dt>Birthdate</dt><dd>${fmtDate(r.birth)}</dd><dt>Blood type</dt><dd>${esc(r.blood || '—')}</dd><dt>Valid for</dt><dd>S.Y. ${esc(r.sy || S.sy)}</dd></dl>
+      <div class="qr" data-text="${esc(r.cardNo ? 'SVNHS|' + r.cardNo + '|' + fullName(r) : '')}"></div>
+      <div class="sig"><b>${esc(S.principal)}</b>School Principal</div>
+      <div class="lost">If found, please return to San Vicente National High School.</div>
+    </div></div>`;
+}
+function drawQRs(root){
+  (root || document).querySelectorAll('.qr[data-text]').forEach(el => {
+    el.innerHTML = '';
+    const t = el.dataset.text;
+    if (!t) { el.innerHTML = '<div style="font-size:1.6mm;color:#94a3b8;border:.2mm dashed #cbd5e1;height:100%;display:grid;place-items:center">QR after approval</div>'; return; }
+    if (window.QRCode) new QRCode(el, {text:t, width:160, height:160, correctLevel:QRCode.CorrectLevel.M});
+    else el.innerHTML = `<div style="font-size:1.6mm">${esc(t)}</div>`;
+  });
+}
+
+/* ================= APPLICANT ================= */
+const mine = () => P.db.reqs.filter(r => r.by === P.me.u).sort((a,b) => b.at - a.at);
+function apply(el){
+  const pending = mine().find(r => ['Submitted','Approved','Printed'].includes(r.status));
+  if (pending) { el.innerHTML = `<div class="card"><h2>You already have an ID request in progress</h2><p class="hint">${rno(pending.no)} · ${sPill(pending.status)}</p><button class="btn" onclick="P.tab('myid')">See my ID</button></div>`; return; }
+  const last = mine()[0], emp = P.me.role === 'teacher';
+  const base = last || {last:'', first:'', middle:'', idNo:'', unit:P.me.pos, birth:'', blood:'', address:'', emName:'', emRel:'', emPhone:'', photo:''};
+  const draft = Object.assign({}, base, {kind: emp ? 'Employee' : 'Student', cardNo:'', status:'', sy:P.db.settings.sy});
+  el.innerHTML = `<div class="twocol">
+    <div class="card"><h2>${last ? (last.status === 'Returned' ? 'Fix and resubmit your ID request' : 'Request a replacement ID') : 'Apply for your school ID'}</h2>
+      <p class="hint">Your card preview updates as you type.</p>
+      ${last && last.status === 'Returned' ? `<div class="warn" style="margin-bottom:1rem">The ID Office returned your last request. Check the message in My ID, fix it here, and submit again.</div>` : ''}
+      <form class="form" id="form">
+        <div class="full"><label>Request type</label><div class="seg">
+          <label><input type="radio" name="type" value="New" ${!last || last.status === 'Returned' ? 'checked' : ''}>New ID</label>
+          <label><input type="radio" name="type" value="Replacement" ${last && last.status === 'Released' ? 'checked' : ''}>Replacement</label></div></div>
+        <div class="full" id="reasonBox" hidden><label>Reason for replacement</label><select name="reason"><option>Lost</option><option>Damaged</option><option>Change of information</option></select></div>
+        <div><label>Last name <i>*</i></label><input name="last" required value="${esc(draft.last)}"></div>
+        <div><label>First name <i>*</i></label><input name="first" required value="${esc(draft.first)}"></div>
+        <div><label>Middle name</label><input name="middle" value="${esc(draft.middle)}"></div>
+        <div><label>${emp ? 'Employee number' : 'LRN'} <i>*</i></label><input name="idNo" required value="${esc(draft.idNo)}" ${emp ? '' : 'pattern="\\d{12}" maxlength="12" inputmode="numeric" title="12 digits"'}></div>
+        <div><label>${emp ? 'Position' : 'Grade &amp; section'} <i>*</i></label><input name="unit" required value="${esc(draft.unit)}"></div>
+        <div><label>Birthdate <i>*</i></label><input name="birth" type="date" required value="${esc(draft.birth)}"></div>
+        <div><label>Blood type</label><select name="blood">${['','A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b => `<option ${draft.blood===b?'selected':''} value="${b}">${b || '—'}</option>`).join('')}</select></div>
+        <div class="full"><label>Address <i>*</i></label><input name="address" required value="${esc(draft.address)}"></div>
+        <div><label>Emergency contact name <i>*</i></label><input name="emName" required value="${esc(draft.emName)}"></div>
+        <div><label>Relationship</label><input name="emRel" value="${esc(draft.emRel)}" placeholder="e.g. Mother"></div>
+        <div class="full"><label>Emergency contact number <i>*</i></label><input name="emPhone" required inputmode="tel" value="${esc(draft.emPhone)}"></div>
+        <div class="full"><label>ID photo <i>*</i> <span style="font-weight:400;color:var(--muted)">— plain background, face clearly visible</span></label>
+          <div class="photoPick"><div class="pv" id="pv" style="${draft.photo ? `background-image:url('${draft.photo}')` : ''}"></div>
+          <input type="file" id="photo" accept="image/*" capture="user"></div><div id="photoErr" class="err" hidden style="margin-top:.4rem"></div></div>
+        <div class="full"><label class="check"><input type="checkbox" required> <span>The information above is correct, and I agree to its use for my school ID (Data Privacy Act of 2012). <i>*</i></span></label></div>
+        <div class="full actions"><button class="btn">Submit ID request</button></div>
+      </form></div>
+    <div class="card" style="position:sticky;top:1rem"><h3 class="sec">Preview</h3><div class="cardview" id="preview"></div></div></div>`;
+  const f = $('form');
+  let photo = draft.photo;
+  const read = () => Object.assign({}, draft, Object.fromEntries(new FormData(f)), {photo});
+  const preview = () => { $('preview').innerHTML = cardHTML(read()); drawQRs($('preview')); $('reasonBox').hidden = f.type.value !== 'Replacement'; };
+  f.addEventListener('input', preview); f.addEventListener('change', preview); preview();
+  $('photo').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try { photo = await shrinkPhoto(file); $('pv').style.backgroundImage = `url('${photo}')`; $('photoErr').hidden = true; preview(); }
+    catch(err) { $('photoErr').textContent = 'Could not read that photo. Try another image.'; $('photoErr').hidden = false; }
+  };
+  f.onsubmit = e => {
+    e.preventDefault();
+    if (!photo) { $('photoErr').textContent = 'Please add your ID photo.'; $('photoErr').hidden = false; return; }
+    const d = read(), no = nextNo(P.db.reqs);
+    const r = {no, by:P.me.u, kind:d.kind, type:d.type, reason: d.type === 'Replacement' ? d.reason : '', last:d.last.trim(), first:d.first.trim(), middle:d.middle.trim(),
+      idNo:d.idNo.trim(), unit:d.unit.trim(), birth:d.birth, blood:d.blood, address:d.address.trim(), emName:d.emName.trim(), emRel:d.emRel.trim(), emPhone:d.emPhone.trim(),
+      photo, status:'Submitted', cardNo:'', sy:P.db.settings.sy, at:Date.now(), log:[]};
+    P.log(r, d.type === 'Replacement' ? 'Replacement ID requested (' + r.reason + ')' : 'ID request submitted');
+    P.db.reqs.push(r); P.save(); P.counts();
+    el.innerHTML = P.doneCard('Your ID request was sent to the ID Office. Reference number', rno(no), 'OK', `P.tab('myid')`);
+  };
+}
+// Resize + center-crop to a 4:5 portrait JPEG so it fits in browser storage.
+function shrinkPhoto(file){
+  return new Promise((ok, bad) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const W = 240, H = 300, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const s = Math.max(W / img.width, H / img.height), w = img.width * s, h = img.height * s;
+      c.getContext('2d').drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+      URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', .82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); bad(new Error('bad image')); };
+    img.src = url;
+  });
+}
+function myid(el){
+  const R = mine();
+  if (!R.length) { el.innerHTML = `<div class="empty">You haven't applied for an ID yet. <button class="btn sm" style="margin-left:.5rem" onclick="P.tab('apply')">Apply now</button></div>`; return; }
+  el.innerHTML = `<div class="stack">${R.map(r => `<div class="card">
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start"><div><h2>${r.type === 'Replacement' ? 'Replacement ID' : 'School ID'} · ${esc(r.sy)}</h2>
+      <p class="hint" style="margin:0">${rno(r.no)} · ${when(r.at)}</p></div>${sPill(r.status)}</div>
+    <div class="steps"><div class="on">Submitted</div><div class="${['Approved','Printed','Released'].includes(r.status)?'on':r.status==='Returned'?'bad on':''}">Approved</div><div class="${['Printed','Released'].includes(r.status)?'on':''}">Printed</div><div class="${r.status==='Released'?'on':''}">Claimed</div></div>
+    ${r.status === 'Printed' ? '<div class="okbox" style="margin:.6rem 0">Your ID is ready. Claim it at the ID Office.</div>' : ''}
+    ${r.status === 'Returned' ? `<div class="warn" style="margin:.6rem 0">Please fix your request. <button class="btn sm" onclick="P.tab('apply')">Fix and resubmit</button></div>` : ''}
+    <div class="twocol" style="margin-top:.8rem"><div class="cardview">${cardHTML(r)}</div>${P.timeline(r)}</div></div>`).join('')}</div>`;
+  drawQRs(el);
+}
+
+/* ================= ID OFFICE ================= */
+let fq = '', fs = 'Submitted';
+const row = r => `<button class="tk" onclick="viewReq(${r.no})"><span class="no">${rno(r.no)}</span>
+  <span class="ttl">${esc(fullName(r))}</span><span>${sPill(r.status)}</span>
+  <span class="meta">${r.kind} · ${esc(r.unit)} · ${r.type}${r.reason ? ' (' + esc(r.reason) + ')' : ''}${r.cardNo ? ' · ' + esc(r.cardNo) : ''} · ${ago(r.at)}</span></button>`;
+function requests(el){
+  const R = P.db.reqs, by = s => R.filter(r => r.status === s).length;
+  const rows = R.filter(r => (!fs || r.status === fs) && (!fq || [rno(r.no), fullName(r), r.idNo, r.cardNo, r.unit].join(' ').toLowerCase().includes(fq))).sort((a,b) => a.at - b.at);
+  el.innerHTML = `<div class="stack">
+    <div class="stats" style="grid-template-columns:repeat(5,1fr)">${[['','All',R.length]].concat(Object.keys(STATUS).map(s => [s, s, by(s)])).map(([k,l,n]) =>
+      `<button class="stat ${fs===k?'on':''}" data-f="${k}"><b>${n}</b><span>${l}</span></button>`).join('')}</div>
+    <div class="tools"><input id="q" value="${esc(fq)}" placeholder="Search name, LRN, employee no., or ID no.…"></div>
+    <div class="list">${rows.length ? rows.map(row).join('') : '<div class="empty">Nothing here.</div>'}</div></div>`;
+  el.querySelectorAll('.stat').forEach(b => b.onclick = () => { fs = b.dataset.f; requests(el); });
+  const q = $('q'); q.oninput = () => { fq = q.value.trim().toLowerCase(); const p = q.selectionStart; requests(el); $('q').focus(); $('q').setSelectionRange(p,p); };
+}
+function viewReq(no){
+  const r = P.db.reqs.find(x => x.no === no); if (!r) return;
+  if (!P.isAdmin()) { if (r.by === P.me.u) P.tab('myid'); return; }
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${rno(r.no)}</div><h2>${esc(fullName(r))}</h2><div style="margin-top:.4rem">${sPill(r.status)}</div></div>
+      <button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <div class="cardview" style="zoom:1.1">${cardHTML(r)}</div>
+    <dl class="kv"><dt>Kind</dt><dd>${r.kind}</dd><dt>Request</dt><dd>${r.type}${r.reason ? ' – ' + esc(r.reason) : ''}</dd>
+      <dt>${r.kind === 'Employee' ? 'Employee no.' : 'LRN'}</dt><dd>${esc(r.idNo)}</dd><dt>ID no.</dt><dd>${esc(r.cardNo || 'Assigned on approval')}</dd></dl>
+    <div class="box admin"><h3>ID Office actions</h3>
+      <div class="row"><select id="rStatus">${Object.keys(STATUS).map(s => `<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div id="rErr" class="err" hidden style="margin-bottom:.6rem"></div>
+      <textarea id="rMsg" style="min-height:3.5rem" placeholder="Message to the applicant (required when returning a request)"></textarea>
+      <div class="actions" style="margin-top:.6rem">${r.status === 'Approved' ? `<button class="btn ghost" onclick="printCards([${r.no}])">Print this ID</button>` : ''}<button class="btn" onclick="saveReq(${r.no})">Save</button></div></div>
+    ${P.timeline(r)}`);
+  drawQRs($('drawer'));
+}
+function assignCard(r){
+  if (r.cardNo) return;
+  const S = P.db.settings, yy = String(S.sy).slice(2,4);
+  r.cardNo = 'SV-' + yy + '-' + String(S.nextCard++).padStart(4, '0');
+}
+function saveReq(no){
+  const r = P.db.reqs.find(x => x.no === no), st = $('rStatus').value, msg = $('rMsg').value.trim();
+  if (st === 'Returned' && st !== r.status && !msg) { $('rErr').textContent = 'Tell the applicant what to fix.'; $('rErr').hidden = false; return; }
+  if (st !== r.status) {
+    if (['Approved','Printed','Released'].includes(st)) assignCard(r);
+    r.status = st;
+    P.log(r, st === 'Approved' ? 'Approved · ID no. ' + r.cardNo : st === 'Printed' ? 'Printed – ready to claim at the ID Office' : st === 'Returned' ? 'Returned to applicant' : 'Status changed to ' + st);
+  }
+  if (msg) P.log(r, msg);
+  P.save(); viewReq(no); P.refresh();
+}
+function printQueue(el){
+  const Q = P.db.reqs.filter(r => r.status === 'Approved').sort((a,b) => a.at - b.at);
+  el.innerHTML = `<div class="stack">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div><h2>Print queue (${Q.length})</h2><p class="hint" style="margin:0">Approved IDs waiting to be printed. Print on CR80 card stock or A4 and cut.</p></div>
+      ${Q.length ? `<button class="btn" onclick="printCards(${JSON.stringify(Q.map(r => r.no))})">Print all ${Q.length}</button>` : ''}</div>
+    ${Q.length ? `<div class="pq">${Q.map(r => `<div class="item">${cardHTML(r)}<div style="font-size:.82rem;text-align:center"><b>${esc(fullName(r))}</b><br>${esc(r.cardNo)}</div>
+      <button class="btn ghost sm" onclick="printCards([${r.no}])">Print this one</button></div>`).join('')}</div>` : '<div class="empty">Nothing to print. Approve requests first.</div>'}</div>`;
+  drawQRs(el);
+}
+function printCards(nos){
+  const R = nos.map(n => P.db.reqs.find(r => r.no === n));
+  const area = $('printArea'); area.innerHTML = R.map(r => cardHTML(r)).join(''); drawQRs(area);
+  document.body.classList.add('printing');
+  setTimeout(() => {
+    window.print();
+    document.body.classList.remove('printing'); area.innerHTML = '';
+    if (confirm('Mark ' + R.length + ' ID' + (R.length > 1 ? 's' : '') + ' as printed (ready to claim)?')) {
+      R.forEach(r => { if (r.status === 'Approved') { r.status = 'Printed'; P.log(r, 'Printed – ready to claim at the ID Office'); } });
+      P.save(); P.close(); P.refresh();
+    }
+  }, 300);
+}
+let vq = '';
+function verify(el){
+  const q = vq.trim().toLowerCase();
+  const hits = q ? P.db.reqs.filter(r => r.cardNo && [r.cardNo, fullName(r), r.idNo].join(' ').toLowerCase().includes(q)) : [];
+  el.innerHTML = `<div class="stack"><div class="card"><h2>Verify an ID</h2><p class="hint">Type the ID number on the card (e.g. SV-26-0001), the LRN, or a name. Scanning the QR on the back gives the same ID number.</p>
+    <div class="tools"><input id="vq" value="${esc(vq)}" placeholder="SV-26-0001"></div></div>
+    ${q ? (hits.length ? hits.map(r => { const ok = r.status === 'Released' || r.status === 'Printed', current = r.sy === P.db.settings.sy;
+      const newer = P.db.reqs.some(x => x.by === r.by && x.by && x.no > r.no && x.cardNo && x.no !== r.no);
+      const valid = ok && current && !newer;
+      return `<div class="card"><div class="twocol"><div class="cardview">${cardHTML(r, valid ? {} : {stamp: newer ? 'REPLACED' : !current ? 'EXPIRED' : 'NOT ISSUED'})}</div>
+        <div>${valid ? '<div class="okbox"><b>✓ Valid ID</b><br>Issued for S.Y. ' + esc(r.sy) + '.</div>' : `<div class="warn"><b>Not valid.</b> ${newer ? 'A newer ID was issued to this person.' : !current ? 'This ID is from an old school year.' : 'This ID has not been released yet.'}</div>`}
+        <dl class="kv" style="margin-top:1rem"><dt>Name</dt><dd>${esc(fullName(r))}</dd><dt>${r.kind}</dt><dd>${esc(r.unit)}</dd><dt>ID no.</dt><dd>${esc(r.cardNo)}</dd><dt>Status</dt><dd>${sPill(r.status)}</dd></dl></div></div></div>`; }).join('')
+      : '<div class="empty">No ID matches that. It may be fake or not issued yet.</div>') : ''}</div>`;
+  drawQRs(el);
+  const i = $('vq'); i.oninput = () => { vq = i.value; const p = i.selectionStart; verify(el); $('vq').focus(); $('vq').setSelectionRange(p,p); };
+}
+function settings(el){
+  const S = P.db.settings;
+  el.innerHTML = `<div class="card"><h2>ID settings</h2><p class="hint">These print on every new card.</p>
+    <form class="form" id="sf"><div><label>School year printed on IDs</label><input name="sy" value="${esc(S.sy)}" required></div>
+      <div><label>Principal's name (signature line)</label><input name="principal" value="${esc(S.principal)}" required></div>
+      <div class="full actions"><span class="saved" id="sv" hidden>✓ Saved</span><button class="btn">Save</button></div></form></div>`;
+  $('sf').onsubmit = e => { e.preventDefault(); S.sy = e.target.sy.value.trim(); S.principal = e.target.principal.value.trim(); P.save(); $('sv').hidden = false; };
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

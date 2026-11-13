@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICT Concerns</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f5f8; --card:#fff; --ink:#1b1f2a; --muted:#6b7280; --line:#e5e7eb;
+    --brand:#e11d48; --brand-d:#9f1239; --brand-soft:#ffe4e9;
+    --open:#2563eb; --open-bg:#dbeafe; --prog:#b45309; --prog-bg:#fef3c7; --done:#15803d; --done-bg:#dcfce7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,sans-serif;font-size:14px}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  [hidden]{display:none!important}
+
+  /* ---------- login ---------- */
+  #login{min-height:100vh;display:grid;place-items:center;padding:1.5rem;
+    background:radial-gradient(circle at 50% 30%,rgba(244,63,94,.25),transparent 55%),#1b1f2a}
+  .lcard{width:min(24rem,100%);background:#fff;border-radius:1rem;padding:1.8rem;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .lcard .ic{width:3.2rem;height:3.2rem;border-radius:.8rem;background:linear-gradient(135deg,#f43f5e,#9f1239);color:#fff;display:grid;place-items:center;margin:0 auto .8rem}
+  .lcard .ic svg{width:1.8rem;height:1.8rem}
+  .lcard h1{text-align:center;font-size:1.3rem;font-weight:600}
+  .lcard .sub{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:1.3rem}
+  .lcard form{display:flex;flex-direction:column;gap:.85rem}
+  .lcard .btn{width:100%;padding:.75rem}
+  .err{background:#fee2e2;color:#b91c1c;border-radius:.5rem;padding:.5rem .7rem;font-size:.82rem}
+  .switchlink{text-align:center;font-size:.83rem;color:var(--muted);margin-top:1rem}
+  .switchlink button{color:var(--brand);font-weight:500;text-decoration:underline}
+  .demo{margin-top:1.2rem;border-top:1px dashed var(--line);padding-top:1rem;font-size:.78rem;color:var(--muted)}
+  .demo b{color:var(--ink);font-weight:500}
+  .demo button{display:block;width:100%;text-align:left;padding:.45rem .6rem;border:1px solid var(--line);border-radius:.5rem;margin-top:.4rem}
+  .demo button:hover{border-color:#fda4af;background:#fff7f8}
+
+  /* ---------- app ---------- */
+  header{background:linear-gradient(135deg,#f43f5e,#9f1239);color:#fff;padding:1.2rem 1.5rem 0}
+  .head{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:.8rem}
+  .head .ic{width:2.6rem;height:2.6rem;border-radius:.6rem;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+  .head .ic svg{width:1.5rem;height:1.5rem}
+  .head h1{font-size:1.25rem;font-weight:600;line-height:1.2}
+  .head p{font-size:.8rem;opacity:.85}
+  .who{margin-left:auto;display:flex;align-items:center;gap:.6rem;flex:none}
+  .who .av{width:2.1rem;height:2.1rem;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:600;font-size:.8rem}
+  .who .nm{font-size:.82rem;line-height:1.2;text-align:right}
+  .who .nm small{display:block;opacity:.8;font-size:.7rem}
+  .who .out{border:1px solid rgba(255,255,255,.5);border-radius:.4rem;padding:.3rem .7rem;font-size:.78rem}
+  .who .out:hover{background:rgba(255,255,255,.12)}
+  .role{display:inline-block;background:#fff;color:var(--brand-d);font-size:.62rem;font-weight:600;padding:.05rem .4rem;border-radius:.3rem;letter-spacing:.04em;margin-left:.3rem;vertical-align:middle}
+  .tabs{max-width:1100px;margin:1rem auto 0;display:flex;gap:.25rem}
+  .tabs button{padding:.6rem 1rem;border-radius:.5rem .5rem 0 0;color:rgba(255,255,255,.85);font-weight:500}
+  .tabs button.on{background:var(--bg);color:var(--brand-d)}
+  .tabs .count{display:inline-block;min-width:1.3rem;padding:0 .35rem;margin-left:.3rem;border-radius:1rem;background:rgba(255,255,255,.25);font-size:.72rem}
+  .tabs button.on .count{background:var(--brand-soft)}
+
+  main{max-width:1100px;margin:0 auto;padding:1.5rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:.8rem;padding:1.4rem}
+  h2{font-size:1.05rem;font-weight:600;margin-bottom:.2rem}
+  .hint{color:var(--muted);font-size:.85rem;margin-bottom:1.2rem}
+
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:.78rem;font-weight:500;color:#374151;margin-bottom:.3rem}
+  label i{color:var(--brand);font-style:normal}
+  input,select,textarea{width:100%;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;background:#fff}
+  textarea{min-height:7rem;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid #fda4af;border-color:var(--brand)}
+  .asme{background:var(--bg);border-radius:.5rem;padding:.6rem .7rem}
+  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+  .cats label{margin:0;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem;display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:400;font-size:.82rem}
+  .cats input{display:none}
+  .cats label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--brand-d);font-weight:500}
+  .prio{display:flex;gap:.5rem}
+  .prio label{flex:1;margin:0;text-align:center;border:1px solid #d1d5db;border-radius:.5rem;padding:.55rem;cursor:pointer;font-weight:400}
+  .prio input{display:none}
+  .prio label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--brand-d);font-weight:500}
+  .btn{background:var(--brand);color:#fff;padding:.65rem 1.3rem;border-radius:.5rem;font-weight:500}
+  .btn:hover{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid #d1d5db}
+  .btn.ghost:hover{background:#f9fafb}
+  .actions{display:flex;justify-content:flex-end;gap:.6rem}
+
+  .done-msg{text-align:center;padding:2.5rem 1rem}
+  .done-msg .big{font-size:1.6rem;font-weight:700;color:var(--brand-d);margin:.4rem 0}
+  .done-msg .chk{width:3.4rem;height:3.4rem;border-radius:50%;background:var(--done-bg);color:var(--done);display:grid;place-items:center;margin:0 auto}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.8rem 1rem;cursor:pointer;text-align:left}
+  .stat b{display:block;font-size:1.5rem;font-weight:600}
+  .stat span{color:var(--muted);font-size:.78rem}
+  .stat.on{outline:2px solid var(--brand)}
+  .tools{display:flex;gap:.6rem;margin-bottom:.8rem}
+  .tools input{flex:1}
+  .tools select{width:auto}
+  .list{display:flex;flex-direction:column;gap:.5rem}
+  .tk{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.85rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.3rem 1rem;align-items:center;cursor:pointer;text-align:left;width:100%}
+  .tk:hover{border-color:#fda4af}
+  .tk .no{font-weight:600;color:var(--brand-d);font-size:.8rem}
+  .tk .ttl{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tk .meta{grid-column:2/4;color:var(--muted);font-size:.78rem}
+  .pill{display:inline-block;padding:.15rem .6rem;border-radius:1rem;font-size:.72rem;font-weight:500;white-space:nowrap}
+  .s-Open{background:var(--open-bg);color:var(--open)}
+  .s-In{background:var(--prog-bg);color:var(--prog)}
+  .s-Resolved{background:var(--done-bg);color:var(--done)}
+  .p-Urgent{background:#fee2e2;color:#b91c1c}
+  .p-Normal{background:#f3f4f6;color:#4b5563}
+  .p-Low{background:#f3f4f6;color:#9ca3af}
+  .empty{text-align:center;color:var(--muted);padding:2.5rem;background:#fff;border:1px dashed var(--line);border-radius:.7rem}
+
+  .shade{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;justify-content:flex-end;z-index:10}
+  .shade.on{display:flex}
+  .drawer{width:min(30rem,100%);height:100%;background:#fff;overflow:auto;padding:1.4rem;display:flex;flex-direction:column;gap:1rem}
+  .drawer .top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .drawer .x{font-size:1.4rem;line-height:1;color:var(--muted);padding:.2rem .4rem}
+  .kv{display:grid;grid-template-columns:7rem 1fr;gap:.4rem;font-size:.85rem}
+  .kv dt{color:var(--muted)}
+  .desc{background:var(--bg);border-radius:.6rem;padding:.8rem;white-space:pre-wrap;font-size:.88rem}
+  .staff{border:1px dashed #fda4af;border-radius:.7rem;padding:1rem;background:#fff7f8}
+  .staff h3{font-size:.85rem;font-weight:600;color:var(--brand-d);margin-bottom:.6rem}
+  .staff .row{display:flex;gap:.5rem;margin-bottom:.6rem}
+  .reply{border:1px solid var(--line);border-radius:.7rem;padding:1rem}
+  .reply h3{font-size:.85rem;font-weight:600;margin-bottom:.6rem}
+  .tl{display:flex;flex-direction:column;gap:.7rem;border-left:2px solid var(--line);padding-left:1rem;margin-left:.3rem}
+  .tl div{position:relative;font-size:.83rem}
+  .tl div::before{content:"";position:absolute;left:-1.37rem;top:.35rem;width:.6rem;height:.6rem;border-radius:50%;background:var(--brand)}
+  .tl div.me::before{background:#94a3b8}
+  .tl small{display:block;color:var(--muted);font-size:.72rem}
+  .foot{text-align:center;color:#9ca3af;font-size:.75rem;padding:1rem}
+  .foot button{text-decoration:underline;color:#9ca3af;font-size:.75rem}
+
+  @media (max-width:700px){
+    main{padding:1rem}
+    .head p,.who .nm{display:none}
+    .form{grid-template-columns:1fr}
+    .cats{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .tools{flex-wrap:wrap}
+    .tk{grid-template-columns:1fr auto}
+    .tk .no{grid-column:1/-1}
+    .tk .meta{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" hidden>
+  <div class="lcard">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M12 7.5v4.5M12 14.3v.1"/></svg></div>
+    <h1>ICT Concerns</h1>
+
+    <div id="signinBox">
+      <p class="sub">Sign in to raise or track a concern</p>
+      <form id="signinForm">
+        <div id="signinErr" class="err" hidden></div>
+        <div><label>Username</label><input name="u" required autocomplete="username"></div>
+        <div><label>Password</label><input name="p" type="password" required autocomplete="current-password"></div>
+        <button class="btn">Sign in</button>
+      </form>
+      <p class="switchlink">New teacher? <button onclick="showSignup(true)">Create an account</button></p>
+      <div class="demo">
+        <b>Prototype demo accounts</b> (tap to fill in)
+        <button onclick="fill('admin','admin123')">Admin (ICT) — admin / admin123</button>
+        <button onclick="fill('teacher','teacher123')">Teacher — teacher / teacher123</button>
+      </div>
+    </div>
+
+    <div id="signupBox" hidden>
+      <p class="sub">Teacher account</p>
+      <form id="signupForm">
+        <div id="signupErr" class="err" hidden></div>
+        <div><label>Full name</label><input name="name" required placeholder="e.g. Juan Dela Cruz"></div>
+        <div><label>Position / Office</label>
+          <select name="pos"><option>Teacher</option><option>Adviser</option><option>Department Head</option><option>Admin Staff</option><option>Principal's Office</option></select></div>
+        <div><label>Username</label><input name="u" required pattern="[A-Za-z0-9._-]{3,}" title="At least 3 letters or numbers, no spaces"></div>
+        <div><label>Password</label><input name="p" type="password" required minlength="6"></div>
+        <button class="btn">Create account</button>
+      </form>
+      <p class="switchlink">Already have an account? <button onclick="showSignup(false)">Sign in</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="app" hidden>
+<header>
+  <div class="head">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M12 7.5v4.5M12 14.3v.1"/></svg></div>
+    <div><h1>ICT Concerns</h1><p id="tagline"></p></div>
+    <div class="who">
+      <div class="nm"><span id="whoName"></span><small id="whoPos"></small></div>
+      <div class="av" id="whoAv"></div>
+      <button class="out" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+
+<main>
+  <!-- TEACHER: raise a concern -->
+  <section id="tab-new" hidden>
+    <div class="card" id="formCard">
+      <h2>Raise a concern</h2>
+      <p class="hint">Fill this out and you'll get a ticket number. You can follow its progress in My Concerns.</p>
+      <form class="form" id="form">
+        <div class="full"><label>Reported by</label><div class="asme" id="asme"></div></div>
+        <div class="full"><label>Where is the problem? <i>*</i></label><input name="location" required placeholder="e.g. Room 12, Grade 9 building / Faculty room / Computer Lab"></div>
+        <div class="full"><label>What kind of problem? <i>*</i></label><div class="cats" id="cats"></div></div>
+        <div class="full"><label>Short title <i>*</i></label><input name="title" required maxlength="80" placeholder="e.g. Projector won't turn on"></div>
+        <div class="full"><label>Describe the problem <i>*</i></label><textarea name="desc" required placeholder="What happened? Since when? Any error message?"></textarea></div>
+        <div class="full"><label>How urgent?</label>
+          <div class="prio">
+            <label><input type="radio" name="priority" value="Low">Low – can wait</label>
+            <label><input type="radio" name="priority" value="Normal" checked>Normal</label>
+            <label><input type="radio" name="priority" value="Urgent">Urgent – class/work stopped</label>
+          </div></div>
+        <div class="full actions"><button type="reset" class="btn ghost">Clear</button><button class="btn">Submit concern</button></div>
+      </form>
+    </div>
+    <div class="card done-msg" id="doneCard" hidden>
+      <div class="chk"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+      <p style="margin-top:1rem">Your concern was sent to the ICT admin. Your ticket number is</p>
+      <div class="big" id="doneNo"></div>
+      <p class="hint">You can check its status anytime in My Concerns.</p>
+      <div class="actions" style="justify-content:center">
+        <button class="btn ghost" onclick="viewTicket(lastId)">View ticket</button>
+        <button class="btn" onclick="newForm()">Raise another</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIST (teacher: own tickets, admin: all) -->
+  <section id="tab-list" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="tools">
+      <input id="q" placeholder="Search ticket no., name, room, or problem…">
+      <select id="fcat"><option value="">All categories</option></select>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+</main>
+
+<div class="shade" id="shade"><aside class="drawer" id="drawer"></aside></div>
+<div class="foot">Prototype · accounts and tickets are saved in this browser only · <button onclick="resetDemo()">Reset demo data</button></div>
+</section>
+
+<script>
+const CATS = ['Computer / Laptop','Printer','Internet / Wi-Fi','Projector / TV','Account / Password','Software / LIS','CCTV / Network','Other'];
+const K = {users:'svnhs-ict-users', tickets:'svnhs-ict-tickets-v2', session:'svnhs-ict-session'};
+const now = Date.now(), H = 3600e3;
+
+// ---- demo data (prototype only; passwords are stored as plain text in this browser) ----
+const SAMPLE_USERS = [
+  {u:'admin',   p:'admin123',   name:'Reyel',            pos:'ICT Coordinator', role:'admin'},
+  {u:'teacher', p:'teacher123', name:'Grade 9 Adviser',  pos:'Adviser',         role:'teacher'},
+  {u:'faculty', p:'faculty123', name:'Faculty Room',     pos:'Teacher',         role:'teacher'},
+  {u:'registrar',p:'registrar123',name:'Registrar',      pos:'Admin Staff',     role:'teacher'},
+];
+const SAMPLE_TICKETS = [
+  {no:1,by:'teacher',location:'Room 12, Grade 9 building',cat:'Projector / TV',title:'Smart TV has no signal from laptop',desc:'HDMI cable connected but TV says "No signal". Tried another cable already.',priority:'Urgent',status:'In progress',at:now-26*H,log:[{t:now-26*H,m:'Ticket submitted',by:'teacher'},{t:now-24*H,m:'Status changed to In progress',by:'admin'},{t:now-24*H,m:'Will check the HDMI port this afternoon.',by:'admin'}]},
+  {no:2,by:'faculty',location:'Faculty room',cat:'Printer',title:'Printer paper jam, prints blank',desc:'Epson printer jams every 2–3 pages and some pages come out blank.',priority:'Normal',status:'Open',at:now-5*H,log:[{t:now-5*H,m:'Ticket submitted',by:'faculty'}]},
+  {no:3,by:'registrar',location:'Registrar office',cat:'Account / Password',title:'Cannot log in to LIS',desc:'Password reset needed for LIS account.',priority:'Normal',status:'Resolved',at:now-72*H,log:[{t:now-72*H,m:'Ticket submitted',by:'registrar'},{t:now-70*H,m:'Status changed to Resolved',by:'admin'},{t:now-70*H,m:'Password reset done. Please change it after logging in.',by:'admin'}]},
+  {no:4,by:'teacher',location:'JHS Computer Lab',cat:'Internet / Wi-Fi',title:'No internet on PCs 5–10',desc:'Half of the lab has no internet since this morning.',priority:'Urgent',status:'Open',at:now-1.5*H,log:[{t:now-1.5*H,m:'Ticket submitted',by:'teacher'}]},
+];
+const clone = x => JSON.parse(JSON.stringify(x));
+const get = (k, d) => { try{ const v = JSON.parse(localStorage.getItem(k)); return v ?? d; }catch(e){ return d; } };
+const put = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+let users = get(K.users, null) || clone(SAMPLE_USERS);
+let tickets = get(K.tickets, null) || clone(SAMPLE_TICKETS);
+let me = null, lastId, filter = '', current = '';
+const save = () => { put(K.users, users); put(K.tickets, tickets); };
+const isAdmin = () => me && me.role === 'admin';
+const userOf = u => users.find(x => x.u === u) || {u, name:u, pos:''};
+
+const tno = n => 'ICT-' + String(n).padStart(4,'0');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago = t => { const m = Math.round((Date.now()-t)/60000); if(m<1) return 'just now'; if(m<60) return m+' min ago'; const h=Math.round(m/60); if(h<24) return h+' hr ago'; const d=Math.round(h/24); return d+' day'+(d>1?'s':'')+' ago'; };
+const when = t => new Date(t).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const sPill = s => `<span class="pill s-${s.split(' ')[0]}">${s}</span>`;
+const pPill = p => `<span class="pill p-${p}">${p}</span>`;
+const initials = n => n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const $ = id => document.getElementById(id);
+
+// ================= AUTH =================
+function showSignup(on){ $('signinBox').hidden = on; $('signupBox').hidden = !on; }
+function fill(u,p){ const f = $('signinForm'); f.u.value = u; f.p.value = p; }
+$('signinForm').onsubmit = e => {
+  e.preventDefault();
+  const f = e.target, u = f.u.value.trim().toLowerCase();
+  const acc = users.find(x => x.u === u && x.p === f.p.value);
+  if(!acc){ $('signinErr').textContent = 'Wrong username or password.'; $('signinErr').hidden = false; return; }
+  $('signinErr').hidden = true; f.reset(); start(acc);
+};
+$('signupForm').onsubmit = e => {
+  e.preventDefault();
+  const f = e.target, u = f.u.value.trim().toLowerCase();
+  if(users.some(x => x.u === u)){ $('signupErr').textContent = 'That username is taken. Try another.'; $('signupErr').hidden = false; return; }
+  const acc = {u, p:f.p.value, name:f.name.value.trim(), pos:f.pos.value, role:'teacher'};
+  users.push(acc); save(); f.reset(); $('signupErr').hidden = true; showSignup(false); start(acc);
+};
+function start(acc){
+  me = acc; try{ sessionStorage.setItem(K.session, acc.u); }catch(e){}
+  $('login').hidden = true; $('app').hidden = false;
+  $('whoName').innerHTML = esc(me.name) + (isAdmin() ? '<span class="role">ADMIN</span>' : '');
+  $('whoPos').textContent = me.pos;
+  $('whoAv').textContent = initials(me.name);
+  $('tagline').textContent = isAdmin()
+    ? 'All concerns raised by teachers and staff. Update the status so they know what is happening.'
+    : 'Report a computer, internet, printer, or account problem. The ICT admin will handle it.';
+  $('asme').textContent = me.name + ' · ' + me.pos;
+  filter = '';
+  buildTabs();
+  tab(isAdmin() ? 'list' : 'new');
+}
+function logout(){ me = null; try{ sessionStorage.removeItem(K.session); }catch(e){} closeT(); $('app').hidden = true; $('login').hidden = false; showSignup(false); newForm(); }
+
+// ================= TABS =================
+function buildTabs(){
+  $('tabs').innerHTML = isAdmin()
+    ? `<button data-tab="list">All Concerns <span class="count" id="openCount">0</span></button>`
+    : `<button data-tab="new">＋ Raise a Concern</button><button data-tab="list">My Concerns <span class="count" id="openCount">0</span></button>`;
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => tab(b.dataset.tab));
+}
+function tab(name){
+  current = name;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $('tab-new').hidden = name !== 'new';
+  $('tab-list').hidden = name !== 'list';
+  renderList();
+}
+
+// ================= RAISE =================
+$('cats').innerHTML = CATS.map((c,i)=>`<label><input type="radio" name="cat" value="${c}" ${i?'':'required'}>${c}</label>`).join('');
+$('fcat').innerHTML += CATS.map(c=>`<option>${c}</option>`).join('');
+$('form').onsubmit = e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  const no = tickets.reduce((m,t)=>Math.max(m,t.no),0) + 1, t = Date.now();
+  tickets.push({no, by:me.u, ...f, status:'Open', at:t, log:[{t, m:'Ticket submitted', by:me.u}]});
+  save(); lastId = no; e.target.reset();
+  $('formCard').hidden = true; $('doneCard').hidden = false; $('doneNo').textContent = tno(no);
+  renderList();
+};
+function newForm(){ $('formCard').hidden = false; $('doneCard').hidden = true; }
+
+// ================= LIST =================
+const visible = () => isAdmin() ? tickets : tickets.filter(t => t.by === me.u);
+function renderList(){
+  if(!me) return;
+  const mine = visible();
+  const oc = $('openCount'); if(oc) oc.textContent = mine.filter(t => t.status !== 'Resolved').length;
+  if(current !== 'list') return;
+  const by = s => mine.filter(t => t.status === s).length;
+  const st = [['','All',mine.length],['Open','Open',by('Open')],['In progress','In progress',by('In progress')],['Resolved','Resolved',by('Resolved')]];
+  $('stats').innerHTML = st.map(([k,l,n])=>`<button class="stat ${filter===k?'on':''}" data-f="${k}"><b>${n}</b><span>${l}</span></button>`).join('');
+  document.querySelectorAll('#stats .stat').forEach(b => b.onclick = () => { filter = b.dataset.f; renderList(); });
+  const q = $('q').value.trim().toLowerCase(), cat = $('fcat').value;
+  const order = {Urgent:0,Normal:1,Low:2}, sOrder = {'Open':0,'In progress':1,'Resolved':2};
+  const rows = mine
+    .filter(t => !filter || t.status === filter)
+    .filter(t => !cat || t.cat === cat)
+    .filter(t => !q || [tno(t.no), userOf(t.by).name, t.location, t.title, t.desc, t.cat].join(' ').toLowerCase().includes(q))
+    .sort((a,b) => sOrder[a.status]-sOrder[b.status] || order[a.priority]-order[b.priority] || b.at-a.at);
+  $('list').innerHTML = rows.length ? rows.map(t => `
+    <button class="tk" onclick="viewTicket(${t.no})">
+      <span class="no">${tno(t.no)}</span>
+      <span class="ttl">${esc(t.title)}</span>
+      <span>${t.priority==='Urgent'?pPill('Urgent')+' ':''}${sPill(t.status)}</span>
+      <span class="meta">${esc(t.cat)} · ${esc(t.location)}${isAdmin() ? ' · ' + esc(userOf(t.by).name) : ''} · ${ago(t.at)}</span>
+    </button>`).join('')
+    : `<div class="empty">${mine.length ? 'No concerns match.' : isAdmin() ? 'No concerns yet.' : 'You haven\'t raised any concerns yet.'}</div>`;
+}
+$('q').oninput = renderList;
+$('fcat').onchange = renderList;
+
+// ================= DETAIL =================
+function viewTicket(no){
+  const t = tickets.find(x => x.no === no);
+  if(!t || (!isAdmin() && t.by !== me.u)) return;
+  const who = userOf(t.by);
+  const logName = u => u === 'admin' || userOf(u).role === 'admin' ? 'ICT Admin' : userOf(u).name;
+  $('drawer').innerHTML = `
+    <div class="top"><div><div style="color:var(--brand-d);font-weight:600">${tno(t.no)}</div><h2>${esc(t.title)}</h2>
+      <div style="margin-top:.4rem">${sPill(t.status)} ${pPill(t.priority)}</div></div>
+      <button class="x" onclick="closeT()" aria-label="Close">×</button></div>
+    <dl class="kv">
+      <dt>Reported by</dt><dd>${esc(who.name)}${who.pos ? ' (' + esc(who.pos) + ')' : ''}</dd>
+      <dt>Location</dt><dd>${esc(t.location)}</dd>
+      <dt>Category</dt><dd>${esc(t.cat)}</dd>
+      <dt>Submitted</dt><dd>${when(t.at)}</dd>
+    </dl>
+    <div class="desc">${esc(t.desc)}</div>
+    ${isAdmin() ? `
+    <div class="staff">
+      <h3>Admin actions</h3>
+      <div class="row"><select id="newStatus">${['Open','In progress','Resolved'].map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join('')}</select></div>
+      <textarea id="note" placeholder="Message to the teacher (optional)" style="min-height:4.5rem"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn" onclick="update(${t.no})">Save update</button></div>
+    </div>` : t.status !== 'Resolved' ? `
+    <div class="reply">
+      <h3>Add a follow-up</h3>
+      <textarea id="note" placeholder="Add more details for the ICT admin" style="min-height:4rem"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn" onclick="update(${t.no})">Send</button></div>
+    </div>` : ''}
+    <div><h3 style="font-size:.85rem;font-weight:600;margin-bottom:.7rem">History</h3>
+      <div class="tl">${t.log.slice().reverse().map(l=>`<div class="${userOf(l.by).role==='admin'?'':'me'}">${esc(l.m)}<small>${esc(logName(l.by))} · ${when(l.t)}</small></div>`).join('')}</div></div>`;
+  $('shade').classList.add('on');
+}
+function update(no){
+  const t = tickets.find(x => x.no === no), ts = Date.now();
+  const note = $('note').value.trim();
+  if(isAdmin()){
+    const s = $('newStatus').value;
+    if(s !== t.status){ t.status = s; t.log.push({t:ts, m:'Status changed to ' + s, by:me.u}); }
+  }
+  if(note) t.log.push({t:ts, m:note, by:me.u});
+  save(); viewTicket(no); renderList();
+}
+function closeT(){ $('shade').classList.remove('on'); }
+$('shade').onclick = e => { if(e.target.id === 'shade') closeT(); };
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeT(); });
+function resetDemo(){
+  if(!confirm('Remove all accounts and tickets and bring back the demo data?')) return;
+  users = clone(SAMPLE_USERS); tickets = clone(SAMPLE_TICKETS); save(); logout();
+}
+
+// ================= BOOT =================
+let saved = null; try{ saved = sessionStorage.getItem(K.session); }catch(e){}
+let as0 = null; try{ as0 = new URLSearchParams(location.search).get('as'); }catch(e){} // opened from the School Hub: already signed in
+const acc = (as0 && users.find(x => x.u === as0)) || (saved && users.find(x => x.u === saved));
+if(acc) start(acc); else $('login').hidden = false;
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Quiz – Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#1f1147;color:#fff;font-family:Poppins,system-ui,sans-serif;display:flex;flex-direction:column}
+  button,input{font:inherit}
+  header{padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.2);font-size:.9rem}
+  main{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1rem;gap:1rem;text-align:center}
+  .box{background:#fff;color:#1f1147;border-radius:1rem;padding:1.5rem;width:min(22rem,100%);display:flex;flex-direction:column;gap:.8rem}
+  .box h1{font-size:1.4rem}
+  input{border:2px solid #ddd6fe;border-radius:.6rem;padding:.8rem;text-align:center;font-size:1.2rem;font-weight:600;width:100%}
+  .go{background:#7c3aed;color:#fff;border:0;border-radius:.6rem;padding:.9rem;font-weight:600;font-size:1.05rem;cursor:pointer}
+  .err{background:#fee2e2;color:#b91c1c;border-radius:.5rem;padding:.5rem;font-size:.85rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;width:min(40rem,100%);flex:1;max-height:70vh}
+  .grid button{border:0;border-radius:.8rem;color:#fff;font-size:1.15rem;font-weight:600;padding:1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;min-height:7rem}
+  .grid button span{font-size:2rem}
+  .c0{background:#e11d48}.c1{background:#2563eb}.c2{background:#ca8a04}.c3{background:#16a34a}
+  .q{font-size:1.2rem;font-weight:600;max-width:40rem}
+  .big{font-size:2.6rem;font-weight:700}
+  .ok{background:#16a34a}.no{background:#dc2626}
+  .result{border-radius:1rem;padding:1.5rem 2rem;width:min(22rem,100%)}
+  .muted{opacity:.75;font-size:.9rem}
+  .note{font-size:.75rem;opacity:.6;padding:.8rem;text-align:center}
+</style>
+</head>
+<body>
+<header><b>Live Quiz</b><span id="who"></span></header>
+<main id="main"></main>
+<div class="note">Prototype: works in tabs of the same browser as the teacher's screen.</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SHAPES = ['▲','◆','●','■'];
+const LKEY = c => 'svnhs-live-' + c, PKEY = c => 'svnhs-livep-' + c + '-';
+const read = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
+let code = new URLSearchParams(location.search).get('code') || '', me = null, lastSig = '';
+// each tab is its own player, so the id lives in sessionStorage
+try { me = JSON.parse(sessionStorage.getItem('svnhs-live-me')); } catch(e) {}
+if (me && me.code !== code && code) me = null;
+
+function joinForm(err){
+  $('main').innerHTML = `<form class="box" id="jf"><h1>Join the quiz</h1>${err ? `<div class="err">${esc(err)}</div>` : ''}
+    <input id="code" inputmode="numeric" maxlength="4" placeholder="Game code" value="${esc(code)}" required>
+    <input id="name" maxlength="20" placeholder="Your name" required>
+    <button class="go">Join</button></form>`;
+  $('jf').onsubmit = e => {
+    e.preventDefault(); const c = $('code').value.trim(), n = $('name').value.trim();
+    const st = read(LKEY(c));
+    if (!st) return joinForm('No game with that code. Check the code on the teacher\'s screen.');
+    if (st.phase !== 'lobby') return joinForm('This game already started.');
+    const taken = Object.keys(localStorage).some(k => k.startsWith(PKEY(c)) && (read(k) || {}).name?.toLowerCase() === n.toLowerCase());
+    if (taken) return joinForm('Someone already uses that name. Add a number or initial.');
+    code = c; me = {code:c, id:Math.random().toString(36).slice(2, 9), name:n};
+    sessionStorage.setItem('svnhs-live-me', JSON.stringify(me));
+    localStorage.setItem(PKEY(c) + me.id, JSON.stringify({name:n, answers:{}}));
+    lastSig = ''; loop();
+  };
+}
+function myRec(){ return read(PKEY(code) + me.id) || {name:me.name, answers:{}}; }
+function answer(j){
+  const st = read(LKEY(code)), rec = myRec();
+  if (!st || st.phase !== 'question' || rec.answers[st.q]) return;
+  rec.answers[st.q] = {c:j, at:Date.now()};
+  localStorage.setItem(PKEY(code) + me.id, JSON.stringify(rec));
+  lastSig = ''; render(st);
+}
+function rankOf(st){
+  const R = Object.entries(st.scores || {}).sort((a,b) => b[1] - a[1]);
+  return {rank: R.findIndex(r => r[0] === me.id) + 1, of: R.length, score: (st.scores || {})[me.id] || 0};
+}
+function render(st){
+  const rec = myRec(), answered = st.q >= 0 && rec.answers[st.q];
+  const sig = [st.phase, st.q, !!answered].join('|'); if (sig === lastSig) return; lastSig = sig;
+  $('who').textContent = me.name;
+  const M = $('main');
+  if (st.phase === 'lobby') M.innerHTML = `<div class="big">You're in!</div><p class="q">${esc(st.title)}</p><p class="muted">Look at the teacher's screen. The quiz starts soon.</p>`;
+  else if (st.phase === 'question' && !answered) M.innerHTML = `<p class="muted">Question ${st.q + 1} of ${st.total}</p><p class="q">${esc(st.question.q)}</p>
+      <div class="grid">${st.question.c.map((c, j) => c.trim() ? `<button class="c${j}" onclick="answer(${j})"><span>${SHAPES[j]}</span>${esc(c)}</button>` : '').join('')}</div>`;
+  else if (st.phase === 'question') M.innerHTML = `<div class="big">Answer sent!</div><p class="muted">Wait for the others…</p>`;
+  else if (st.phase === 'reveal') {
+    const l = (st.last || {})[me.id] || {}, r = rankOf(st);
+    M.innerHTML = `<div class="result ${l.ok ? 'ok' : 'no'}"><div class="big">${l.ok ? '✓ Correct' : l.answered ? '✗ Wrong' : '⏱ Time\'s up'}</div>
+      <p>${l.ok ? '+' + l.pts + ' points' : 'No points this time'}</p></div><p>Total: <b>${r.score}</b> · You're <b>#${r.rank}</b> of ${r.of}</p>`;
+  }
+  else if (st.phase === 'final') { const r = rankOf(st); M.innerHTML = `<div class="big">${r.rank <= 3 ? ['🥇','🥈','🥉'][r.rank - 1] : '🎉'} #${r.rank}</div><p class="q">${r.score} points</p><p class="muted">Thanks for playing ${esc(st.title)}!</p>`; }
+}
+function loop(){
+  if (!me) return joinForm();
+  const st = read(LKEY(code));
+  if (!st) { sessionStorage.removeItem('svnhs-live-me'); me = null; return joinForm('The game has ended.'); }
+  render(st); setTimeout(loop, 300);
+}
+me ? loop() : joinForm();
+</script>
+</body>
+</html>

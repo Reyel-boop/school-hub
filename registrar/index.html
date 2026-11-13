@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registrar</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#a21caf;--brand-d:#701a75;--brand-soft:#fae8ff;--grad:linear-gradient(135deg,#d946ef,#86198f)}
+  .docs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+  .doc{display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--line);border-radius:.6rem;padding:.6rem .8rem;background:#fff;cursor:pointer;margin:0;font-weight:400}
+  .doc:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+  .doc input[type=checkbox]{width:auto;margin-top:.3rem;accent-color:var(--brand)}
+  .doc b{font-weight:500;font-size:.88rem;display:block}
+  .doc small{color:var(--muted);font-size:.74rem;display:block}
+  .doc .copies{width:4.2rem;padding:.3rem .4rem;margin-left:auto;flex:none}
+  .items{display:flex;flex-direction:column;gap:.3rem}
+  .items div{display:flex;justify-content:space-between;background:var(--bg);border-radius:.4rem;padding:.4rem .6rem;font-size:.85rem}
+  .stub{border:2px dashed var(--brand);border-radius:.8rem;padding:1.2rem;background:#fff}
+  .stub .big{font-size:1.6rem;font-weight:700;color:var(--brand-d);letter-spacing:.05em}
+  #stubPrint{display:none}
+  @media print{
+    body.printing > *:not(#stubPrint){display:none!important}
+    body.printing #stubPrint{display:block;padding:10mm}
+    .printhead{display:block!important}
+  }
+  .printhead{display:none;margin-bottom:1rem}
+  @media (max-width:760px){ .docs{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div id="stubPrint"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h8l4 4V21a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 21z"/><path d="M14 2.5V7h4M9 11h6M9 14.5h4"/><circle cx="15" cy="18" r="2"/></svg>';
+const DOCS = {
+  SF10:{name:'Form 137 / SF10 (Permanent Record)', days:5, note:'For transfers it is usually sent directly to the receiving school.'},
+  SF9:{name:'Copy of Report Card (SF9 / Form 138)', days:2, note:'Certified copy of the learner\'s report card.'},
+  COE:{name:'Certificate of Enrollment', days:1, note:'Proof that the learner is currently enrolled.'},
+  CGR:{name:'Certificate of Graduation / Completion', days:3, note:'For finished Grade 10 (completion) or Grade 12 (graduation).'},
+  DIP:{name:'Certified True Copy of Diploma', days:5, note:'Bring the original diploma when claiming.'},
+  CAV:{name:'CAV (Certification, Authentication & Verification)', days:7, note:'Needed for documents used abroad.'},
+};
+const PURPOSES = ['Transfer to another school','Scholarship','College application','Employment','Use abroad','Personal records','Other'];
+const WHO = ['Learner','Parent / guardian','Alumni','Authorized representative'];
+const STATUS = {'Submitted':'p-blue','Processing':'p-violet','On hold':'p-amber','Ready for release':'p-green','Released':'p-gray','Cancelled':'p-red'};
+const sPill = s => `<span class="pill ${STATUS[s]}">${s}</span>`;
+const rno = n => 'RG-' + String(n).padStart(4,'0');
+const D = 864e5, now = Date.now();
+const addDays = (t, d) => { const x = new Date(t); let n = 0; while (n < d) { x.setDate(x.getDate() + 1); if (x.getDay() !== 0 && x.getDay() !== 6) n++; } return ymd(x); }; // school days only
+const docList = r => r.items.map(i => `${DOCS[i.doc].name}${i.copies > 1 ? ' × ' + i.copies : ''}`);
+
+const sample = (no, by, who, learner, lrn, level, items, purpose, status, daysAgo, extra) => {
+  const at = now - daysAgo * D;
+  return Object.assign({no, by, who, learner, lrn, level, items, purpose, deliver:'Pick up', school:'', phone:'0917 000 00' + pad(no), status, at,
+    due: addDays(at, Math.max(...items.map(i => DOCS[i.doc].days))), releasedTo:'', releasedAt:null, log:[{t:at, m:'Request submitted', by}]}, extra || {});
+};
+
+const CFG = {
+  key:'svnhs-reg', title:'Registrar', subtitle:"SVNHS Registrar's Office", icon:ICON, officeName:"Registrar's Office",
+  roles:{
+    registrar:{admin:true, tagline:'Document requests, releasing, and the release logbook.',
+      tabs:[['dash','Today'],['reqs','Requests <span class="count" id="cNew"></span>'],['log','Release Logbook']]},
+    student:{tagline:'Request school documents and follow their status.', tabs:[['new','Request a Document'],['mine','My Requests <span class="count" id="cMine"></span>']]},
+    alumni:{tagline:'Request school documents and follow their status.', tabs:[['new','Request a Document'],['mine','My Requests <span class="count" id="cMine"></span>']]},
+  },
+  signup:{roles:[['student','Student / Parent'],['alumni','Alumni']], posLabel:{student:'Grade & section', alumni:'Year graduated'},
+    posHint:{student:'e.g. Grade 9 – Rizal', alumni:'e.g. 2020'}},
+  demo:[['registrar','registrar123','Registrar (admin)'],['student','student123','Student / Parent'],['alumni','alumni123','Alumni']],
+  sampleUsers:[
+    {u:'registrar', p:'registrar123', name:'School Registrar', pos:"Registrar's Office", role:'registrar'},
+    {u:'student', p:'student123', name:'Student Demo', pos:'Grade 9 – Rizal', role:'student'},
+    {u:'alumni', p:'alumni123', name:'Alumni Demo', pos:'Batch 2020', role:'alumni'},
+  ],
+  data:{
+    reqs:[
+      sample(1,'student','Learner','Demo, Student','123456789012','Grade 9 – Rizal',[{doc:'COE',copies:1}],'Scholarship','Ready for release',2,
+        {log:[{t:now-2*D,m:'Request submitted',by:'student'},{t:now-1.8*D,m:'Status changed to Processing',by:'registrar'},{t:now-1*D,m:'Status changed to Ready for release',by:'registrar'},{t:now-1*D,m:'Ready. Claim at the Registrar\'s Office, 8 AM – 4 PM. Bring your school ID.',by:'registrar'}]}),
+      sample(2,'alumni','Alumni','Demo, Alumni','','Batch 2020',[{doc:'CGR',copies:2},{doc:'SF10',copies:1}],'Employment','Processing',3,
+        {log:[{t:now-3*D,m:'Request submitted',by:'alumni'},{t:now-2*D,m:'Status changed to Processing',by:'registrar'}]}),
+      sample(3,'x1','Parent / guardian','Sample, Learner K','100000000021','Grade 8 – Gumamela',[{doc:'SF10',copies:1}],'Transfer to another school','Submitted',0.2,
+        {deliver:'Send to receiving school', school:'Another National High School, Davao del Norte'}),
+      sample(4,'x2','Learner','Sample, Learner L','100000000022','Grade 10 – Narra',[{doc:'SF9',copies:1},{doc:'COE',copies:1}],'College application','Submitted',1),
+      sample(5,'x3','Alumni','Sample, Graduate M','','Batch 2018',[{doc:'CAV',copies:1},{doc:'DIP',copies:1}],'Use abroad','On hold',6,
+        {log:[{t:now-6*D,m:'Request submitted',by:'x3'},{t:now-5*D,m:'Status changed to On hold',by:'registrar'},{t:now-5*D,m:'Please bring the original diploma and a photocopy of your passport.',by:'registrar'}]}),
+      sample(6,'x4','Learner','Sample, Learner N','100000000024','Grade 7 – Rosal',[{doc:'COE',copies:1}],'Scholarship','Released',9,
+        {releasedTo:'Learner (school ID shown)', releasedAt:now-7*D, log:[{t:now-9*D,m:'Request submitted',by:'x4'},{t:now-8*D,m:'Status changed to Ready for release',by:'registrar'},{t:now-7*D,m:'Released to Learner (school ID shown)',by:'registrar'}]}),
+    ],
+  },
+  counts(){
+    P.setCount('cNew', P.db.reqs.filter(r => r.status === 'Submitted').length);
+    if (P.me) P.setCount('cMine', P.db.reqs.filter(r => r.by === P.me.u && r.status === 'Ready for release').length);
+  },
+  views:{dash, reqs: reqList, log: logbook, new: requestForm, mine},
+};
+
+/* ================= REQUESTER ================= */
+function requestForm(el){
+  const alum = P.me.role === 'alumni';
+  el.innerHTML = `<div class="card"><h2>Request a document</h2>
+    <p class="hint">School documents are <b>free</b>. Choose what you need and you'll get a claim number. Good Moral Certificates are requested through <b>E-Guidance</b>.</p>
+    <form class="form" id="form">
+      <div><label>I am the <i>*</i></label><select name="who">${WHO.map(w => `<option ${alum && w === 'Alumni' ? 'selected' : ''}>${w}</option>`).join('')}</select></div>
+      <div><label>Contact number <i>*</i></label><input name="phone" required inputmode="tel" placeholder="09xx xxx xxxx"></div>
+      <div><label>Learner's full name (Last, First Middle) <i>*</i></label><input name="learner" required value="${esc(alum || P.me.role === 'student' ? P.me.name.replace(/^(.*)\s(\S+)$/, '$2, $1') : '')}"></div>
+      <div><label>LRN ${alum ? '(if you know it)' : '<i>*</i>'}</label><input name="lrn" ${alum ? '' : 'required'} pattern="\\d{12}" maxlength="12" inputmode="numeric" title="12 digits"></div>
+      <div class="full"><label>${alum ? 'Year graduated / last grade level' : 'Grade &amp; section'} <i>*</i></label><input name="level" required value="${esc(P.me.pos)}"></div>
+      <div class="full"><label>Documents needed <i>*</i></label><div class="docs">${Object.entries(DOCS).map(([k, d]) => `<label class="doc"><input type="checkbox" name="d_${k}">
+        <span><b>${d.name}</b><small>${d.note} About ${d.days} school day${d.days > 1 ? 's' : ''}.</small></span>
+        <input class="copies" type="number" name="c_${k}" min="1" max="5" value="1" title="Copies"></label>`).join('')}</div>
+        <div id="docErr" class="err" hidden style="margin-top:.5rem"></div></div>
+      <div><label>Purpose <i>*</i></label><select name="purpose">${PURPOSES.map(p => `<option>${p}</option>`).join('')}</select></div>
+      <div><label>How will you get it?</label><select name="deliver" id="deliver"><option>Pick up</option><option>Representative will pick up</option><option>Send to receiving school</option></select></div>
+      <div class="full" id="schoolBox" hidden><label>Receiving school (name and address) <i>*</i></label><input name="school"></div>
+      <div class="full" id="repBox" hidden><div class="warn">Your representative must bring an <b>authorization letter</b> signed by you, plus a valid ID of both of you.</div></div>
+      <div class="full"><label class="check"><input type="checkbox" required> <span>I confirm this information is true and allow the school to process it under the Data Privacy Act of 2012. <i>*</i></span></label></div>
+      <div class="full actions"><button class="btn">Submit request</button></div>
+    </form></div>`;
+  const f = $('form');
+  f.addEventListener('change', e => { if (e.target.name && e.target.name.startsWith('d_')) $('docErr').hidden = true; });
+  $('deliver').onchange = () => { const v = $('deliver').value; $('schoolBox').hidden = v !== 'Send to receiving school'; f.school.required = v === 'Send to receiving school'; $('repBox').hidden = v !== 'Representative will pick up'; };
+  f.onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(f));
+    const items = Object.keys(DOCS).filter(k => d['d_' + k]).map(k => ({doc:k, copies: Math.max(1, Math.min(5, +d['c_' + k] || 1))}));
+    if (!items.length) { $('docErr').textContent = 'Choose at least one document.'; $('docErr').hidden = false; return; }
+    if (d.deliver === 'Send to receiving school' && items.some(i => i.doc !== 'SF10')) { $('docErr').textContent = 'Only Form 137 / SF10 can be sent to a receiving school. Pick up the other documents in a separate request.'; $('docErr').hidden = false; return; }
+    const no = nextNo(P.db.reqs), at = Date.now();
+    const r = {no, by:P.me.u, who:d.who, learner:d.learner.trim(), lrn:d.lrn.trim(), level:d.level.trim(), items, purpose:d.purpose, deliver:d.deliver, school:(d.school || '').trim(),
+      phone:d.phone.trim(), status:'Submitted', at, due: addDays(at, Math.max(...items.map(i => DOCS[i.doc].days))), releasedTo:'', releasedAt:null, log:[]};
+    P.log(r, 'Request submitted'); P.db.reqs.push(r); P.save(); P.counts();
+    el.innerHTML = P.doneCard(`Request sent. Expected ready by <b>${fmtDate(r.due)}</b>. Your claim number is`, rno(no), 'Request another', `viewReq(${no})`);
+  };
+}
+const steps = r => { const order = ['Submitted','Processing','Ready for release','Released'], i = order.indexOf(r.status);
+  return `<div class="steps">${['Submitted','Processing','Ready','Released'].map((s, j) => `<div class="${r.status === 'On hold' && j === 1 ? 'bad on' : j <= i ? 'on' : ''}">${s}</div>`).join('')}</div>`; };
+function mine(el){
+  const R = P.db.reqs.filter(r => r.by === P.me.u).sort((a,b) => b.at - a.at);
+  el.innerHTML = R.length ? `<div class="stack">${R.map(r => `<div class="card">
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start"><div><b>${rno(r.no)}</b> · ${esc(r.purpose)}<div class="hint" style="margin:0">${docList(r).map(esc).join(' · ')}</div></div>${sPill(r.status)}</div>
+    ${steps(r)}
+    ${r.status === 'Ready for release' ? `<div class="okbox" style="margin-top:.5rem">Ready to claim at the Registrar's Office. Bring a valid ID and your claim number <b>${rno(r.no)}</b>.</div>` : ''}
+    ${r.status === 'On hold' ? `<div class="warn" style="margin-top:.5rem">The Registrar needs something from you. Open the request to see the message.</div>` : ''}
+    ${['Submitted','Processing'].includes(r.status) ? `<p class="hint" style="margin:.4rem 0 0">Expected ready by ${fmtDate(r.due)}</p>` : ''}
+    <div class="actions" style="margin-top:.6rem">${r.status === 'Ready for release' ? `<button class="btn ghost sm" onclick="printStub(${r.no})">Print claim stub</button>` : ''}<button class="btn ghost sm" onclick="viewReq(${r.no})">Details &amp; messages</button></div></div>`).join('')}</div>`
+    : '<div class="empty">You have no requests yet.</div>';
+}
+function printStub(no){
+  const r = P.db.reqs.find(x => x.no === no);
+  $('stubPrint').innerHTML = `<div class="stub" style="max-width:120mm"><b>San Vicente National High School</b><br>Registrar's Office · Claim stub
+    <div class="big" style="margin:.6rem 0">${rno(r.no)}</div>
+    <dl class="kv"><dt>Learner</dt><dd>${esc(r.learner)}</dd><dt>Documents</dt><dd>${docList(r).map(esc).join('<br>')}</dd><dt>Requested</dt><dd>${when(r.at)}</dd></dl>
+    <p style="margin-top:.8rem;font-size:.85rem">Bring this stub and a valid ID. Representatives need an authorization letter.</p></div>`;
+  document.body.classList.add('printing'); setTimeout(() => { window.print(); document.body.classList.remove('printing'); }, 100);
+}
+
+/* ================= REGISTRAR ================= */
+const isOpen = r => !['Released','Cancelled'].includes(r.status);
+const row = r => { const late = isOpen(r) && r.status !== 'Ready for release' && r.due < todayStr();
+  return `<button class="tk" onclick="viewReq(${r.no})"><span class="no">${rno(r.no)}</span><span class="ttl">${esc(r.learner)} – ${docList(r).map(esc).join(', ')}</span>
+  <span>${late ? '<span class="pill p-red">Overdue</span> ' : ''}${sPill(r.status)}</span>
+  <span class="meta">${esc(r.who)} · ${esc(r.level)} · ${esc(r.purpose)}${r.deliver !== 'Pick up' ? ' · ' + esc(r.deliver) : ''} · due ${fmtDate(r.due)} · ${ago(r.at)}</span></button>`; };
+function dash(el){
+  const R = P.db.reqs, t = todayStr(), m = t.slice(0,7);
+  const due = R.filter(r => isOpen(r) && r.status !== 'Ready for release' && r.due <= t).sort((a,b) => a.due.localeCompare(b.due));
+  const ready = R.filter(r => r.status === 'Ready for release');
+  const relM = R.filter(r => r.status === 'Released' && r.releasedAt && ymd(new Date(r.releasedAt)).slice(0,7) === m);
+  const byDoc = Object.keys(DOCS).map(k => [k, R.filter(r => ymd(new Date(r.at)).slice(0,7) === m).reduce((s, r) => s + r.items.filter(i => i.doc === k).reduce((a, i) => a + i.copies, 0), 0)]);
+  el.innerHTML = `<div class="stack">
+    <div class="stats">
+      <div class="stat"><b>${R.filter(r => r.status === 'Submitted').length}</b><span>New requests</span></div>
+      <div class="stat"><b>${R.filter(r => r.status === 'Processing' || r.status === 'On hold').length}</b><span>Processing / on hold</span></div>
+      <div class="stat"><b>${ready.length}</b><span>Ready for release</span></div>
+      <div class="stat"><b>${relM.length}</b><span>Released this month</span></div>
+    </div>
+    <div class="twocol">
+      <div class="stack">
+        <div class="card"><h3 class="sec">Due today or overdue (${due.length})</h3><div class="list">${due.length ? due.map(row).join('') : '<div class="empty">Nothing due. 🎉</div>'}</div></div>
+        <div class="card"><h3 class="sec">Waiting to be claimed (${ready.length})</h3><div class="list">${ready.length ? ready.map(row).join('') : '<div class="empty">None.</div>'}</div></div>
+      </div>
+      <div class="card"><h3 class="sec">Copies requested this month</h3><div class="tablewrap"><table><tr><th>Document</th><th class="num">Copies</th></tr>
+        ${byDoc.map(([k, n]) => `<tr><td>${esc(DOCS[k].name)}</td><td class="num">${n}</td></tr>`).join('')}</table></div></div>
+    </div></div>`;
+}
+let fq = '', fs = '', fd = '';
+function reqList(el){
+  const rows = P.db.reqs.filter(r => (!fs || r.status === fs) && (!fd || r.items.some(i => i.doc === fd)) &&
+      (!fq || [rno(r.no), r.learner, r.lrn, r.level, r.purpose].join(' ').toLowerCase().includes(fq)))
+    .sort((a,b) => Object.keys(STATUS).indexOf(a.status) - Object.keys(STATUS).indexOf(b.status) || a.due.localeCompare(b.due));
+  el.innerHTML = `<div class="stack"><div class="tools"><input id="q" value="${esc(fq)}" placeholder="Search name, LRN, claim no.…">
+      <select id="s"><option value="">All statuses</option>${Object.keys(STATUS).map(s => `<option ${fs===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select id="d"><option value="">All documents</option>${Object.entries(DOCS).map(([k, d]) => `<option value="${k}" ${fd===k?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+    <div class="list">${rows.length ? rows.map(row).join('') : '<div class="empty">No requests match.</div>'}</div></div>`;
+  const q = $('q'); q.oninput = () => { fq = q.value.trim().toLowerCase(); const p = q.selectionStart; reqList(el); $('q').focus(); $('q').setSelectionRange(p,p); };
+  $('s').onchange = e => { fs = e.target.value; reqList(el); };
+  $('d').onchange = e => { fd = e.target.value; reqList(el); };
+}
+let lm = '';
+function logbook(el){
+  const rel = P.db.reqs.filter(r => r.status === 'Released' && r.releasedAt).sort((a,b) => b.releasedAt - a.releasedAt);
+  const months = [...new Set(rel.map(r => ymd(new Date(r.releasedAt)).slice(0,7)))];
+  if (!lm || !months.includes(lm)) lm = months[0] || todayStr().slice(0,7);
+  const L = rel.filter(r => ymd(new Date(r.releasedAt)).slice(0,7) === lm);
+  el.innerHTML = `<div class="card"><div class="printhead"><b>San Vicente National High School</b><br>Registrar's Office · Release Logbook</div>
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem" class="noprint">
+      <h2>Release logbook</h2><div class="actions"><select id="lm" style="width:auto">${(months.length ? months : [lm]).map(m => `<option value="${m}" ${lm===m?'selected':''}>${new Date(m + '-01T00:00').toLocaleDateString('en-PH',{month:'long',year:'numeric'})}</option>`).join('')}</select>
+      <button class="btn" onclick="window.print()">Print</button></div></div>
+    ${L.length ? `<div class="tablewrap"><table><tr><th>Date released</th><th>Claim no.</th><th>Learner</th><th>Documents</th><th>Received by</th></tr>
+      ${L.map(r => `<tr class="clickable" onclick="viewReq(${r.no})"><td>${when(r.releasedAt)}</td><td>${rno(r.no)}</td><td>${esc(r.learner)}</td><td>${docList(r).map(esc).join('<br>')}</td><td>${esc(r.releasedTo)}</td></tr>`).join('')}</table></div>`
+      : '<div class="empty">Nothing released this month.</div>'}</div>`;
+  $('lm').onchange = e => { lm = e.target.value; logbook(el); };
+}
+
+/* ================= DETAIL ================= */
+function viewReq(no){
+  const r = P.db.reqs.find(x => x.no === no);
+  if (!r || (!P.isAdmin() && r.by !== P.me.u)) return;
+  const admin = P.isAdmin();
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${rno(r.no)}</div><h2>${esc(r.learner)}</h2><div style="margin-top:.4rem">${sPill(r.status)}</div></div>
+      <button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    ${steps(r)}
+    <div class="items">${r.items.map(i => `<div><span>${esc(DOCS[i.doc].name)}</span><b>× ${i.copies}</b></div>`).join('')}</div>
+    <dl class="kv">
+      <dt>Requested by</dt><dd>${esc(r.who)}${admin ? ' · ' + esc(P.userOf(r.by).name) : ''}</dd>
+      <dt>LRN</dt><dd>${esc(r.lrn || '—')}</dd><dt>Grade / batch</dt><dd>${esc(r.level)}</dd>
+      <dt>Purpose</dt><dd>${esc(r.purpose)}</dd><dt>Release</dt><dd>${esc(r.deliver)}${r.school ? '<br>' + esc(r.school) : ''}</dd>
+      <dt>Contact</dt><dd>${esc(r.phone)}</dd><dt>Requested</dt><dd>${when(r.at)}</dd><dt>Target date</dt><dd>${fmtDate(r.due)}</dd>
+      ${r.releasedAt ? `<dt>Released</dt><dd>${when(r.releasedAt)} · to ${esc(r.releasedTo)}</dd>` : ''}
+    </dl>
+    ${admin && isOpen(r) ? `<div class="box admin"><h3>Registrar actions</h3>
+      <div class="row"><div><label>Status</label><select id="rs">${Object.keys(STATUS).map(s => `<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label>Target date</label><input type="date" id="rd" value="${r.due}"></div></div>
+      <div id="relBox" hidden><label>Released to (name and ID shown) <i>*</i></label><input id="rt" placeholder="e.g. Juan Dela Cruz – school ID" style="margin-bottom:.6rem"></div>
+      <div id="rErr" class="err" hidden style="margin-bottom:.6rem"></div>
+      <textarea id="rMsg" style="min-height:3.5rem" placeholder="Message to the requester (required for On hold or Cancelled)"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn" onclick="saveReq(${r.no})">Save</button></div></div>`
+    : !admin && isOpen(r) ? `<div class="box"><h3>Message the Registrar</h3><textarea id="rMsg" style="min-height:3.5rem"></textarea>
+      <div class="actions" style="margin-top:.6rem">${r.status === 'Submitted' ? `<button class="btn ghost" onclick="cancelReq(${r.no})">Cancel request</button>` : ''}<button class="btn" onclick="saveReq(${r.no})">Send</button></div></div>` : ''}
+    ${P.timeline(r)}`);
+  if ($('rs')) $('rs').onchange = () => { $('relBox').hidden = $('rs').value !== 'Released'; };
+}
+function saveReq(no){
+  const r = P.db.reqs.find(x => x.no === no), msg = $('rMsg').value.trim();
+  if (P.isAdmin()) {
+    const s = $('rs').value, d = $('rd').value, err = m => { $('rErr').textContent = m; $('rErr').hidden = false; };
+    if ((s === 'On hold' || s === 'Cancelled') && s !== r.status && !msg) return err('Tell the requester why.');
+    if (s === 'Released') { const to = $('rt').value.trim(); if (!to) return err('Write who received the documents.'); r.releasedTo = to; r.releasedAt = Date.now(); }
+    if (d && d !== r.due) { r.due = d; P.log(r, 'Target date set to ' + fmtDate(d)); }
+    if (s !== r.status) { r.status = s; P.log(r, s === 'Released' ? 'Released to ' + r.releasedTo : 'Status changed to ' + s); }
+  }
+  if (msg) P.log(r, msg);
+  P.save(); viewReq(no); P.refresh();
+}
+function cancelReq(no){
+  if (!confirm('Cancel this request?')) return;
+  const r = P.db.reqs.find(x => x.no === no); r.status = 'Cancelled'; P.log(r, 'Cancelled by the requester'); P.save(); viewReq(no); P.refresh();
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

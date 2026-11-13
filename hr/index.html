@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HR</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#0f766e;--brand-d:#134e4a;--brand-soft:#ccfbf1;--grad:linear-gradient(135deg,#14b8a6,#134e4a)}
+  .credits{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+  .credit{background:#fff;border:1px solid var(--line);border-radius:.6rem;padding:.6rem .8rem}
+  .credit b{display:block;font-size:1.3rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .credit span{color:var(--muted);font-size:.75rem}
+  .credit input{width:100%;padding:.3rem .4rem;font-size:1rem}
+  .drawer .credits{grid-template-columns:1fr 1fr}
+  .days{background:var(--brand-soft);color:var(--brand-d);border-radius:.5rem;padding:.5rem .8rem;font-size:.88rem}
+  @media (max-width:760px){ .credits{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.6c2.6-.4 4.6 1.1 5 4.4"/></svg>';
+// Leave types and which credit they use (null = no credit deducted, e.g. maternity)
+const LEAVES = {
+  'Vacation Leave':'vl', 'Sick Leave':'sl', 'Special Privilege Leave':'spl', 'Use of Service Credits':'sc',
+  'Forced / Mandatory Leave':'vl', 'Maternity Leave':null, 'Paternity Leave':null, 'Solo Parent Leave':null, 'Study Leave':null, 'Others':null,
+};
+const CREDIT = {vl:'Vacation', sl:'Sick', spl:'Special Privilege', sc:'Service credits'};
+const LSTATUS = {'Pending':'p-amber','Approved':'p-green','Disapproved':'p-red','Cancelled':'p-gray'};
+const DSTATUS = {'Requested':'p-blue','Ready':'p-green','Released':'p-gray'};
+const HRDOCS = ['Certificate of Employment','Service Record','Certificate of Leave Credits'];
+const pill = (map, s) => `<span class="pill ${map[s]}">${s}</span>`;
+const lno = n => 'LV-' + String(n).padStart(4,'0');
+const dno = n => 'HD-' + String(n).padStart(4,'0');
+const D = 864e5, now = Date.now(), T = todayStr();
+const off = d => ymd(new Date(Date.now() + d * D));
+// working days (Mon–Fri) from a to b inclusive
+const workDays = (a, b) => { if (!a || !b || b < a) return 0; let n = 0; for (let d = new Date(a + 'T00:00'); ymd(d) <= b; d.setDate(d.getDate() + 1)) if (d.getDay() % 6) n++; return n; };
+
+const emp = (id, u, name, position, type, hired, credits, extra) => Object.assign({id, u, name, empNo:'EMP-' + (2010 + id) + '-' + String(id * 7).padStart(4,'0'), position, type,
+  hired, status:'Permanent', phone:'0917 000 10' + pad(id), email:'', address:'Panabo City', birth:'1988-0' + ((id % 9) + 1) + '-15',
+  education:'Bachelor of Secondary Education', eligibility: type === 'Teaching' ? 'LET Passer' : 'CS Professional', emergency:'Family member', credits}, extra || {});
+
+const CFG = {
+  key:'svnhs-hr', title:'HR', subtitle:'SVNHS Human Resources', icon:ICON, officeName:'HR Office',
+  roles:{
+    hr:{admin:true, tagline:'Employee records, leave, and HR documents.',
+      tabs:[['dash','Dashboard'],['staff','Employees'],['leaves','Leave Records'],['docs','Document Requests <span class="count" id="cDocs"></span>']]},
+    principal:{badge:'PRINCIPAL', tagline:'Approve leave applications and see who is out.',
+      tabs:[['dash','Dashboard'],['approve','Leave Approvals <span class="count" id="cPend"></span>']]},
+    employee:{tagline:'Apply for leave, check your credits, and request HR documents.',
+      tabs:[['leave','Apply for Leave'],['myleaves','My Leaves'],['profile','My 201 File'],['mydocs','HR Documents']]},
+  },
+  signup:{roles:[['employee','Teacher / Staff']], posLabel:{employee:'Position'}, posHint:{employee:'e.g. Teacher I'}},
+  demo:[['hr','hr123','HR Officer (admin)'],['principal','principal123','Principal'],['teacher','teacher123','Teacher']],
+  sampleUsers:[
+    {u:'hr', p:'hr123', name:'HR Officer', pos:'Administrative Officer', role:'hr'},
+    {u:'principal', p:'principal123', name:'School Principal', pos:'Principal', role:'principal'},
+    {u:'teacher', p:'teacher123', name:'Grade 9 Adviser', pos:'Teacher I', role:'employee'},
+  ],
+  data:{
+    employees:[
+      emp(1,'teacher','Grade 9 Adviser','Teacher I','Teaching','2019-06-03',{vl:0,sl:0,spl:3,sc:5}),
+      emp(2,'','Teacher A (sample)','Teacher III','Teaching','2012-06-04',{vl:0,sl:0,spl:3,sc:12}),
+      emp(3,'','Teacher B (sample)','Master Teacher I','Teaching','2008-06-02',{vl:0,sl:0,spl:2,sc:8}),
+      emp(4,'','Teacher C (sample)','Teacher II','Teaching','2016-06-06',{vl:0,sl:0,spl:3,sc:3}),
+      emp(5,'','Teacher D (sample)','Teacher I','Teaching','2023-08-14',{vl:0,sl:0,spl:3,sc:0}),
+      emp(6,'','Staff E (sample)','Administrative Assistant II','Non-teaching','2015-01-05',{vl:18.5,sl:22,spl:3,sc:0}),
+      emp(7,'','Staff F (sample)','Administrative Aide IV','Non-teaching','2020-03-02',{vl:9,sl:11.25,spl:1,sc:0}),
+      emp(8,'principal','School Principal','Principal I','Non-teaching','2005-06-01',{vl:40,sl:52.5,spl:3,sc:0}),
+    ],
+    leaves:[
+      {no:1, emp:2, type:'Use of Service Credits', from:off(0), to:off(1), days:workDays(off(0), off(1)), reason:'Medical check-up', status:'Approved', at:now-4*D, deducted:true,
+        log:[{t:now-4*D,m:'Leave application submitted',by:'Teacher A (sample)'},{t:now-3*D,m:'Approved by the Principal',by:'principal'}]},
+      {no:2, emp:6, type:'Vacation Leave', from:off(7), to:off(9), days:workDays(off(7), off(9)), reason:'Family event', status:'Pending', at:now-1*D, log:[{t:now-1*D,m:'Leave application submitted',by:'Staff E (sample)'}]},
+      {no:3, emp:1, type:'Special Privilege Leave', from:off(-20), to:off(-20), days:workDays(off(-20), off(-20)), reason:'Personal matter', status:'Approved', at:now-25*D, deducted:true,
+        log:[{t:now-25*D,m:'Leave application submitted',by:'teacher'},{t:now-24*D,m:'Approved by the Principal',by:'principal'}]},
+      {no:4, emp:4, type:'Sick Leave', from:off(-2), to:off(-1), days:workDays(off(-2), off(-1)), reason:'Fever', status:'Pending', at:now-2*D, log:[{t:now-2*D,m:'Leave application submitted',by:'Teacher C (sample)'}]},
+    ],
+    docs:[
+      {no:1, emp:3, doc:'Service Record', purpose:'Promotion application', status:'Requested', at:now-1*D, log:[{t:now-1*D,m:'Request submitted',by:'Teacher B (sample)'}]},
+      {no:2, emp:1, doc:'Certificate of Employment', purpose:'Bank loan', status:'Ready', at:now-3*D, log:[{t:now-3*D,m:'Request submitted',by:'teacher'},{t:now-2*D,m:'Ready to claim at the HR Office',by:'hr'}]},
+    ],
+  },
+  counts(){
+    P.setCount('cPend', P.db.leaves.filter(l => l.status === 'Pending').length);
+    P.setCount('cDocs', P.db.docs.filter(d => d.status === 'Requested').length);
+  },
+  views:{dash, staff, leaves: leaveRecords, docs: docRequests, approve, leave: applyLeave, myleaves, profile, mydocs},
+};
+
+const empOf = id => P.db.employees.find(e => e.id === id);
+// the signed-in employee's record (created on first use for new sign-ups)
+function myEmp(){
+  let e = P.db.employees.find(x => x.u === P.me.u);
+  if (!e) { e = emp(P.db.employees.reduce((m, x) => Math.max(m, x.id), 0) + 1, P.me.u, P.me.name, P.me.pos, /teacher/i.test(P.me.pos) ? 'Teaching' : 'Non-teaching', '', {vl:0,sl:0,spl:3,sc:0}, {empNo:'(HR will assign)', education:'', eligibility:'', status:'—'}); P.db.employees.push(e); P.save(); }
+  return e;
+}
+const onLeave = d => P.db.leaves.filter(l => l.status === 'Approved' && l.from <= d && l.to >= d);
+const creditsBox = (e, edit) => `<div class="credits">${Object.entries(CREDIT).map(([k, l]) => `<div class="credit"><span>${l}</span>${edit ? `<input type="number" step="0.25" min="0" id="cr_${k}" value="${e.credits[k]}">` : `<b>${e.credits[k]}</b>`}</div>`).join('')}</div>`;
+const leaveRow = l => { const e = empOf(l.emp) || {};
+  return `<button class="tk" onclick="viewLeave(${l.no})"><span class="no">${lno(l.no)}</span><span class="ttl">${P.me.role === 'employee' ? esc(l.type) : esc(e.name) + ' – ' + esc(l.type)}</span>
+  <span>${pill(LSTATUS, l.status)}</span><span class="meta">${fmtDate(l.from)}${l.to !== l.from ? ' to ' + fmtDate(l.to) : ''} · ${l.days} working day${l.days === 1 ? '' : 's'}${P.me.role !== 'employee' ? ' · ' + esc(e.position) : ''} · filed ${ago(l.at)}</span></button>`; };
+
+/* ================= DASHBOARD (HR + Principal) ================= */
+function dash(el){
+  const E = P.db.employees, out = onLeave(T), soon = P.db.leaves.filter(l => l.status === 'Approved' && l.from > T && l.from <= off(14)).sort((a,b) => a.from.localeCompare(b.from));
+  const pend = P.db.leaves.filter(l => l.status === 'Pending');
+  el.innerHTML = `<div class="stack">
+    <div class="stats">
+      <div class="stat"><b>${E.length}</b><span>Employees</span></div>
+      <div class="stat"><b>${E.filter(e => e.type === 'Teaching').length} / ${E.filter(e => e.type !== 'Teaching').length}</b><span>Teaching / non-teaching</span></div>
+      <div class="stat"><b>${out.length}</b><span>On leave today</span></div>
+      <div class="stat"><b>${pend.length}</b><span>Leave applications pending</span></div>
+    </div>
+    <div class="twocol">
+      <div class="stack">
+        <div class="card"><h3 class="sec">On leave today (${out.length})</h3><div class="list">${out.length ? out.map(leaveRow).join('') : '<div class="empty">Everyone is in today.</div>'}</div></div>
+        <div class="card"><h3 class="sec">Pending approval (${pend.length})</h3><div class="list">${pend.length ? pend.map(leaveRow).join('') : '<div class="empty">Nothing pending.</div>'}</div></div>
+      </div>
+      <div class="card"><h3 class="sec">Upcoming leaves · next 2 weeks</h3><div class="list">${soon.length ? soon.map(leaveRow).join('') : '<div class="empty">None scheduled.</div>'}</div></div>
+    </div></div>`;
+}
+
+/* ================= HR: EMPLOYEES ================= */
+let sq = '', st = '';
+function staff(el){
+  const rows = P.db.employees.filter(e => (!st || e.type === st) && (!sq || [e.name, e.empNo, e.position].join(' ').toLowerCase().includes(sq))).sort((a,b) => a.name.localeCompare(b.name));
+  el.innerHTML = `<div class="stack">
+    <div class="tools"><input id="q" value="${esc(sq)}" placeholder="Search name, employee no., position…">
+      <select id="t"><option value="">All employees</option><option ${st==='Teaching'?'selected':''}>Teaching</option><option ${st==='Non-teaching'?'selected':''}>Non-teaching</option></select>
+      <button class="btn" onclick="viewEmp(0)">＋ Add employee</button></div>
+    <div class="card"><div class="tablewrap"><table><tr><th>Name</th><th>Employee no.</th><th>Position</th><th>Type</th><th>Date hired</th><th class="num">Leave credits (VL / SL / SPL / SC)</th></tr>
+      ${rows.map(e => `<tr class="clickable" onclick="viewEmp(${e.id})"><td>${esc(e.name)}${onLeave(T).some(l => l.emp === e.id) ? ' <span class="pill p-amber">On leave</span>' : ''}</td><td>${esc(e.empNo)}</td><td>${esc(e.position)}</td><td>${e.type}</td><td>${fmtDate(e.hired)}</td>
+        <td class="num">${e.credits.vl} / ${e.credits.sl} / ${e.credits.spl} / ${e.credits.sc}</td></tr>`).join('')}</table></div></div></div>`;
+  const q = $('q'); q.oninput = () => { sq = q.value.trim().toLowerCase(); const p = q.selectionStart; staff(el); $('q').focus(); $('q').setSelectionRange(p,p); };
+  $('t').onchange = e => { st = e.target.value; staff(el); };
+}
+const FIELDS = [['name','Full name'],['empNo','Employee no.'],['position','Position'],['type','Type'],['status','Appointment status'],['hired','Date hired','date'],
+  ['birth','Birthdate','date'],['phone','Phone'],['email','Email'],['address','Address'],['education','Highest education'],['eligibility','Eligibility'],['emergency','Emergency contact']];
+function viewEmp(id){
+  const e = id ? empOf(id) : {id:0, name:'', empNo:'', position:'', type:'Teaching', status:'Permanent', hired:'', birth:'', phone:'', email:'', address:'', education:'', eligibility:'', emergency:'', credits:{vl:0,sl:0,spl:3,sc:0}};
+  const L = P.db.leaves.filter(l => l.emp === id).sort((a,b) => b.from.localeCompare(a.from));
+  P.open(`<div class="top"><div><h2>${id ? esc(e.name) : 'Add employee'}</h2>${id ? `<div class="hint" style="margin:0">${esc(e.empNo)} · ${esc(e.position)}</div>` : ''}</div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <div class="box admin"><h3>201 file</h3><div class="form" style="gap:.7rem">
+      ${FIELDS.map(([k, l, t]) => `<div><label>${l}</label>${k === 'type' ? `<select id="f_type"><option ${e.type==='Teaching'?'selected':''}>Teaching</option><option ${e.type!=='Teaching'?'selected':''}>Non-teaching</option></select>` : `<input id="f_${k}" type="${t || 'text'}" value="${esc(e[k])}">`}</div>`).join('')}
+    </div>
+    <h3 style="margin-top:1rem">Leave credits (days)</h3>${creditsBox(e, true)}
+    <div id="eErr" class="err" hidden style="margin-top:.6rem"></div>
+    <div class="actions" style="margin-top:.8rem"><span class="saved" id="eSaved" hidden>✓ Saved</span><button class="btn" onclick="saveEmp(${id})">${id ? 'Save changes' : 'Add employee'}</button></div></div>
+    ${id ? `<div><h3 class="sec">Leave history</h3><div class="list">${L.length ? L.map(leaveRow).join('') : '<div class="empty">No leaves filed.</div>'}</div></div>` : ''}`);
+}
+function saveEmp(id){
+  const v = k => $('f_' + k).value.trim();
+  if (!v('name') || !v('position')) { $('eErr').textContent = 'Name and position are required.'; $('eErr').hidden = false; return; }
+  let e = id ? empOf(id) : null;
+  if (!e) { e = {id: P.db.employees.reduce((m, x) => Math.max(m, x.id), 0) + 1, u:'', credits:{}}; P.db.employees.push(e); }
+  FIELDS.forEach(([k]) => e[k] = v(k));
+  Object.keys(CREDIT).forEach(k => e.credits[k] = Math.max(0, +$('cr_' + k).value || 0));
+  P.save(); P.refresh(); viewEmp(e.id); $('eSaved').hidden = false;
+}
+
+/* ================= LEAVES ================= */
+let lf = '', lt = '';
+function leaveRecords(el){
+  const rows = P.db.leaves.filter(l => (!lf || l.status === lf) && (!lt || l.type === lt)).sort((a,b) => b.from.localeCompare(a.from));
+  el.innerHTML = `<div class="stack"><div class="tools">
+      <select id="s"><option value="">All statuses</option>${Object.keys(LSTATUS).map(s => `<option ${lf===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select id="ty"><option value="">All leave types</option>${Object.keys(LEAVES).map(s => `<option ${lt===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="list">${rows.length ? rows.map(leaveRow).join('') : '<div class="empty">No leave records match.</div>'}</div></div>`;
+  $('s').onchange = e => { lf = e.target.value; leaveRecords(el); };
+  $('ty').onchange = e => { lt = e.target.value; leaveRecords(el); };
+}
+function approve(el){
+  const pend = P.db.leaves.filter(l => l.status === 'Pending').sort((a,b) => a.from.localeCompare(b.from));
+  const done = P.db.leaves.filter(l => l.status !== 'Pending').sort((a,b) => b.at - a.at).slice(0, 10);
+  el.innerHTML = `<div class="stack"><div class="card"><h3 class="sec">Waiting for your decision (${pend.length})</h3><div class="list">${pend.length ? pend.map(leaveRow).join('') : '<div class="empty">Nothing to approve.</div>'}</div></div>
+    <div class="card"><h3 class="sec">Recently decided</h3><div class="list">${done.map(leaveRow).join('') || '<div class="empty">None yet.</div>'}</div></div></div>`;
+}
+function applyLeave(el){
+  const e = myEmp();
+  el.innerHTML = `<div class="stack"><div class="card"><h3 class="sec">My leave credits</h3>${creditsBox(e)}
+      <p class="hint" style="margin:.6rem 0 0">Credits are kept by the HR Office. Ask HR if something looks wrong.</p></div>
+    <div class="card"><h2>Apply for leave</h2><p class="hint">Your application goes to the Principal for approval.</p>
+    <form class="form" id="lf">
+      <div class="full"><label>Type of leave <i>*</i></label><select name="type" id="ltype">${Object.keys(LEAVES).map(t => `<option>${t}</option>`).join('')}</select></div>
+      <div><label>From <i>*</i></label><input type="date" name="from" id="lfrom" required value="${T}"></div>
+      <div><label>To <i>*</i></label><input type="date" name="to" id="lto" required value="${T}"></div>
+      <div class="full"><div class="days" id="lcount"></div></div>
+      <div class="full"><label>Reason / details <i>*</i></label><textarea name="reason" required placeholder="e.g. Medical check-up, family event"></textarea></div>
+      <div class="full" id="lErr" hidden><div class="err"></div></div>
+      <div class="full actions"><button class="btn">Submit application</button></div></form></div></div>`;
+  const sync = () => {
+    const n = workDays($('lfrom').value, $('lto').value), c = LEAVES[$('ltype').value], bal = c ? e.credits[c] : null;
+    $('lcount').innerHTML = n ? `<b>${n}</b> working day${n === 1 ? '' : 's'} (weekends not counted)${c ? ` · taken from <b>${CREDIT[c]}</b> (you have ${bal} day${bal === 1 ? '' : 's'})${n > bal ? ' — <b>not enough credits</b>; extra days may be without pay' : ''}` : ''}` : 'Choose valid dates.';
+  };
+  ['lfrom','lto','ltype'].forEach(id => $(id).onchange = sync); sync();
+  $('lf').onsubmit = ev => {
+    ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target)), n = workDays(d.from, d.to);
+    if (!n) { $('lErr').hidden = false; $('lErr').firstChild.textContent = 'The dates must include at least one working day, and "To" must not be before "From".'; return; }
+    const no = nextNo(P.db.leaves), l = {no, emp:e.id, type:d.type, from:d.from, to:d.to, days:n, reason:d.reason.trim(), status:'Pending', at:Date.now(), log:[]};
+    P.log(l, 'Leave application submitted'); P.db.leaves.push(l); P.save(); P.counts();
+    el.innerHTML = P.doneCard('Your leave application was sent to the Principal. Reference number', lno(no), 'OK', `viewLeave(${no})`);
+  };
+}
+function myleaves(el){
+  const e = myEmp(), L = P.db.leaves.filter(l => l.emp === e.id).sort((a,b) => b.from.localeCompare(a.from));
+  el.innerHTML = `<div class="list">${L.length ? L.map(leaveRow).join('') : '<div class="empty">You have not filed any leave yet.</div>'}</div>`;
+}
+function viewLeave(no){
+  const l = P.db.leaves.find(x => x.no === no); if (!l) return;
+  const e = empOf(l.emp), role = P.me.role;
+  if (role === 'employee' && e.u !== P.me.u) return;
+  const c = LEAVES[l.type], bal = c ? e.credits[c] : null;
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${lno(l.no)}</div><h2>${esc(l.type)}</h2><div style="margin-top:.4rem">${pill(LSTATUS, l.status)}</div></div>
+      <button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <dl class="kv"><dt>Employee</dt><dd>${esc(e.name)} · ${esc(e.position)}</dd><dt>Dates</dt><dd>${fmtDate(l.from)}${l.to !== l.from ? ' to ' + fmtDate(l.to) : ''}</dd>
+      <dt>Working days</dt><dd>${l.days}</dd>${c ? `<dt>Credits</dt><dd>${CREDIT[c]} · ${l.deducted ? 'deducted' : 'balance ' + bal}</dd>` : ''}<dt>Filed</dt><dd>${when(l.at)}</dd></dl>
+    <div class="desc">${esc(l.reason)}</div>
+    ${role === 'principal' && l.status === 'Pending' ? `<div class="box admin"><h3>Your decision</h3>
+      ${c && l.days > bal ? `<div class="warn" style="margin-bottom:.6rem">Only ${bal} day(s) of ${CREDIT[c]} left. If approved, ${l.days - bal} day(s) will be without pay.</div>` : ''}
+      <textarea id="lMsg" style="min-height:3.5rem" placeholder="Remarks (required when disapproving)"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn ghost" onclick="decide(${l.no}, false)">Disapprove</button><button class="btn" onclick="decide(${l.no}, true)">Approve</button></div></div>` : ''}
+    ${(role === 'employee' || role === 'hr') && l.status === 'Pending' ? `<div class="actions"><button class="btn ghost" onclick="cancelLeave(${l.no})">Cancel application</button></div>` : ''}
+    ${P.timeline(l)}`);
+}
+function decide(no, ok){
+  const l = P.db.leaves.find(x => x.no === no), msg = $('lMsg').value.trim();
+  if (!ok && !msg) { $('lMsg').focus(); $('lMsg').placeholder = 'Please give a reason for disapproving'; return; }
+  l.status = ok ? 'Approved' : 'Disapproved';
+  P.log(l, ok ? 'Approved by the Principal' : 'Disapproved by the Principal');
+  if (ok) { const c = LEAVES[l.type], e = empOf(l.emp);
+    if (c) { const take = Math.min(l.days, e.credits[c]); e.credits[c] = Math.round((e.credits[c] - take) * 100) / 100; l.deducted = true;
+      P.log(l, `${take} day(s) deducted from ${CREDIT[c]}${l.days > take ? `; ${l.days - take} day(s) without pay` : ''}`); } }
+  if (msg) P.log(l, msg);
+  P.save(); viewLeave(no); P.refresh();
+}
+function cancelLeave(no){ if (!confirm('Cancel this leave application?')) return; const l = P.db.leaves.find(x => x.no === no); l.status = 'Cancelled'; P.log(l, 'Cancelled'); P.save(); viewLeave(no); P.refresh(); }
+
+/* ================= EMPLOYEE: 201 + DOCUMENTS ================= */
+function profile(el){
+  const e = myEmp();
+  el.innerHTML = `<div class="card"><h2>My 201 file</h2><p class="hint">Official details are kept by HR. You can update your contact information here.</p>
+    <dl class="kv" style="margin-bottom:1.2rem">${FIELDS.filter(([k]) => !['phone','email','address','emergency'].includes(k)).map(([k, l, t]) => `<dt>${l}</dt><dd>${t === 'date' ? fmtDate(e[k]) : esc(e[k] || '—')}</dd>`).join('')}</dl>
+    <form class="form" id="pf">${[['phone','Phone'],['email','Email'],['address','Address'],['emergency','Emergency contact']].map(([k, l]) => `<div><label>${l}</label><input name="${k}" value="${esc(e[k])}"></div>`).join('')}
+      <div class="full actions"><span class="saved" id="pSaved" hidden>✓ Saved</span><button class="btn">Save contact info</button></div></form></div>`;
+  $('pf').onsubmit = ev => { ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target)); Object.assign(e, d); P.save(); $('pSaved').hidden = false; };
+}
+const docRow = d => { const e = empOf(d.emp) || {}; return `<button class="tk" onclick="viewDoc(${d.no})"><span class="no">${dno(d.no)}</span><span class="ttl">${P.me.role === 'employee' ? '' : esc(e.name) + ' – '}${esc(d.doc)}</span><span>${pill(DSTATUS, d.status)}</span><span class="meta">${esc(d.purpose)} · ${ago(d.at)}</span></button>`; };
+function mydocs(el){
+  const e = myEmp(), R = P.db.docs.filter(d => d.emp === e.id).sort((a,b) => b.at - a.at);
+  el.innerHTML = `<div class="stack"><div class="card"><h2>Request an HR document</h2><form class="form" id="df" style="margin-top:.8rem">
+      <div><label>Document <i>*</i></label><select name="doc">${HRDOCS.map(d => `<option>${d}</option>`).join('')}</select></div>
+      <div><label>Purpose <i>*</i></label><input name="purpose" required placeholder="e.g. Bank loan, promotion"></div>
+      <div class="full actions"><button class="btn">Request</button></div></form></div>
+    <div class="list">${R.length ? R.map(docRow).join('') : '<div class="empty">No requests yet.</div>'}</div></div>`;
+  $('df').onsubmit = ev => { ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target));
+    const r = {no:nextNo(P.db.docs), emp:e.id, doc:d.doc, purpose:d.purpose.trim(), status:'Requested', at:Date.now(), log:[]}; P.log(r, 'Request submitted'); P.db.docs.push(r); P.save(); mydocs(el); };
+}
+function docRequests(el){
+  const R = P.db.docs.slice().sort((a,b) => Object.keys(DSTATUS).indexOf(a.status) - Object.keys(DSTATUS).indexOf(b.status) || a.at - b.at);
+  el.innerHTML = `<div class="list">${R.length ? R.map(docRow).join('') : '<div class="empty">No document requests.</div>'}</div>`;
+}
+function viewDoc(no){
+  const d = P.db.docs.find(x => x.no === no), e = empOf(d.emp);
+  if (P.me.role === 'employee' && e.u !== P.me.u) return;
+  P.open(`<div class="top"><div><div style="color:var(--brand-d);font-weight:600">${dno(d.no)}</div><h2>${esc(d.doc)}</h2><div style="margin-top:.4rem">${pill(DSTATUS, d.status)}</div></div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <dl class="kv"><dt>Employee</dt><dd>${esc(e.name)} · ${esc(e.position)}</dd><dt>Purpose</dt><dd>${esc(d.purpose)}</dd><dt>Requested</dt><dd>${when(d.at)}</dd></dl>
+    ${P.isAdmin() && d.status !== 'Released' ? `<div class="box admin"><h3>HR actions</h3><div class="actions">${d.status === 'Requested' ? `<button class="btn" onclick="setDoc(${d.no}, 'Ready')">Mark ready to claim</button>` : `<button class="btn" onclick="setDoc(${d.no}, 'Released')">Mark released</button>`}</div></div>` : ''}
+    ${P.timeline(d)}`);
+}
+function setDoc(no, s){ const d = P.db.docs.find(x => x.no === no); d.status = s; P.log(d, s === 'Ready' ? 'Ready to claim at the HR Office' : 'Released'); P.save(); viewDoc(no); P.refresh(); }
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

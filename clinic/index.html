@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-Clinic</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f6f9; --card:#fff; --ink:#14212b; --muted:#64748b; --line:#e2e8f0;
+    --brand:#0284c7; --brand-d:#0c4a6e; --brand-soft:#e0f2fe;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,sans-serif;font-size:14px}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  [hidden]{display:none!important}
+
+  #login{min-height:100vh;display:grid;place-items:center;padding:1.5rem;background:radial-gradient(circle at 50% 30%,rgba(14,165,233,.3),transparent 55%),#111c24}
+  .lcard{width:min(24rem,100%);background:#fff;border-radius:1rem;padding:1.8rem;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .logo{width:3.2rem;height:3.2rem;border-radius:.8rem;background:linear-gradient(135deg,#0ea5e9,#0c4a6e);color:#fff;display:grid;place-items:center;margin:0 auto .8rem}
+  .logo svg{width:1.8rem;height:1.8rem}
+  .lcard h1{text-align:center;font-size:1.3rem;font-weight:600}
+  .lcard .sub{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:1.3rem}
+  .lcard form{display:flex;flex-direction:column;gap:.85rem}
+  .lcard .btn{width:100%;padding:.75rem}
+  .err{background:#fee2e2;color:#b91c1c;border-radius:.5rem;padding:.5rem .7rem;font-size:.82rem}
+  .switchlink{text-align:center;font-size:.83rem;color:var(--muted);margin-top:1rem}
+  .switchlink button{color:var(--brand);font-weight:500;text-decoration:underline}
+  .demo{margin-top:1.2rem;border-top:1px dashed var(--line);padding-top:1rem;font-size:.78rem;color:var(--muted)}
+  .demo b{color:var(--ink);font-weight:500}
+  .demo button{display:block;width:100%;text-align:left;padding:.45rem .6rem;border:1px solid var(--line);border-radius:.5rem;margin-top:.4rem}
+  .demo button:hover{border-color:#7dd3fc;background:#f0f9ff}
+  .seg{display:flex;gap:.4rem;flex-wrap:wrap}
+  .seg label{flex:1;margin:0;text-align:center;border:1px solid #cbd5e1;border-radius:.5rem;padding:.5rem;cursor:pointer;font-weight:400;white-space:nowrap}
+  .seg input{display:none}
+  .seg label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--brand-d);font-weight:500}
+
+  header{background:linear-gradient(135deg,#0ea5e9,#0c4a6e);color:#fff;padding:1.2rem 1.5rem 0}
+  .head{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:.8rem}
+  .head .ic{width:2.6rem;height:2.6rem;border-radius:.6rem;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+  .head .ic svg{width:1.5rem;height:1.5rem}
+  .head h1{font-size:1.25rem;font-weight:600;line-height:1.2}
+  .head p{font-size:.8rem;opacity:.88}
+  .who{margin-left:auto;display:flex;align-items:center;gap:.6rem;flex:none}
+  .who .av{width:2.1rem;height:2.1rem;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:600;font-size:.8rem}
+  .who .nm{font-size:.82rem;line-height:1.2;text-align:right}
+  .who .nm small{display:block;opacity:.8;font-size:.7rem}
+  .who .out{border:1px solid rgba(255,255,255,.5);border-radius:.4rem;padding:.3rem .7rem;font-size:.78rem}
+  .role{display:inline-block;background:#fff;color:var(--brand-d);font-size:.62rem;font-weight:600;padding:.05rem .4rem;border-radius:.3rem;letter-spacing:.04em;margin-left:.3rem;vertical-align:middle}
+  .tabs{max-width:1100px;margin:1rem auto 0;display:flex;gap:.25rem;overflow-x:auto}
+  .tabs button{padding:.6rem 1rem;border-radius:.5rem .5rem 0 0;color:rgba(255,255,255,.88);font-weight:500;white-space:nowrap}
+  .tabs button.on{background:var(--bg);color:var(--brand-d)}
+  .tabs .count{display:inline-block;min-width:1.3rem;padding:0 .35rem;margin-left:.3rem;border-radius:1rem;background:rgba(255,255,255,.25);font-size:.72rem}
+  .tabs button.on .count{background:var(--brand-soft)}
+
+  main{max-width:1100px;margin:0 auto;padding:1.5rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:.8rem;padding:1.4rem}
+  h2{font-size:1.05rem;font-weight:600;margin-bottom:.2rem}
+  h3.sec{font-size:.9rem;font-weight:600;margin:0 0 .7rem}
+  .hint{color:var(--muted);font-size:.85rem;margin-bottom:1.2rem}
+  .warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:.7rem;padding:.7rem 1rem;font-size:.83rem;margin-bottom:1rem}
+  .warn b{font-weight:600}
+  .allergy{background:#fee2e2;border:1px solid #fecaca;color:#991b1b;border-radius:.6rem;padding:.6rem .8rem;font-size:.85rem}
+  .allergy b{font-weight:600}
+
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:.78rem;font-weight:500;color:#334155;margin-bottom:.3rem}
+  label i{color:#e11d48;font-style:normal}
+  input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:.5rem;padding:.6rem .7rem;background:#fff}
+  textarea{min-height:5.5rem;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid #7dd3fc;border-color:var(--brand)}
+  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+  .cats label{margin:0;border:1px solid #cbd5e1;border-radius:.5rem;padding:.6rem;cursor:pointer;font-weight:400;font-size:.82rem}
+  .cats input{display:none}
+  .cats label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--brand-d);font-weight:500}
+  .check{display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--line);border-radius:.6rem;padding:.7rem .8rem;cursor:pointer;font-weight:400;font-size:.85rem;margin:0}
+  .check input{width:auto;margin-top:.25rem}
+  .btn{background:var(--brand);color:#fff;padding:.65rem 1.3rem;border-radius:.5rem;font-weight:500}
+  .btn:hover{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid #cbd5e1}
+  .btn.sm{padding:.4rem .8rem;font-size:.8rem}
+  .actions{display:flex;justify-content:flex-end;gap:.6rem}
+  .saved{color:#15803d;font-size:.82rem;align-self:center}
+
+  .done-msg{text-align:center;padding:2.5rem 1rem}
+  .done-msg .big{font-size:1.6rem;font-weight:700;color:var(--brand-d);margin:.4rem 0}
+  .done-msg .chk{width:3.4rem;height:3.4rem;border-radius:50%;background:#dcfce7;color:#15803d;display:grid;place-items:center;margin:0 auto}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.8rem 1rem;text-align:left}
+  .stat b{display:block;font-size:1.5rem;font-weight:600}
+  .stat span{color:var(--muted);font-size:.78rem}
+  .stat.red b{color:#dc2626}
+  .tools{display:flex;gap:.6rem;margin-bottom:.8rem}
+  .tools input{flex:1}
+  .tools select{width:auto}
+  .list{display:flex;flex-direction:column;gap:.5rem}
+  .tk{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.85rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.3rem 1rem;align-items:center;cursor:pointer;text-align:left;width:100%}
+  .tk:hover{border-color:#7dd3fc}
+  .tk.flag{border-left:4px solid #dc2626}
+  .tk .no{font-weight:600;color:var(--brand-d);font-size:.8rem}
+  .tk .ttl{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tk .meta{grid-column:2/4;color:var(--muted);font-size:.78rem}
+  .pill{display:inline-block;padding:.15rem .6rem;border-radius:1rem;font-size:.72rem;font-weight:500;white-space:nowrap}
+  .st-way{background:#e0e7ff;color:#4338ca}
+  .st-in{background:#fef3c7;color:#b45309}
+  .st-back{background:#dcfce7;color:#15803d}
+  .st-home{background:#f1f5f9;color:#475569}
+  .st-hosp{background:#fee2e2;color:#b91c1c}
+  .a-pill{background:#fee2e2;color:#b91c1c}
+  .empty{text-align:center;color:var(--muted);padding:2rem;background:#fff;border:1px dashed var(--line);border-radius:.7rem}
+
+  .dash{display:grid;grid-template-columns:1.4fr 1fr;gap:1rem}
+  .dash .card{padding:1.1rem}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  th{text-align:left;color:var(--muted);font-weight:500;font-size:.75rem;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
+  td{padding:.55rem .6rem;border-bottom:1px solid var(--line)}
+  tr.low td{background:#fff7ed}
+  .stockin{display:flex;gap:.3rem}
+  .stockin input{width:4.5rem;padding:.35rem .5rem}
+
+  .shade{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;justify-content:flex-end;z-index:10}
+  .shade.on{display:flex}
+  .drawer{width:min(32rem,100%);height:100%;background:#fff;overflow:auto;padding:1.4rem;display:flex;flex-direction:column;gap:1rem}
+  .drawer .top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .drawer .x{font-size:1.4rem;line-height:1;color:var(--muted);padding:.2rem .4rem}
+  .kv{display:grid;grid-template-columns:7.5rem 1fr;gap:.4rem;font-size:.85rem}
+  .kv dt{color:var(--muted)}
+  .desc{background:var(--bg);border-radius:.6rem;padding:.8rem;white-space:pre-wrap;font-size:.88rem}
+  .box{border:1px solid var(--line);border-radius:.7rem;padding:1rem}
+  .box h3{font-size:.85rem;font-weight:600;margin-bottom:.6rem}
+  .box.admin{border:1px dashed #7dd3fc;background:#f0f9ff}
+  .box.admin h3{color:var(--brand-d)}
+  .box.secret{border:1px dashed #cbd5e1;background:#f8fafc}
+  .row{display:flex;gap:.5rem;margin-bottom:.6rem}
+  .row > *{flex:1}
+  .medlist{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+  .medlist span{background:#fff;border:1px solid var(--line);border-radius:1rem;padding:.15rem .6rem;font-size:.78rem}
+  .notes{display:flex;flex-direction:column;gap:.5rem;margin-top:.7rem}
+  .notes div{background:#fff;border:1px solid var(--line);border-radius:.5rem;padding:.5rem .7rem;font-size:.83rem;white-space:pre-wrap}
+  .notes small{display:block;color:var(--muted);font-size:.7rem}
+  .tl{display:flex;flex-direction:column;gap:.7rem;border-left:2px solid var(--line);padding-left:1rem;margin-left:.3rem}
+  .tl div{position:relative;font-size:.83rem}
+  .tl div::before{content:"";position:absolute;left:-1.37rem;top:.35rem;width:.6rem;height:.6rem;border-radius:50%;background:var(--brand)}
+  .tl div.them::before{background:#94a3b8}
+  .tl small{display:block;color:var(--muted);font-size:.72rem}
+  .foot{text-align:center;color:#94a3b8;font-size:.75rem;padding:1rem}
+  .foot button{text-decoration:underline;color:#94a3b8;font-size:.75rem}
+
+  .medform{grid-template-columns:2fr 1fr 1fr 1fr auto;align-items:end}
+  @media (max-width:760px){
+    .medform{grid-template-columns:1fr 1fr}
+    main{padding:1rem}
+    .head p,.who .nm{display:none}
+    .form{grid-template-columns:1fr}
+    .cats{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .dash{grid-template-columns:1fr}
+    .tools{flex-wrap:wrap}
+    .tk{grid-template-columns:1fr auto}
+    .tk .no,.tk .meta{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><symbol id="cIcon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></symbol></svg>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" hidden>
+  <div class="lcard">
+    <div class="logo"><svg><use href="#cIcon"/></svg></div>
+    <h1>E-Clinic</h1>
+    <div id="signinBox">
+      <p class="sub">School Clinic · sign in to continue</p>
+      <form id="signinForm">
+        <div id="signinErr" class="err" hidden></div>
+        <div><label>Username</label><input name="u" required autocomplete="username"></div>
+        <div><label>Password</label><input name="p" type="password" required autocomplete="current-password"></div>
+        <button class="btn">Sign in</button>
+      </form>
+      <p class="switchlink">No account yet? <button onclick="showSignup(true)">Create one</button></p>
+      <div class="demo">
+        <b>Prototype demo accounts</b> (tap to fill in)
+        <button onclick="fill('nurse','nurse123')">School Nurse (admin) — nurse / nurse123</button>
+        <button onclick="fill('teacher','teacher123')">Teacher — teacher / teacher123</button>
+        <button onclick="fill('student','student123')">Student — student / student123</button>
+      </div>
+    </div>
+    <div id="signupBox" hidden>
+      <p class="sub">Create an account</p>
+      <form id="signupForm">
+        <div id="signupErr" class="err" hidden></div>
+        <div><label>I am a</label>
+          <div class="seg"><label><input type="radio" name="role" value="student" checked>Student</label><label><input type="radio" name="role" value="teacher">Teacher</label></div></div>
+        <div><label>Full name</label><input name="name" required placeholder="e.g. Juan Dela Cruz"></div>
+        <div id="suGrade"><label>Grade &amp; section</label><input name="grade" placeholder="e.g. Grade 8 – Sampaguita"></div>
+        <div><label>Username</label><input name="u" required pattern="[A-Za-z0-9._-]{3,}" title="At least 3 letters or numbers, no spaces"></div>
+        <div><label>Password</label><input name="p" type="password" required minlength="6"></div>
+        <button class="btn">Create account</button>
+      </form>
+      <p class="switchlink">Already have an account? <button onclick="showSignup(false)">Sign in</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="app" hidden>
+<header>
+  <div class="head">
+    <div class="ic"><svg><use href="#cIcon"/></svg></div>
+    <div><h1>E-Clinic</h1><p id="tagline"></p></div>
+    <div class="who">
+      <div class="nm"><span id="whoName"></span><small id="whoPos"></small></div>
+      <div class="av" id="whoAv"></div>
+      <button class="out" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main id="view"></main>
+<div class="shade" id="shade"><aside class="drawer" id="drawer"></aside></div>
+<div class="foot">Prototype · accounts and records are saved in this browser only · <button onclick="resetDemo()">Reset demo data</button></div>
+</section>
+
+<datalist id="studentNames"></datalist>
+
+<script>
+const COMPLAINTS = ['Headache','Fever','Stomach ache','Dizziness','Cough / Colds','Injury / Wound','Toothache','Menstrual pain','Asthma attack','Other'];
+const STATUS = {way:'On the way', in:'In clinic', back:'Back to class', home:'Sent home', hosp:'Referred to hospital'};
+const K = {users:'svnhs-cl-users', visits:'svnhs-cl-visits', meds:'svnhs-cl-meds', session:'svnhs-cl-session'};
+const M = 6e4, H = 36e5, D = 864e5, now = Date.now();
+
+// ---- demo data (prototype only; passwords are plain text in this browser) ----
+const SAMPLE_USERS = [
+  {u:'nurse',   p:'nurse123',   name:'School Nurse',     pos:'School Clinic', role:'nurse'},
+  {u:'teacher', p:'teacher123', name:'Grade 9 Adviser',  pos:'Adviser',       role:'teacher'},
+  {u:'student', p:'student123', name:'Student Demo',     pos:'Grade 9 – Rizal', role:'student',
+    health:{blood:'O+', allergies:'Penicillin, shrimp', conditions:'Mild asthma', guardian:'Parent of Student Demo', phone:'0917 000 0000', consent:true}},
+  {u:'student2',p:'student123', name:'Student Two',      pos:'Grade 7 – Mabini', role:'student',
+    health:{blood:'A+', allergies:'', conditions:'', guardian:'Parent of Student Two', phone:'0918 000 0000', consent:false}},
+];
+const SAMPLE_MEDS = [
+  {id:1,name:'Paracetamol 500 mg',unit:'tablet',stock:120,low:30},
+  {id:2,name:'Mefenamic Acid 500 mg',unit:'capsule',stock:18,low:20},
+  {id:3,name:'Antacid',unit:'tablet',stock:40,low:15},
+  {id:4,name:'Oral Rehydration Salts',unit:'sachet',stock:25,low:10},
+  {id:5,name:'Povidone-Iodine',unit:'bottle',stock:3,low:2},
+  {id:6,name:'Adhesive Bandage',unit:'piece',stock:8,low:25},
+  {id:7,name:'Cotton Balls',unit:'pack',stock:6,low:2},
+];
+const SAMPLE_VISITS = [
+  {no:1,studentU:'student',student:'Student Demo',grade:'Grade 9 – Rizal',by:'teacher',complaint:'Headache',details:'Complained of headache after PE class.',status:'back',at:now-2*D,timeIn:now-2*D+10*M,timeOut:now-2*D+50*M,
+   vitals:{temp:'37.2',bp:'110/70'},action:'Rested for 40 minutes. Given water and paracetamol.',meds:[{name:'Paracetamol 500 mg',qty:1}],
+   log:[{t:now-2*D,m:'Clinic pass sent',by:'teacher'},{t:now-2*D+10*M,m:'Arrived at the clinic',by:'nurse'},{t:now-2*D+50*M,m:'Back to class',by:'nurse'}],notes:[]},
+  {no:2,studentU:'',student:'Student E (sample)',grade:'Grade 10 – Narra',by:'nurse',complaint:'Injury / Wound',details:'Scraped knee during lunch break.',status:'back',at:now-26*H,timeIn:now-26*H,timeOut:now-25.5*H,
+   vitals:{temp:'36.6',bp:''},action:'Wound cleaned and covered.',meds:[{name:'Povidone-Iodine',qty:1},{name:'Adhesive Bandage',qty:2}],
+   log:[{t:now-26*H,m:'Walk-in visit recorded',by:'nurse'},{t:now-25.5*H,m:'Back to class',by:'nurse'}],notes:[]},
+  {no:3,studentU:'student2',student:'Student Two',grade:'Grade 7 – Mabini',by:'nurse',complaint:'Fever',details:'Feeling hot and weak since morning.',status:'in',at:now-35*M,timeIn:now-35*M,timeOut:null,
+   vitals:{temp:'38.4',bp:'100/70'},action:'Resting. Parent being contacted.',meds:[],
+   log:[{t:now-35*M,m:'Walk-in visit recorded',by:'nurse'}],notes:[{t:now-30*M,m:'No parent consent on file for medicine. Called parent.'}]},
+  {no:4,studentU:'',student:'Student F (sample)',grade:'Grade 9 – Rizal',by:'teacher',complaint:'Stomach ache',details:'Stomach pain during class.',status:'way',at:now-4*M,timeIn:null,timeOut:null,
+   vitals:{},action:'',meds:[],log:[{t:now-4*M,m:'Clinic pass sent',by:'teacher'}],notes:[]},
+];
+const clone = x => JSON.parse(JSON.stringify(x));
+const get = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
+const put = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+let users = get(K.users) || clone(SAMPLE_USERS);
+let visits = get(K.visits) || clone(SAMPLE_VISITS);
+let meds = get(K.meds) || clone(SAMPLE_MEDS);
+let me = null, current = '', lastId;
+const save = () => { put(K.users, users); put(K.visits, visits); put(K.meds, meds); };
+const isN = () => me && me.role === 'nurse';
+const userOf = u => users.find(x => x.u === u) || {u, name:u, pos:'', role:''};
+
+const vno = n => 'CL-' + String(n).padStart(4,'0');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago = t => { const m = Math.round((Date.now()-t)/60000); if(m<1) return 'just now'; if(m<60) return m+' min ago'; const h=Math.round(m/60); if(h<24) return h+' hr ago'; const d=Math.round(h/24); return d+' day'+(d>1?'s':'')+' ago'; };
+const when = t => t ? new Date(t).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+const clock = t => t ? new Date(t).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}) : '—';
+const sPill = s => `<span class="pill st-${s}">${STATUS[s]}</span>`;
+const initials = n => n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const $ = id => document.getElementById(id);
+const isToday = t => new Date(t).toDateString() === new Date().toDateString();
+const studentAcc = name => users.find(u => u.role === 'student' && u.name.toLowerCase() === String(name).trim().toLowerCase());
+const healthOf = v => v.studentU ? (userOf(v.studentU).health || null) : null;
+const lowMeds = () => meds.filter(m => m.stock <= m.low);
+
+// ================= AUTH =================
+function showSignup(on){ $('signinBox').hidden = on; $('signupBox').hidden = !on; }
+function fill(u,p){ const f = $('signinForm'); f.u.value = u; f.p.value = p; }
+$('signupForm').addEventListener('change', e => { if(e.target.name === 'role') $('suGrade').hidden = e.target.value !== 'student'; });
+$('signinForm').onsubmit = e => {
+  e.preventDefault();
+  const f = e.target, u = f.u.value.trim().toLowerCase();
+  const acc = users.find(x => x.u === u && x.p === f.p.value);
+  if(!acc){ $('signinErr').textContent = 'Wrong username or password.'; $('signinErr').hidden = false; return; }
+  $('signinErr').hidden = true; f.reset(); start(acc);
+};
+$('signupForm').onsubmit = e => {
+  e.preventDefault();
+  const f = e.target, u = f.u.value.trim().toLowerCase(), role = f.role.value;
+  const err = m => { $('signupErr').textContent = m; $('signupErr').hidden = false; };
+  if(users.some(x => x.u === u)) return err('That username is taken. Try another.');
+  if(role === 'student' && !f.grade.value.trim()) return err('Please enter your grade and section.');
+  const acc = {u, p:f.p.value, name:f.name.value.trim(), pos: role === 'student' ? f.grade.value.trim() : 'Teacher', role};
+  if(role === 'student') acc.health = {blood:'',allergies:'',conditions:'',guardian:'',phone:'',consent:false};
+  users.push(acc); save(); f.reset(); $('suGrade').hidden = false; $('signupErr').hidden = true; showSignup(false); start(acc);
+};
+function start(acc){
+  me = acc; try{ sessionStorage.setItem(K.session, acc.u); }catch(e){}
+  $('login').hidden = true; $('app').hidden = false;
+  $('whoName').innerHTML = esc(me.name) + (isN() ? '<span class="role">ADMIN</span>' : '');
+  $('whoPos').textContent = me.pos;
+  $('whoAv').textContent = initials(me.name);
+  $('tagline').textContent = {
+    nurse:'Clinic visits, health profiles, and medicine stock.',
+    teacher:'Send a student to the clinic and see how they are.',
+    student:'Your health profile and clinic visits.'}[me.role];
+  $('studentNames').innerHTML = users.filter(u => u.role === 'student').map(u => `<option value="${esc(u.name)}">${esc(u.pos)}</option>`).join('');
+  buildTabs(); tab({nurse:'dash', teacher:'pass', student:'profile'}[me.role]);
+}
+function logout(){ me = null; try{ sessionStorage.removeItem(K.session); }catch(e){} closeD(); $('app').hidden = true; $('login').hidden = false; showSignup(false); }
+
+// ================= TABS =================
+function buildTabs(){
+  const t = {
+    nurse:[['dash','Today'],['log','＋ Log a Visit'],['visits','Visit Records'],['meds','Medicine Stock <span class="count" id="lowCount"></span>']],
+    teacher:[['pass','＋ Send to Clinic'],['visits','My Students <span class="count" id="openCount"></span>']],
+    student:[['profile','My Health Profile'],['visits','My Clinic Visits']],
+  }[me.role];
+  $('tabs').innerHTML = t.map(([k,l]) => `<button data-tab="${k}">${l}</button>`).join('');
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => tab(b.dataset.tab));
+}
+function tab(name){
+  current = name;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  ({dash:renderDash, log:renderLogForm, pass:renderPassForm, visits:renderVisits, meds:renderMeds, profile:renderProfile})[name]();
+  counts();
+}
+function counts(){
+  const lc = $('lowCount'); if(lc) lc.textContent = lowMeds().length ? lowMeds().length + ' low' : '';
+  const oc = $('openCount'); if(oc) oc.textContent = visits.filter(v => v.by === me.u && (v.status === 'way' || v.status === 'in')).length;
+}
+const refresh = () => tab(current);
+
+// ================= FORMS =================
+const complaintPicker = () => `<div class="cats">${COMPLAINTS.map((c,i)=>`<label><input type="radio" name="complaint" value="${c}" ${i?'':'required'}>${c}</label>`).join('')}</div>`;
+const doneCard = (msg, again) => `<div class="card done-msg" id="doneCard" hidden>
+  <div class="chk"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+  <p style="margin-top:1rem">${msg}</p><div class="big" id="doneNo"></div>
+  <div class="actions" style="justify-content:center;margin-top:1rem"><button class="btn ghost" onclick="viewVisit(lastId)">View</button><button class="btn" onclick="refresh()">${again}</button></div></div>`;
+
+function renderPassForm(){
+  $('view').innerHTML = `<div class="card" id="formCard">
+    <h2>Send a student to the clinic</h2>
+    <p class="hint">This creates a clinic pass. The nurse will see that the student is on the way, and you'll see when they're back in class or sent home.</p>
+    <form class="form" id="form">
+      <div><label>Student's name <i>*</i></label><input name="student" list="studentNames" required autocomplete="off" placeholder="Start typing a name"></div>
+      <div><label>Grade &amp; section <i>*</i></label><input name="grade" required placeholder="e.g. Grade 9 – Rizal"></div>
+      <div class="full"><label>What's wrong? <i>*</i></label>${complaintPicker()}</div>
+      <div class="full"><label>Notes for the nurse</label><textarea name="details" placeholder="What happened? e.g. vomited in class, fell during PE"></textarea></div>
+      <div class="full"><label class="check"><input type="checkbox" name="escort"> <span>A classmate is going with the student</span></label></div>
+      <div class="full actions"><button type="reset" class="btn ghost">Clear</button><button class="btn">Send clinic pass</button></div>
+    </form></div>` + doneCard('Clinic pass sent. Reference number', 'Send another');
+  wireStudentAutofill();
+  $('form').onsubmit = e => submitVisit(e, 'way');
+}
+function renderLogForm(){
+  $('view').innerHTML = `<div class="card" id="formCard">
+    <h2>Log a walk-in visit</h2>
+    <p class="hint">For students who came to the clinic on their own. Students sent by a teacher appear on the Today tab.</p>
+    <form class="form" id="form">
+      <div><label>Student's name <i>*</i></label><input name="student" list="studentNames" required autocomplete="off" placeholder="Start typing a name"></div>
+      <div><label>Grade &amp; section <i>*</i></label><input name="grade" required></div>
+      <div class="full" id="allergyBox"></div>
+      <div class="full"><label>Complaint <i>*</i></label>${complaintPicker()}</div>
+      <div class="full"><label>Details</label><textarea name="details" placeholder="What the student said, what happened"></textarea></div>
+      <div><label>Temperature (°C)</label><input name="temp" inputmode="decimal" placeholder="e.g. 37.5"></div>
+      <div><label>Blood pressure</label><input name="bp" placeholder="e.g. 110/70"></div>
+      <div class="full actions"><button type="reset" class="btn ghost">Clear</button><button class="btn">Save visit</button></div>
+    </form></div>` + doneCard('Visit saved. Record number', 'Log another');
+  wireStudentAutofill(true);
+  $('form').onsubmit = e => submitVisit(e, 'in');
+}
+function wireStudentAutofill(showHealth){
+  const f = $('form');
+  f.student.addEventListener('input', () => {
+    const acc = studentAcc(f.student.value);
+    if(acc && !f.grade.value) f.grade.value = acc.pos;
+    if(showHealth) $('allergyBox').innerHTML = acc && acc.health ? healthAlert(acc.health) : '';
+  });
+}
+const healthAlert = h => {
+  const bits = [];
+  if(h.allergies) bits.push(`<b>Allergies:</b> ${esc(h.allergies)}`);
+  if(h.conditions) bits.push(`<b>Conditions:</b> ${esc(h.conditions)}`);
+  bits.push(h.consent ? 'Parent consent for basic medicine: <b>Yes</b>' : '<b>No parent consent on file for medicine</b>');
+  return `<div class="allergy">⚠ ${bits.join(' · ')}</div>`;
+};
+function submitVisit(e, status){
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  const acc = studentAcc(f.student);
+  const no = visits.reduce((m,v)=>Math.max(m,v.no),0) + 1, t = Date.now();
+  const v = {no, studentU: acc ? acc.u : '', student: acc ? acc.name : f.student.trim(), grade: f.grade.trim(), by: me.u,
+    complaint: f.complaint, details: (f.details || '') + (f.escort ? (f.details ? '\n' : '') + '(Escorted by a classmate)' : ''),
+    status, at:t, timeIn: status === 'in' ? t : null, timeOut:null, vitals:{temp:f.temp||'', bp:f.bp||''}, action:'', meds:[],
+    log:[{t, m: status === 'way' ? 'Clinic pass sent' : 'Walk-in visit recorded', by:me.u}], notes:[]};
+  visits.push(v); save(); lastId = no;
+  $('formCard').hidden = true; $('doneCard').hidden = false; $('doneNo').textContent = vno(no);
+  counts();
+}
+
+// ================= NURSE: TODAY =================
+function renderDash(){
+  const today = visits.filter(v => isToday(v.at));
+  const way = visits.filter(v => v.status === 'way').sort((a,b)=>a.at-b.at);
+  const inC = visits.filter(v => v.status === 'in').sort((a,b)=>a.timeIn-b.timeIn);
+  const done = today.filter(v => v.status !== 'way' && v.status !== 'in').sort((a,b)=>b.at-a.at);
+  const low = lowMeds();
+  $('view').innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${today.length}</b><span>Visits today</span></div>
+      <div class="stat"><b>${way.length}</b><span>On the way</span></div>
+      <div class="stat"><b>${inC.length}</b><span>In the clinic now</span></div>
+      <div class="stat ${low.length?'red':''}"><b>${low.length}</b><span>Medicines running low</span></div>
+    </div>
+    ${low.length ? `<div class="warn"><b>Restock soon:</b> ${low.map(m => esc(m.name) + ' (' + m.stock + ' left)').join(', ')}</div>` : ''}
+    <div class="dash">
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card"><h3 class="sec">On the way — sent by teachers (${way.length})</h3>
+          <div class="list">${way.length ? way.map(row).join('') : '<div class="empty">No one on the way.</div>'}</div></div>
+        <div class="card"><h3 class="sec">In the clinic now (${inC.length})</h3>
+          <div class="list">${inC.length ? inC.map(row).join('') : '<div class="empty">The clinic is empty.</div>'}</div></div>
+      </div>
+      <div class="card"><h3 class="sec">Finished today (${done.length})</h3>
+        <div class="list">${done.length ? done.map(row).join('') : '<div class="empty">None yet.</div>'}</div></div>
+    </div>`;
+}
+const row = v => {
+  const h = healthOf(v), flag = h && h.allergies;
+  const timeTxt = v.status === 'way' ? 'sent ' + ago(v.at) : v.status === 'in' ? 'in since ' + clock(v.timeIn) : when(v.at);
+  return `<button class="tk ${v.status==='hosp'?'flag':''}" onclick="viewVisit(${v.no})">
+    <span class="no">${vno(v.no)}</span>
+    <span class="ttl">${me.role === 'student' ? esc(v.complaint) : esc(v.student) + ' – ' + esc(v.complaint)}</span>
+    <span>${flag && isN() ? '<span class="pill a-pill">Allergy</span> ' : ''}${sPill(v.status)}</span>
+    <span class="meta">${me.role !== 'student' ? esc(v.grade) + ' · ' : ''}${timeTxt}${isN() && v.by !== 'nurse' && userOf(v.by).role === 'teacher' ? ' · sent by ' + esc(userOf(v.by).name) : ''}</span>
+  </button>`;
+};
+
+// ================= VISIT LIST =================
+let vq = '', vs = '';
+function renderVisits(){
+  const mine = isN() ? visits : me.role === 'teacher' ? visits.filter(v => v.by === me.u) : visits.filter(v => v.studentU === me.u);
+  const rows = mine
+    .filter(v => !vs || v.status === vs)
+    .filter(v => !vq || [vno(v.no), v.student, v.grade, v.complaint, v.details, v.action].join(' ').toLowerCase().includes(vq))
+    .sort((a,b) => b.at - a.at);
+  $('view').innerHTML = `
+    ${me.role === 'student' ? '<p class="hint">Every time you visit the clinic, it is recorded here.</p>' : ''}
+    <div class="tools">
+      <input id="q" value="${esc(vq)}" placeholder="Search name, grade, complaint…">
+      <select id="fs"><option value="">All statuses</option>${Object.entries(STATUS).map(([k,l]) => `<option value="${k}" ${vs===k?'selected':''}>${l}</option>`).join('')}</select>
+    </div>
+    <div class="list">${rows.length ? rows.map(row).join('') : `<div class="empty">${mine.length ? 'Nothing matches.' : me.role === 'student' ? 'No clinic visits yet.' : me.role === 'teacher' ? 'You haven\'t sent any students to the clinic yet.' : 'No visits yet.'}</div>`}</div>`;
+  const q = $('q'); q.oninput = () => { vq = q.value.trim().toLowerCase(); const pos = q.selectionStart; renderVisits(); const n = $('q'); n.focus(); n.setSelectionRange(pos,pos); };
+  $('fs').onchange = e => { vs = e.target.value; renderVisits(); };
+}
+
+// ================= MEDICINE STOCK =================
+function renderMeds(){
+  $('view').innerHTML = `
+    ${lowMeds().length ? `<div class="warn"><b>${lowMeds().length} item${lowMeds().length>1?'s are':' is'} running low.</b> Rows in orange are at or below the reorder level.</div>` : ''}
+    <div class="card">
+      <h3 class="sec">Medicine &amp; supplies</h3>
+      <p class="hint" style="margin-bottom:.8rem">Stock goes down automatically when you record medicine given during a visit.</p>
+      <div style="overflow-x:auto"><table>
+        <tr><th>Item</th><th>In stock</th><th>Reorder at</th><th>Add stock</th></tr>
+        ${meds.map(m => `<tr class="${m.stock<=m.low?'low':''}"><td>${esc(m.name)}</td><td><b>${m.stock}</b> ${esc(m.unit)}${m.stock===1?'':'s'}</td><td>${m.low}</td>
+          <td><div class="stockin"><input type="number" min="1" id="add${m.id}" placeholder="qty"><button class="btn sm" onclick="addStock(${m.id})">Add</button></div></td></tr>`).join('')}
+      </table></div>
+      <h3 class="sec" style="margin-top:1.4rem">Add a new item</h3>
+      <form class="form medform" id="medForm">
+        <div><label>Name</label><input name="name" required placeholder="e.g. Cetirizine 10 mg"></div>
+        <div><label>Unit</label><input name="unit" required placeholder="tablet"></div>
+        <div><label>Stock</label><input name="stock" type="number" min="0" required></div>
+        <div><label>Reorder at</label><input name="low" type="number" min="0" required></div>
+        <button class="btn">Add</button>
+      </form>
+    </div>`;
+  $('medForm').onsubmit = e => {
+    e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
+    meds.push({id: meds.reduce((m,x)=>Math.max(m,x.id),0)+1, name:f.name.trim(), unit:f.unit.trim(), stock:+f.stock, low:+f.low});
+    save(); renderMeds(); counts();
+  };
+}
+function addStock(id){
+  const n = parseInt($('add'+id).value, 10); if(!(n > 0)) return;
+  meds.find(m => m.id === id).stock += n; save(); renderMeds(); counts();
+}
+
+// ================= STUDENT HEALTH PROFILE =================
+function renderProfile(){
+  const h = me.health || (me.health = {blood:'',allergies:'',conditions:'',guardian:'',phone:'',consent:false});
+  $('view').innerHTML = `<div class="card">
+    <h2>My health profile</h2>
+    <p class="hint">The school nurse uses this to keep you safe, for example so you are never given a medicine you're allergic to. Only you and the clinic can see it.</p>
+    <form class="form" id="pform">
+      <div><label>Name</label><input value="${esc(me.name)}" disabled></div>
+      <div><label>Grade &amp; section</label><input value="${esc(me.pos)}" disabled></div>
+      <div><label>Blood type</label><select name="blood">${['','A+','A-','B+','B-','AB+','AB-','O+','O-',"Don't know"].map(b=>`<option ${h.blood===b?'selected':''} value="${b}">${b||'—'}</option>`).join('')}</select></div>
+      <div></div>
+      <div class="full"><label>Allergies (medicine, food, others)</label><input name="allergies" value="${esc(h.allergies)}" placeholder="e.g. Penicillin, shrimp — leave blank if none"></div>
+      <div class="full"><label>Health conditions</label><input name="conditions" value="${esc(h.conditions)}" placeholder="e.g. Asthma, epilepsy, diabetes — leave blank if none"></div>
+      <div><label>Parent / guardian</label><input name="guardian" value="${esc(h.guardian)}"></div>
+      <div><label>Guardian's phone</label><input name="phone" value="${esc(h.phone)}" inputmode="tel"></div>
+      <div class="full"><label class="check"><input type="checkbox" name="consent" ${h.consent?'checked':''}> <span>My parent/guardian allows the school nurse to give basic medicine (e.g. paracetamol) when needed.</span></label></div>
+      <div class="full actions"><span class="saved" id="savedMsg" hidden>✓ Saved</span><button class="btn">Save profile</button></div>
+    </form></div>`;
+  $('pform').onsubmit = e => {
+    e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
+    me.health = {blood:f.blood, allergies:f.allergies.trim(), conditions:f.conditions.trim(), guardian:f.guardian.trim(), phone:f.phone.trim(), consent:!!f.consent};
+    save(); $('savedMsg').hidden = false;
+  };
+}
+
+// ================= VISIT DETAIL =================
+function viewVisit(no){
+  const v = visits.find(x => x.no === no); if(!v) return;
+  if(!isN() && !(me.role === 'teacher' && v.by === me.u) && !(me.role === 'student' && v.studentU === me.u)) return;
+  const h = healthOf(v), acc = v.studentU ? userOf(v.studentU) : null;
+  const nameOf = u => userOf(u).role === 'nurse' ? 'Clinic' : userOf(u).name;
+  const showClinical = isN() || me.role === 'student';
+  $('drawer').innerHTML = `
+    <div class="top"><div><div style="color:var(--brand-d);font-weight:600">${vno(v.no)}</div><h2>${esc(v.student)}</h2>
+      <div style="margin-top:.4rem">${sPill(v.status)}</div></div>
+      <button class="x" onclick="closeD()" aria-label="Close">×</button></div>
+    ${isN() && h ? healthAlert(h) : ''}
+    <dl class="kv">
+      <dt>Grade &amp; section</dt><dd>${esc(v.grade)}</dd>
+      <dt>Complaint</dt><dd>${esc(v.complaint)}</dd>
+      ${userOf(v.by).role === 'teacher' ? `<dt>Sent by</dt><dd>${esc(userOf(v.by).name)}</dd>` : ''}
+      <dt>Time in</dt><dd>${v.timeIn ? when(v.timeIn) : 'Not yet arrived'}</dd>
+      <dt>Time out</dt><dd>${v.timeOut ? when(v.timeOut) : '—'}</dd>
+      ${isN() && h ? `<dt>Guardian</dt><dd>${esc(h.guardian||'—')} · ${esc(h.phone||'no number')}</dd>` : ''}
+    </dl>
+    ${v.details ? `<div class="desc">${esc(v.details)}</div>` : ''}
+    ${showClinical && !isN() && (v.vitals.temp || v.vitals.bp || v.action || v.meds.length) ? `<div class="box"><h3>Clinic findings</h3>
+      <dl class="kv">${v.vitals.temp?`<dt>Temperature</dt><dd>${esc(v.vitals.temp)} °C</dd>`:''}${v.vitals.bp?`<dt>Blood pressure</dt><dd>${esc(v.vitals.bp)}</dd>`:''}
+      ${v.action?`<dt>What was done</dt><dd>${esc(v.action)}</dd>`:''}${v.meds.length?`<dt>Medicine given</dt><dd>${v.meds.map(m=>esc(m.name)+' × '+m.qty).join(', ')}</dd>`:''}</dl></div>` : ''}
+    ${isN() ? `
+    <div class="box admin">
+      <h3>Nurse actions</h3>
+      <label>Status</label>
+      <div class="row"><select id="nStatus">${Object.entries(STATUS).map(([k,l])=>`<option value="${k}" ${k===v.status?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="row"><div><label>Temperature (°C)</label><input id="nTemp" value="${esc(v.vitals.temp||'')}"></div><div><label>Blood pressure</label><input id="nBp" value="${esc(v.vitals.bp||'')}"></div></div>
+      <label>What was done</label><textarea id="nAction" style="min-height:3.5rem" placeholder="e.g. Rested 30 min, cold compress">${esc(v.action)}</textarea>
+      <label style="margin-top:.6rem">Medicine / supplies given</label>
+      <div class="row"><select id="nMed" style="flex:3"><option value="">— choose —</option>${meds.map(m=>`<option value="${m.id}" ${m.stock<1?'disabled':''}>${esc(m.name)} (${m.stock} left)</option>`).join('')}</select><input id="nQty" type="number" min="1" value="1" style="flex:1"></div>
+      ${h && !h.consent ? '<p style="color:#b91c1c;font-size:.78rem;margin:-.3rem 0 .5rem">No parent consent on file for this student.</p>' : ''}
+      ${v.meds.length ? `<div class="medlist">${v.meds.map(m=>`<span>${esc(m.name)} × ${m.qty}</span>`).join('')}</div>` : ''}
+      <label style="margin-top:.6rem">Message to the teacher / student</label>
+      <textarea id="nMsg" style="min-height:3.5rem" placeholder="They will see this (optional)"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn" onclick="saveVisit(${v.no})">Save</button></div>
+    </div>
+    <div class="box secret"><h3>🔒 Private clinic notes</h3>
+      <p class="hint" style="margin:0 0 .6rem;font-size:.75rem">Only the clinic sees these.</p>
+      <textarea id="pnote" style="min-height:3.5rem" placeholder="Confidential note…"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn ghost" onclick="addNote(${v.no})">Add note</button></div>
+      <div class="notes">${v.notes.slice().reverse().map(n=>`<div>${esc(n.m)}<small>${when(n.t)}</small></div>`).join('')}</div>
+    </div>` : ''}
+    <div><h3 class="sec">Updates</h3>
+      <div class="tl">${v.log.slice().reverse().map(l=>`<div class="${userOf(l.by).role==='nurse'?'':'them'}">${esc(l.m)}<small>${esc(nameOf(l.by))} · ${when(l.t)}</small></div>`).join('')}</div></div>`;
+  $('shade').classList.add('on');
+}
+function saveVisit(no){
+  const v = visits.find(x => x.no === no), ts = Date.now();
+  const s = $('nStatus').value;
+  v.vitals = {temp:$('nTemp').value.trim(), bp:$('nBp').value.trim()};
+  v.action = $('nAction').value.trim();
+  const mid = +$('nMed').value, qty = parseInt($('nQty').value, 10) || 0;
+  if(mid && qty > 0){
+    const m = meds.find(x => x.id === mid);
+    const give = Math.min(qty, m.stock);
+    if(give > 0){ m.stock -= give; v.meds.push({name:m.name, qty:give}); v.log.push({t:ts, m:'Given ' + m.name + ' × ' + give, by:me.u}); }
+  }
+  if(s !== v.status){
+    if(s === 'in' && !v.timeIn) v.timeIn = ts;
+    if((s === 'back' || s === 'home' || s === 'hosp') && !v.timeOut){ v.timeOut = ts; if(!v.timeIn) v.timeIn = ts; }
+    v.status = s;
+    v.log.push({t:ts, m: s === 'in' ? 'Arrived at the clinic' : STATUS[s], by:me.u});
+  }
+  const msg = $('nMsg').value.trim(); if(msg) v.log.push({t:ts, m:msg, by:me.u});
+  save(); viewVisit(no); refresh();
+}
+function addNote(no){
+  const v = visits.find(x => x.no === no), m = $('pnote').value.trim(); if(!m) return;
+  v.notes.push({t:Date.now(), m}); save(); viewVisit(no);
+}
+function closeD(){ $('shade').classList.remove('on'); }
+$('shade').onclick = e => { if(e.target.id === 'shade') closeD(); };
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeD(); });
+function resetDemo(){
+  if(!confirm('Remove all accounts, visits, and stock changes and bring back the demo data?')) return;
+  users = clone(SAMPLE_USERS); visits = clone(SAMPLE_VISITS); meds = clone(SAMPLE_MEDS); save(); logout();
+}
+
+// ================= BOOT =================
+let saved0 = null; try{ saved0 = sessionStorage.getItem(K.session); }catch(e){}
+let as0 = null; try{ as0 = new URLSearchParams(location.search).get('as'); }catch(e){} // opened from the School Hub: already signed in
+const acc0 = (as0 && users.find(x => x.u === as0)) || (saved0 && users.find(x => x.u === saved0));
+if(acc0) start(acc0); else $('login').hidden = false;
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

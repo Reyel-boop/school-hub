@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cashiering System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#15803d;--brand-d:#14532d;--brand-soft:#dcfce7;--grad:linear-gradient(135deg,#22c55e,#14532d)}
+  .pos{display:grid;grid-template-columns:1.4fr 1fr;gap:1rem;align-items:start}
+  .catalog{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem}
+  .catalog button{border:1px solid var(--line);background:#fff;border-radius:.6rem;padding:.6rem .7rem;text-align:left;font-size:.85rem}
+  .catalog button:hover{border-color:var(--brand);background:var(--brand-soft)}
+  .catalog small{display:block;color:var(--muted);font-size:.74rem}
+  .lines td input{padding:.35rem .5rem}
+  .total{display:flex;justify-content:space-between;font-size:1.3rem;font-weight:700;padding:.6rem 0;border-top:2px solid var(--ink);margin-top:.4rem;font-variant-numeric:tabular-nums}
+  .change{display:flex;justify-content:space-between;font-size:1rem;font-weight:600;color:var(--brand-d);font-variant-numeric:tabular-nums}
+  tr.void td{color:#94a3b8;text-decoration:line-through}
+  /* receipt */
+  .receipt{width:80mm;background:#fff;color:#000;font:12px/1.4 "Courier New",monospace;padding:4mm;border:1px solid #ddd;margin:0 auto}
+  .receipt h4{text-align:center;font-size:13px;font-weight:700}
+  .receipt .c{text-align:center}
+  .receipt hr{border:0;border-top:1px dashed #000;margin:2mm 0}
+  .receipt .r{display:flex;justify-content:space-between;gap:2mm}
+  .receipt .big{font-size:14px;font-weight:700}
+  .receipt .void{border:2px solid #dc2626;color:#dc2626;text-align:center;font-weight:700;margin:2mm 0}
+  #printArea{display:none}
+  @media print{
+    body.printing > *:not(#printArea){display:none!important}
+    body.printing #printArea{display:block}
+    body.printing .receipt{border:0;margin:0}
+    @page{margin:4mm}
+  }
+  @media (max-width:860px){ .pos{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21z"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4"/></svg>';
+const FUNDS = {canteen:'Canteen Fund', other:'Donations & Other Funds', pta:'PTA Fund (held in trust)', mooe:'MOOE'};
+const METHODS = ['Cash','GCash','Bank deposit'];
+const REMITS_KEY = 'svnhs-cash-remits';             // read by the Accounting System
+const ACCT_RECORDED_KEY = 'svnhs-acct-recordedRemits'; // written by the Accounting System
+const orNo = n => String(n).padStart(7, '0');
+const D = 864e5, now = Date.now(), T = todayStr();
+const ymdOf = t => ymd(new Date(t));
+
+const SAMPLE_ITEMS = [
+  {id:1, name:'ID replacement (lost or damaged ID)', amount:80, fund:'other', voluntary:false},
+  {id:2, name:'Lost / damaged library book', amount:0, fund:'other', voluntary:false},
+  {id:3, name:'School paper subscription', amount:50, fund:'other', voluntary:true},
+  {id:4, name:'PTA contribution (collected for the PTA)', amount:100, fund:'pta', voluntary:true},
+  {id:5, name:'Canteen remittance', amount:0, fund:'canteen', voluntary:false},
+  {id:6, name:'Other payment', amount:0, fund:'other', voluntary:false},
+];
+const rc = (no, payer, payerU, grade, lines, method, daysAgo, extra) => {
+  const at = now - daysAgo * D, total = lines.reduce((s, l) => s + l.amount * l.qty, 0);
+  return Object.assign({no, payer, payerU, grade, lines, total, method, ref:'', tendered:total, at, by:'cashier', void:false, remit:null}, extra || {});
+};
+
+const CFG = {
+  key:'svnhs-cash', title:'Cashiering System', subtitle:"SVNHS Cashier's Office", icon:ICON, officeName:"Cashier's Office",
+  roles:{
+    cashier:{admin:true, tagline:'Issue official receipts, close the day, and remit to Accounting.',
+      tabs:[['pos','＋ New Payment'],['today','Today'],['receipts','Receipts'],['remits','Remittances'],['items','Fees & Items']]},
+    student:{tagline:'Your official receipts from the Cashier.', tabs:[['mine','My Receipts']]},
+  },
+  signup:{roles:[['student','Student / Parent']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 9 – Rizal'}},
+  demo:[['cashier','cashier123','Cashier (admin)'],['student','student123','Student / Parent']],
+  sampleUsers:[
+    {u:'cashier', p:'cashier123', name:'School Cashier', pos:"Cashier's Office", role:'cashier'},
+    {u:'student', p:'student123', name:'Student Demo', pos:'Grade 9 – Rizal', role:'student'},
+  ],
+  data:{
+    settings:{nextOR:1000006},
+    items:SAMPLE_ITEMS,
+    receipts:[
+      rc(1000001,'Learner P (sample)','','Grade 8 – Gumamela',[{item:4,name:SAMPLE_ITEMS[3].name,fund:'pta',amount:100,qty:1}],'Cash',2, {remit:1}),
+      rc(1000002,'Student Demo','student','Grade 9 – Rizal',[{item:1,name:SAMPLE_ITEMS[0].name,fund:'other',amount:80,qty:1}],'GCash',2, {ref:'GC-5521', remit:1}),
+      rc(1000003,'School Canteen','','—',[{item:5,name:SAMPLE_ITEMS[4].name,fund:'canteen',amount:3250,qty:1}],'Cash',2, {remit:1}),
+      rc(1000004,'Learner Q (sample)','','Grade 10 – Narra',[{item:3,name:SAMPLE_ITEMS[2].name,fund:'other',amount:50,qty:1}],'Cash',0.1, {tendered:100}),
+      rc(1000005,'Learner R (sample)','','Grade 7 – Rosal',[{item:2,name:'Lost / damaged library book – Science LM',fund:'other',amount:250,qty:1}],'Cash',0.05, {tendered:500}),
+    ],
+    remits:[{id:1, date:ymdOf(now - 2*D), from:1000001, to:1000003, count:3, total:3430, byFund:{pta:100, other:80, canteen:3250}, byMethod:{Cash:3350, GCash:80}, at:now - 2*D + 8*36e5}],
+  },
+  views:{pos, today, receipts: receiptList, remits: remitList, items: itemsView, mine},
+};
+// keep a copy of remittances where the Accounting System can read them
+const shareRemits = () => { try { localStorage.setItem(REMITS_KEY, JSON.stringify(P.db.remits)); } catch(e) {} };
+const recordedInAcct = () => { try { return JSON.parse(localStorage.getItem(ACCT_RECORDED_KEY)) || []; } catch(e) { return []; } };
+const live = () => P.db.receipts.filter(r => !r.void);
+
+/* ================= POINT OF PAYMENT ================= */
+let cart = [];
+function pos(el){
+  const students = P.usersWith('student');
+  el.innerHTML = `<div class="pos">
+    <div class="stack">
+      <div class="card"><h3 class="sec">Fees &amp; items <span class="hint" style="font-weight:400">— tap to add</span></h3>
+        <div class="catalog">${P.db.items.map(i => `<button onclick="addLine(${i.id})">${esc(i.name)}<small>${i.amount ? peso(i.amount) : 'Type the amount'}${i.voluntary ? ' · voluntary' : ''} · ${esc(FUNDS[i.fund])}</small></button>`).join('')}</div>
+      </div>
+      <div class="card"><h3 class="sec">Payment</h3>
+        ${cart.length ? `<div class="tablewrap"><table class="lines"><tr><th>Item</th><th class="num">Amount</th><th class="num">Qty</th><th class="num">Subtotal</th><th></th></tr>
+          ${cart.map((l, i) => `<tr><td><input value="${esc(l.name)}" oninput="cart[${i}].name=this.value"></td>
+            <td class="num"><input type="number" min="0" step="0.01" value="${l.amount || ''}" style="width:6.5rem;text-align:right" oninput="cart[${i}].amount=+this.value;sumUp()"></td>
+            <td class="num"><input type="number" min="1" value="${l.qty}" style="width:4rem;text-align:right" oninput="cart[${i}].qty=Math.max(1,+this.value||1);sumUp()"></td>
+            <td class="num" id="sub${i}">${peso(l.amount * l.qty)}</td><td><button class="btn ghost sm" onclick="cart.splice(${i},1);P.refresh()">✕</button></td></tr>`).join('')}</table></div>`
+          : '<div class="empty">Tap a fee or item above to start.</div>'}
+        <div class="total"><span>Total</span><span id="tot">${peso(cartTotal())}</span></div>
+      </div>
+    </div>
+    <div class="card"><h3 class="sec">Payer &amp; receipt</h3>
+      <form class="form" id="pf" style="grid-template-columns:1fr">
+        <div><label>Received from <i>*</i></label><input name="payer" list="stu" required autocomplete="off" placeholder="Learner or parent's name"><datalist id="stu">${students.map(s => `<option value="${esc(s.name)}">${esc(s.pos)}</option>`).join('')}</datalist></div>
+        <div><label>Grade &amp; section</label><input name="grade"></div>
+        <div><label>Payment method</label><div class="seg">${METHODS.map((m, i) => `<label><input type="radio" name="method" value="${m}" ${i ? '' : 'checked'}>${m}</label>`).join('')}</div></div>
+        <div id="refBox" hidden><label>Reference no. <i>*</i></label><input name="ref" placeholder="GCash / bank reference"></div>
+        <div id="tenderBox"><label>Cash received</label><input name="tendered" type="number" min="0" step="0.01" id="tendered"></div>
+        <div class="change" id="chg"></div>
+        <div id="pErr" class="err" hidden></div>
+        <div class="hint" style="margin:0">Next OR no.: <b>${orNo(P.db.settings.nextOR)}</b></div>
+        <button class="btn">Issue official receipt</button>
+      </form></div></div>`;
+  const f = $('pf');
+  f.payer.oninput = () => { const s = students.find(x => x.name.toLowerCase() === f.payer.value.trim().toLowerCase()); if (s && !f.grade.value) f.grade.value = s.pos; };
+  f.addEventListener('change', e => { if (e.target.name === 'method') { const cash = f.method.value === 'Cash'; $('refBox').hidden = cash; $('tenderBox').hidden = !cash; sumUp(); } });
+  $('tendered').oninput = sumUp; sumUp();
+  f.onsubmit = e => { e.preventDefault(); issue(f); };
+}
+const cartTotal = () => Math.round(cart.reduce((s, l) => s + (l.amount || 0) * l.qty, 0) * 100) / 100;
+function addLine(id){ const i = P.db.items.find(x => x.id === id); const ex = cart.find(l => l.item === id && i.amount); if (ex) ex.qty++; else cart.push({item:id, name:i.name, fund:i.fund, amount:i.amount, qty:1}); P.refresh(); }
+function sumUp(){
+  cart.forEach((l, i) => { const c = $('sub' + i); if (c) c.textContent = peso((l.amount || 0) * l.qty); });
+  $('tot').textContent = peso(cartTotal());
+  const f = $('pf'); if (!f) return;
+  $('pErr').hidden = true;
+  const tnd = +f.tendered.value;
+  $('chg').innerHTML = f.method.value === 'Cash' && tnd ? (tnd >= cartTotal() ? `<span>Change</span><span>${peso(tnd - cartTotal())}</span>` : `<span style="color:#b91c1c">Short by</span><span style="color:#b91c1c">${peso(cartTotal() - tnd)}</span>`) : '';
+}
+function issue(f){
+  const err = m => { $('pErr').textContent = m; $('pErr').hidden = false; };
+  const total = cartTotal(), method = f.method.value, tendered = method === 'Cash' ? (+f.tendered.value || total) : total;
+  if (!cart.length) return err('Add at least one fee or item.');
+  if (cart.some(l => !(l.amount > 0))) return err('Every item needs an amount.');
+  if (method !== 'Cash' && !f.ref.value.trim()) return err('Enter the ' + method + ' reference number.');
+  if (method === 'Cash' && tendered < total) return err('Cash received is less than the total.');
+  const s = P.usersWith('student').find(x => x.name.toLowerCase() === f.payer.value.trim().toLowerCase());
+  const r = {no:P.db.settings.nextOR++, payer:f.payer.value.trim(), payerU: s ? s.u : '', grade:f.grade.value.trim(), lines:clone(cart), total, method, ref:(f.ref.value || '').trim(),
+    tendered, at:Date.now(), by:P.me.u, void:false, remit:null};
+  P.db.receipts.push(r); P.save(); cart = [];
+  $('view').innerHTML = `<div class="card done-msg"><div class="chk">${doneSvg}</div><p style="margin-top:1rem">Official receipt issued</p><div class="big">OR ${orNo(r.no)}</div>
+    ${method === 'Cash' && tendered > total ? `<p class="change" style="justify-content:center;gap:.5rem">Change: ${peso(tendered - total)}</p>` : ''}
+    <div class="actions" style="justify-content:center;margin-top:1rem"><button class="btn ghost" onclick="printReceipt(${r.no})">Print receipt</button><button class="btn" onclick="P.refresh()">Next payment</button></div></div>`;
+}
+
+/* ================= RECEIPT ================= */
+function receiptHTML(r){
+  return `<div class="receipt">
+    <h4>SAN VICENTE NATIONAL HIGH SCHOOL</h4><div class="c">San Vicente, Panabo City<br>Cashier's Office</div><hr>
+    <div class="c big">OFFICIAL RECEIPT</div><div class="r"><span>OR No.</span><b>${orNo(r.no)}</b></div><div class="r"><span>Date</span><span>${new Date(r.at).toLocaleString('en-PH')}</span></div>
+    ${r.void ? `<div class="void">VOID – ${esc(r.voidNote || '')}</div>` : ''}<hr>
+    <div>Received from: <b>${esc(r.payer)}</b>${r.grade && r.grade !== '—' ? '<br>' + esc(r.grade) : ''}</div><hr>
+    ${r.lines.map(l => `<div>${esc(l.name)}</div><div class="r"><span>&nbsp;&nbsp;${l.qty} × ${peso(l.amount)}</span><span>${peso(l.amount * l.qty)}</span></div>`).join('')}<hr>
+    <div class="r big"><span>TOTAL</span><span>${peso(r.total)}</span></div>
+    <div class="r"><span>${esc(r.method)}${r.ref ? ' (' + esc(r.ref) + ')' : ''}</span><span>${peso(r.tendered)}</span></div>
+    ${r.method === 'Cash' && r.tendered > r.total ? `<div class="r"><span>Change</span><span>${peso(r.tendered - r.total)}</span></div>` : ''}<hr>
+    <div class="c">Cashier: ${esc(P.userOf(r.by).name)}<br>Thank you!</div></div>`;
+}
+function printReceipt(no){
+  const r = P.db.receipts.find(x => x.no === no);
+  $('printArea').innerHTML = receiptHTML(r); document.body.classList.add('printing');
+  setTimeout(() => { window.print(); document.body.classList.remove('printing'); }, 100);
+}
+function viewReceipt(no){
+  const r = P.db.receipts.find(x => x.no === no); if (!r) return;
+  if (!P.isAdmin() && r.payerU !== P.me.u) return;
+  P.open(`<div class="top"><div><h2>OR ${orNo(r.no)}</h2>${r.void ? '<span class="pill p-red">VOID</span>' : r.remit ? '<span class="pill p-gray">Remitted</span>' : '<span class="pill p-blue">Not yet remitted</span>'}</div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    ${receiptHTML(r)}
+    <div class="actions"><button class="btn ghost" onclick="printReceipt(${r.no})">Print</button></div>
+    ${P.isAdmin() && !r.void && !r.remit ? `<div class="box"><h3>Void this receipt</h3><p class="hint" style="margin:0 0 .6rem;font-size:.78rem">Only for mistakes, before the day is closed. The OR number stays on record as void.</p>
+      <input id="vn" placeholder="Reason (required)"><div class="actions" style="margin-top:.6rem"><button class="btn red sm" onclick="voidReceipt(${r.no})">Void</button></div></div>` : ''}
+    ${r.remit ? `<p class="hint">Part of remittance #${r.remit}. Remitted receipts can't be voided.</p>` : ''}`);
+}
+function voidReceipt(no){ const r = P.db.receipts.find(x => x.no === no), n = $('vn').value.trim(); if (!n) return $('vn').focus(); r.void = true; r.voidNote = n; P.save(); viewReceipt(no); P.refresh(); }
+
+/* ================= TODAY + CLOSE DAY ================= */
+const rcRow = r => `<tr class="clickable ${r.void ? 'void' : ''}" onclick="viewReceipt(${r.no})"><td>${orNo(r.no)}</td><td>${new Date(r.at).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'})}</td>
+  <td>${esc(r.payer)}</td><td>${r.lines.map(l => esc(l.name)).join(', ')}</td><td>${esc(r.method)}</td><td class="num">${peso(r.total)}</td></tr>`;
+const rcTable = L => L.length ? `<div class="tablewrap"><table><tr><th>OR no.</th><th>Time</th><th>Received from</th><th>For</th><th>Method</th><th class="num">Amount</th></tr>${L.map(rcRow).join('')}</table></div>` : '<div class="empty">No receipts.</div>';
+const sumBy = (L, key) => L.reduce((o, r) => { if (key === 'method') o[r.method] = (o[r.method] || 0) + r.total; else r.lines.forEach(l => o[l.fund] = (o[l.fund] || 0) + l.amount * l.qty); return o; }, {});
+function today(el){
+  const open = P.db.receipts.filter(r => !r.remit).sort((a,b) => a.no - b.no), L = open.filter(r => !r.void);
+  const total = L.reduce((s, r) => s + r.total, 0), byM = sumBy(L, 'method'), byF = sumBy(L, 'fund');
+  el.innerHTML = `<div class="stack">
+    <div class="stats">
+      <div class="stat"><b>${peso(total)}</b><span>Collected, not yet remitted</span></div>
+      <div class="stat"><b>${L.length}</b><span>Receipts issued</span></div>
+      <div class="stat"><b>${peso(byM.Cash || 0)}</b><span>Cash on hand to remit</span></div>
+      <div class="stat"><b>${open.length - L.length}</b><span>Voided</span></div>
+    </div>
+    <div class="twocol">
+      <div class="card"><h3 class="sec">Receipts not yet remitted</h3>${rcTable(open)}</div>
+      <div class="card"><h3 class="sec">Close the day</h3>
+        <div class="tablewrap"><table><tr><th>By fund</th><th class="num">Amount</th></tr>${Object.entries(byF).map(([k, v]) => `<tr><td>${esc(FUNDS[k])}</td><td class="num">${peso(v)}</td></tr>`).join('') || '<tr><td colspan="2">—</td></tr>'}</table></div>
+        <div class="tablewrap" style="margin-top:.8rem"><table><tr><th>By method</th><th class="num">Amount</th></tr>${Object.entries(byM).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${peso(v)}</td></tr>`).join('') || '<tr><td colspan="2">—</td></tr>'}</table></div>
+        <p class="hint" style="margin:.8rem 0">Count the cash first. Closing locks these receipts and sends the remittance to the Accounting System.</p>
+        <button class="btn" ${L.length ? '' : 'disabled style="opacity:.5"'} onclick="closeDay()">Close &amp; remit ${peso(total)}</button></div>
+    </div></div>`;
+}
+function closeDay(){
+  const open = P.db.receipts.filter(r => !r.remit), L = open.filter(r => !r.void);
+  if (!L.length || !confirm(`Close and remit ${peso(L.reduce((s, r) => s + r.total, 0))} from ${L.length} receipt(s)?`)) return;
+  const id = P.db.remits.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+  const rem = {id, date:T, from:open[0].no, to:open[open.length - 1].no, count:L.length, total:Math.round(L.reduce((s, r) => s + r.total, 0) * 100) / 100,
+    byFund:sumBy(L, 'fund'), byMethod:sumBy(L, 'method'), at:Date.now()};
+  open.forEach(r => r.remit = id);
+  P.db.remits.push(rem); P.save(); shareRemits(); P.tab('remits');
+}
+
+/* ================= LISTS ================= */
+let rq = '';
+function receiptList(el){
+  const L = P.db.receipts.filter(r => !rq || [orNo(r.no), r.payer, r.grade, r.ref, ...r.lines.map(l => l.name)].join(' ').toLowerCase().includes(rq)).sort((a,b) => b.no - a.no);
+  el.innerHTML = `<div class="stack"><div class="tools"><input id="q" value="${esc(rq)}" placeholder="Search OR no., name, item, reference…"></div><div class="card">${rcTable(L)}</div></div>`;
+  const q = $('q'); q.oninput = () => { rq = q.value.trim().toLowerCase(); const p = q.selectionStart; receiptList(el); $('q').focus(); $('q').setSelectionRange(p,p); };
+}
+function remitList(el){
+  const rec = recordedInAcct(), R = P.db.remits.slice().sort((a,b) => b.id - a.id);
+  el.innerHTML = `<div class="card"><h2>Remittances</h2><p class="hint">Each closed day becomes one remittance. The Accounting System's bookkeeper records it under Collections.</p>
+    ${R.length ? `<div class="tablewrap"><table><tr><th>#</th><th>Date</th><th>OR range</th><th class="num">Receipts</th><th>By fund</th><th class="num">Total</th><th>Accounting</th></tr>
+      ${R.map(r => `<tr><td>${r.id}</td><td>${fmtDate(r.date)}</td><td>${orNo(r.from)}–${orNo(r.to)}</td><td class="num">${r.count}</td>
+        <td>${Object.entries(r.byFund).map(([k, v]) => esc(FUNDS[k]) + ': ' + peso(v)).join('<br>')}</td><td class="num"><b>${peso(r.total)}</b></td>
+        <td>${rec.includes(r.id) ? '<span class="pill p-green">Recorded</span>' : '<span class="pill p-amber">Waiting</span>'}</td></tr>`).join('')}</table></div>` : '<div class="empty">No remittances yet.</div>'}</div>`;
+}
+function itemsView(el){
+  el.innerHTML = `<div class="card"><h2>Fees &amp; items</h2><p class="hint">What the Cashier can collect. Leave the amount at 0 if it changes every time. Mark voluntary contributions so payers know they are optional.</p>
+    <div class="tablewrap"><table><tr><th>Name</th><th class="num">Default amount</th><th>Goes to fund</th><th>Voluntary</th><th></th></tr>
+      ${P.db.items.map(i => `<tr><td><input value="${esc(i.name)}" onchange="setItem(${i.id},'name',this.value)"></td>
+        <td class="num"><input type="number" min="0" step="0.01" value="${i.amount}" style="width:7rem;text-align:right" onchange="setItem(${i.id},'amount',+this.value)"></td>
+        <td><select onchange="setItem(${i.id},'fund',this.value)">${Object.entries(FUNDS).map(([k, n]) => `<option value="${k}" ${i.fund===k?'selected':''}>${esc(n)}</option>`).join('')}</select></td>
+        <td><input type="checkbox" ${i.voluntary ? 'checked' : ''} style="width:auto" onchange="setItem(${i.id},'voluntary',this.checked)"></td>
+        <td><button class="btn ghost sm" onclick="delItem(${i.id})">Remove</button></td></tr>`).join('')}</table></div>
+    <div class="actions" style="margin-top:1rem;justify-content:flex-start"><button class="btn" onclick="addItem()">＋ Add item</button><span class="saved" id="iSaved" hidden>✓ Saved</span></div></div>`;
+}
+function setItem(id, k, v){ P.db.items.find(x => x.id === id)[k] = v; P.save(); $('iSaved').hidden = false; }
+function delItem(id){ if (!confirm('Remove this item from the list? Old receipts are not affected.')) return; P.db.items = P.db.items.filter(x => x.id !== id); P.save(); P.refresh(); }
+function addItem(){ P.db.items.push({id:P.db.items.reduce((m, x) => Math.max(m, x.id), 0) + 1, name:'New item', amount:0, fund:'other', voluntary:false}); P.save(); P.refresh(); }
+
+/* ================= STUDENT ================= */
+function mine(el){
+  const L = P.db.receipts.filter(r => r.payerU === P.me.u).sort((a,b) => b.no - a.no);
+  el.innerHTML = L.length ? `<div class="card"><h2>My receipts</h2><p class="hint">Official receipts the Cashier issued to you. Tap one to see or print it.</p>${rcTable(L)}</div>`
+    : '<div class="empty">No receipts yet. Receipts appear here when the Cashier issues them under your name.</div>';
+}
+P.init(CFG);
+shareRemits();
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

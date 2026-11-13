@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enrollment System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#7e22ce;--brand-d:#581c87;--brand-soft:#f3e8ff;--grad:linear-gradient(135deg,#a855f7,#6b21a8)}
+  .appcard{display:flex;flex-direction:column;gap:.5rem}
+  .appcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .sexcount{color:var(--muted);font-size:.82rem}
+  .reqrow{display:flex;justify-content:space-between;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:.5rem;padding:.5rem .7rem;background:#fff;font-size:.85rem;margin-bottom:.4rem}
+  .reqrow small{color:var(--muted);font-size:.72rem}
+  .reqrow input{width:auto;accent-color:var(--brand)}
+  @media print{ .printhead{display:block!important} }
+  .printhead{display:none;margin-bottom:1rem}
+</style>
+</head>
+<body>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><circle cx="12" cy="11.5" r="2"/><path d="M8.5 17.5c.6-1.6 1.9-2.5 3.5-2.5s2.9.9 3.5 2.5"/></svg>';
+const GRADES = [7,8,9,10,11,12];
+const TYPES = ['New (incoming Grade 7)','Transferee','Continuing','Balik-Aral (returning)'];
+const REQS = {psa:'PSA Birth Certificate', sf9:'Report Card (SF9)', gm:'Good Moral Certificate'};
+const reqsFor = a => a.type === 'Transferee' ? ['psa','sf9','gm'] : ['psa','sf9'];
+const STATUS = {'Submitted':'p-blue','For compliance':'p-amber','Enrolled':'p-green','Not accepted':'p-red'};
+const sPill = s => `<span class="pill ${STATUS[s]}">${s}</span>`;
+const eno = n => 'EN-' + String(n).padStart(4,'0');
+const fullName = a => [a.last + ',', a.first, a.middle ? a.middle[0] + '.' : ''].join(' ').trim();
+const D = 864e5, now = Date.now();
+
+const mkApp = (no, by, type, grade, lrn, last, first, sex, status, section, ver, daysAgo, extra) => Object.assign({
+  no, by, sy:'2027–2028', type, grade, strand:'', lrn, last, first, middle:'', birth:'', sex, address:'San Vicente, Panabo City',
+  guardian:'Parent of ' + first, rel:'Parent', phone:'0917 000 00' + pad(no), lastSchool: type === 'Transferee' ? 'Another National High School' : '',
+  decl:{psa:true, sf9:true, gm:type === 'Transferee'}, ver, status, section, at: now - daysAgo*D,
+  log:[{t:now - daysAgo*D, m:'Application submitted', by}]}, extra || {});
+
+const CFG = {
+  key:'svnhs-en', title:'Enrollment System', subtitle:'SVNHS Registrar', icon:ICON, officeName:"Registrar's Office",
+  roles:{
+    registrar:{admin:true, tagline:'Enrollment applications, requirements, and sectioning.',
+      tabs:[['dash','Dashboard'],['apps','Applications <span class="count" id="cApps"></span>'],['sections','Sections &amp; Settings']]},
+    student:{tagline:'Enroll for the coming school year and follow your status.', tabs:[['enroll','Enroll'],['mine','My Enrollment']]},
+    teacher:{badge:'ADVISER', tagline:'Learners enrolled in your advisory class.', tabs:[['class','My Advisory Class']]},
+  },
+  signup:{roles:[['student','Learner / Parent'],['teacher','Teacher']], posLabel:{}, posDefault:{student:'Learner', teacher:'Teacher'}},
+  demo:[['registrar','registrar123','Registrar (admin)'],['student','student123','Learner / Parent'],['teacher','teacher123','Adviser']],
+  sampleUsers:[
+    {u:'registrar', p:'registrar123', name:'School Registrar', pos:"Registrar's Office", role:'registrar'},
+    {u:'teacher', p:'teacher123', name:'Grade 7 Adviser', pos:'Teacher', role:'teacher'},
+    {u:'teacher2', p:'teacher123', name:'Grade 8 Adviser', pos:'Teacher', role:'teacher'},
+    {u:'student', p:'student123', name:'Student Demo', pos:'Learner', role:'student'},
+  ],
+  data:{
+    settings:{sy:'2027–2028', open:true},
+    sections:[
+      {id:1,grade:7,name:'Sampaguita',adviser:'teacher',cap:45},{id:2,grade:7,name:'Rosal',adviser:'',cap:45},
+      {id:3,grade:8,name:'Ilang-Ilang',adviser:'teacher2',cap:45},{id:4,grade:8,name:'Gumamela',adviser:'',cap:45},
+      {id:5,grade:9,name:'Rizal',adviser:'',cap:45},{id:6,grade:9,name:'Mabini',adviser:'',cap:45},
+      {id:7,grade:10,name:'Narra',adviser:'',cap:45},{id:8,grade:10,name:'Molave',adviser:'',cap:45},
+      {id:9,grade:11,name:'Aguinaldo',adviser:'',cap:40},{id:10,grade:12,name:'Bonifacio',adviser:'',cap:40},
+    ],
+    apps:[
+      mkApp(1,'student','Continuing',10,'123456789012','Demo','Student','Female','For compliance',null,{psa:true,sf9:false},4,
+        {decl:{psa:true,sf9:false}, log:[{t:now-4*D,m:'Application submitted',by:'student'},{t:now-3*D,m:'Status changed to For compliance',by:'registrar'},{t:now-3*D,m:'Please submit your Grade 9 report card (SF9) to the Registrar.',by:'registrar'}]}),
+      mkApp(2,'x1','New (incoming Grade 7)',7,'100000000002','Sample','Learner A','Female','Enrolled',1,{psa:true,sf9:true},9),
+      mkApp(3,'x2','Transferee',8,'100000000003','Sample','Learner B','Male','Submitted',null,{},1),
+      mkApp(4,'x3','New (incoming Grade 7)',7,'100000000004','Sample','Learner C','Female','Submitted',null,{},0.2),
+      mkApp(5,'x4','Balik-Aral (returning)',9,'100000000005','Sample','Learner D','Male','For compliance',null,{psa:true},6),
+      mkApp(6,'x5','New (incoming Grade 7)',7,'100000000006','Sample','Learner E','Male','Enrolled',1,{psa:true,sf9:true},8),
+      mkApp(7,'x6','Continuing',8,'100000000007','Sample','Learner F','Female','Enrolled',3,{psa:true,sf9:true},7),
+    ],
+  },
+  counts(){ P.setCount('cApps', P.db.apps.filter(a => a.status === 'Submitted').length); },
+  views:{dash, apps, sections, enroll, mine, class: advisory},
+};
+
+const secOf = id => P.db.sections.find(s => s.id === id);
+const secName = id => { const s = secOf(id); return s ? 'Grade ' + s.grade + ' – ' + s.name : '—'; };
+const enrolledIn = id => P.db.apps.filter(a => a.status === 'Enrolled' && a.section === id);
+const gradeLabel = g => 'Grade ' + g;
+
+/* ================= REGISTRAR ================= */
+function dash(el){
+  const A = P.db.apps, by = s => A.filter(a => a.status === s).length;
+  const fresh = A.filter(a => a.status === 'Submitted').sort((a,b) => a.at - b.at);
+  el.innerHTML = `<div class="stack">
+    ${P.db.settings.open ? `<div class="okbox">Enrollment for <b>S.Y. ${esc(P.db.settings.sy)}</b> is <b>open</b>.</div>` : `<div class="warn">Enrollment for S.Y. ${esc(P.db.settings.sy)} is <b>closed</b>. Learners can't submit new applications.</div>`}
+    <div class="stats">
+      <div class="stat"><b>${A.length}</b><span>Applications</span></div>
+      <div class="stat"><b>${by('Submitted')}</b><span>Waiting for review</span></div>
+      <div class="stat"><b>${by('For compliance')}</b><span>Missing requirements</span></div>
+      <div class="stat"><b>${by('Enrolled')}</b><span>Enrolled</span></div>
+    </div>
+    <div class="twocol">
+      <div class="card"><h3 class="sec">Waiting for review (${fresh.length}) — oldest first</h3>
+        <div class="list">${fresh.length ? fresh.map(row).join('') : '<div class="empty">All caught up.</div>'}</div></div>
+      <div class="card"><h3 class="sec">Per grade level</h3><div class="tablewrap"><table>
+        <tr><th>Grade</th><th class="num">Applicants</th><th class="num">Enrolled</th><th class="num">Slots</th></tr>
+        ${GRADES.map(g => { const ap = A.filter(a => a.grade === g), cap = P.db.sections.filter(s => s.grade === g).reduce((t,s) => t + s.cap, 0);
+          return `<tr><td>${gradeLabel(g)}</td><td class="num">${ap.length}</td><td class="num">${ap.filter(a => a.status === 'Enrolled').length}</td><td class="num">${cap}</td></tr>`; }).join('')}
+      </table></div></div>
+    </div></div>`;
+}
+const row = a => `<button class="tk" onclick="viewApp(${a.no})"><span class="no">${eno(a.no)}</span>
+  <span class="ttl">${esc(fullName(a))}</span><span>${sPill(a.status)}</span>
+  <span class="meta">${gradeLabel(a.grade)} · ${esc(a.type)}${a.section ? ' · ' + esc(secName(a.section)) : ''} · ${ago(a.at)}</span></button>`;
+
+let fq = '', fg = '', fs = '';
+function apps(el){
+  const rows = P.db.apps.filter(a => (!fg || a.grade === +fg) && (!fs || a.status === fs) &&
+      (!fq || [eno(a.no), fullName(a), a.lrn, a.type].join(' ').toLowerCase().includes(fq)))
+    .sort((a,b) => Object.keys(STATUS).indexOf(a.status) - Object.keys(STATUS).indexOf(b.status) || b.at - a.at);
+  el.innerHTML = `<div class="stack">
+    <div class="tools"><input id="q" value="${esc(fq)}" placeholder="Search name, LRN, or EN number…">
+      <select id="g"><option value="">All grades</option>${GRADES.map(g => `<option value="${g}" ${+fg===g?'selected':''}>${gradeLabel(g)}</option>`).join('')}</select>
+      <select id="s"><option value="">All statuses</option>${Object.keys(STATUS).map(s => `<option ${fs===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="list">${rows.length ? rows.map(row).join('') : '<div class="empty">No applications match.</div>'}</div></div>`;
+  const q = $('q'); q.oninput = () => { fq = q.value.trim().toLowerCase(); const p = q.selectionStart; apps(el); $('q').focus(); $('q').setSelectionRange(p,p); };
+  $('g').onchange = e => { fg = e.target.value; apps(el); };
+  $('s').onchange = e => { fs = e.target.value; apps(el); };
+}
+
+function sections(el){
+  const T = P.usersWith('teacher'), S = P.db.settings;
+  el.innerHTML = `<div class="stack">
+    <div class="card"><h3 class="sec">Enrollment settings</h3>
+      <form class="form three" id="setForm" style="align-items:end">
+        <div><label>School year</label><input name="sy" value="${esc(S.sy)}" required></div>
+        <div><label class="check"><input type="checkbox" name="open" ${S.open?'checked':''}> <span>Enrollment is open</span></label></div>
+        <div class="actions"><span class="saved" id="setSaved" hidden>✓ Saved</span><button class="btn">Save</button></div>
+      </form></div>
+    <div class="card"><h3 class="sec">Sections</h3><div class="tablewrap"><table>
+      <tr><th>Grade</th><th>Section</th><th>Adviser</th><th class="num">Enrolled</th><th class="num">Capacity</th></tr>
+      ${P.db.sections.slice().sort((a,b) => a.grade - b.grade || a.name.localeCompare(b.name)).map(s => `<tr>
+        <td>${gradeLabel(s.grade)}</td><td>${esc(s.name)}</td>
+        <td><select onchange="setAdviser(${s.id}, this.value)"><option value="">— none —</option>${T.map(t => `<option value="${t.u}" ${s.adviser===t.u?'selected':''}>${esc(t.name)}</option>`).join('')}</select></td>
+        <td class="num">${enrolledIn(s.id).length}</td>
+        <td class="num"><input type="number" min="1" value="${s.cap}" style="width:5rem;text-align:right" onchange="setCap(${s.id}, this.value)"></td></tr>`).join('')}
+    </table></div>
+    <h3 class="sec" style="margin-top:1.3rem">Add a section</h3>
+    <form class="form" id="secForm" style="grid-template-columns:1fr 2fr 1fr auto;align-items:end">
+      <div><label>Grade</label><select name="grade">${GRADES.map(g => `<option value="${g}">${gradeLabel(g)}</option>`).join('')}</select></div>
+      <div><label>Section name</label><input name="name" required></div>
+      <div><label>Capacity</label><input name="cap" type="number" min="1" value="45" required></div>
+      <button class="btn">Add</button>
+    </form></div></div>`;
+  $('setForm').onsubmit = e => { e.preventDefault(); S.sy = e.target.sy.value.trim(); S.open = e.target.open.checked; P.save(); $('setSaved').hidden = false; };
+  $('secForm').onsubmit = e => { e.preventDefault(); const f = e.target;
+    P.db.sections.push({id: P.db.sections.reduce((m,s) => Math.max(m,s.id), 0) + 1, grade:+f.grade.value, name:f.name.value.trim(), adviser:'', cap:+f.cap.value});
+    P.save(); sections(el); };
+}
+function setAdviser(id, u){ secOf(id).adviser = u; P.save(); }
+function setCap(id, v){ secOf(id).cap = Math.max(1, +v || 1); P.save(); }
+
+/* ================= LEARNER / PARENT ================= */
+function myApps(){ return P.db.apps.filter(a => a.by === P.me.u); }
+function enroll(el){
+  const S = P.db.settings;
+  const active = myApps().find(a => a.sy === S.sy && a.status !== 'Not accepted');
+  if (!S.open) { el.innerHTML = `<div class="warn">Enrollment for S.Y. ${esc(S.sy)} is closed right now. Please check with the Registrar's Office.</div>`; return; }
+  if (active) { el.innerHTML = `<div class="card appcard"><h2>You already applied for S.Y. ${esc(S.sy)}</h2>${appSummary(active)}
+    <div class="actions"><button class="btn" onclick="viewApp(${active.no})">See details</button></div></div>`; return; }
+  el.innerHTML = `<div class="card">
+    <h2>Enrollment form · S.Y. ${esc(S.sy)}</h2>
+    <p class="hint">Fill this out for the learner. A parent or guardian may fill it out for their child.</p>
+    <form class="form" id="form">
+      <div class="full"><label>Type of learner <i>*</i></label><div class="seg">${TYPES.map((t,i) => `<label><input type="radio" name="type" value="${t}" ${i?'':'checked'}>${t}</label>`).join('')}</div></div>
+      <div><label>Grade level to enroll <i>*</i></label><select name="grade" required>${GRADES.map(g => `<option value="${g}">${gradeLabel(g)}</option>`).join('')}</select></div>
+      <div id="strandBox" hidden><label>Track / strand (Grade 11–12)</label><input name="strand" placeholder="e.g. Academic – STEM"></div>
+      <div><label>LRN (Learner Reference Number) <i>*</i></label><input name="lrn" required pattern="\\d{12}" inputmode="numeric" maxlength="12" title="12 digits" placeholder="12 digits, found on the report card"></div>
+      <div class="full" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+        <div><label>Last name <i>*</i></label><input name="last" required></div>
+        <div><label>First name <i>*</i></label><input name="first" required></div>
+        <div><label>Middle name</label><input name="middle"></div></div>
+      <div><label>Birthdate <i>*</i></label><input name="birth" type="date" required></div>
+      <div><label>Sex <i>*</i></label><div class="seg"><label><input type="radio" name="sex" value="Male" required>Male</label><label><input type="radio" name="sex" value="Female">Female</label></div></div>
+      <div class="full"><label>Home address <i>*</i></label><input name="address" required placeholder="House no., street, barangay, city"></div>
+      <div><label>Parent / guardian <i>*</i></label><input name="guardian" required></div>
+      <div><label>Relationship</label><select name="rel"><option>Mother</option><option>Father</option><option>Guardian</option></select></div>
+      <div><label>Contact number <i>*</i></label><input name="phone" required inputmode="tel" placeholder="09xx xxx xxxx"></div>
+      <div id="lastSchoolBox"><label>Last school attended</label><input name="lastSchool"></div>
+      <div class="full"><label>Requirements you already have (bring the originals to the Registrar)</label><div class="checks" id="reqChecks"></div></div>
+      <div class="full"><label class="check"><input type="checkbox" name="consent" required> <span>I agree that San Vicente National High School will collect and use this information for enrollment, in line with the Data Privacy Act of 2012. <i>*</i></span></label></div>
+      <div class="full actions"><button type="reset" class="btn ghost">Clear</button><button class="btn">Submit enrollment</button></div>
+    </form></div>`;
+  const f = $('form');
+  const sync = () => {
+    const type = f.type.value, g = +f.grade.value;
+    $('strandBox').hidden = g < 11;
+    $('lastSchoolBox').hidden = type === 'Continuing';
+    $('reqChecks').innerHTML = reqsFor({type}).map(k => `<label class="check"><input type="checkbox" name="r_${k}"> <span>${REQS[k]}</span></label>`).join('');
+  };
+  f.addEventListener('change', e => { if (e.target.name === 'type' || e.target.name === 'grade') sync(); });
+  sync();
+  f.onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(f)), no = nextNo(P.db.apps);
+    const a = {no, by:P.me.u, sy:S.sy, type:d.type, grade:+d.grade, strand:d.strand || '', lrn:d.lrn, last:d.last.trim(), first:d.first.trim(), middle:d.middle.trim(),
+      birth:d.birth, sex:d.sex, address:d.address.trim(), guardian:d.guardian.trim(), rel:d.rel, phone:d.phone.trim(), lastSchool:(d.lastSchool||'').trim(),
+      decl:Object.fromEntries(reqsFor(d).map(k => [k, !!d['r_' + k]])), ver:{}, status:'Submitted', section:null, at:Date.now(), log:[]};
+    P.log(a, 'Application submitted');
+    P.db.apps.push(a); P.save(); P.counts();
+    el.innerHTML = P.doneCard('Your enrollment was sent to the Registrar. Your reference number is', eno(no), 'OK', `viewApp(${no})`);
+  };
+}
+function appSummary(a){
+  const missing = reqsFor(a).filter(k => !a.ver[k]);
+  const step = a.status === 'Enrolled' ? 3 : a.status === 'Submitted' ? 1 : 2;
+  return `<div class="top" style="display:flex;justify-content:space-between;gap:1rem"><div><b>${esc(fullName(a))}</b><div class="hint" style="margin:0">${eno(a.no)} · ${gradeLabel(a.grade)} · ${esc(a.type)}</div></div>${sPill(a.status)}</div>
+    <div class="steps"><div class="on">Submitted</div><div class="${step>=2?(a.status==='For compliance'?'bad on':'on'):''}">Requirements checked</div><div class="${step>=3?'on':''}">Enrolled</div></div>
+    ${a.status === 'Enrolled' ? `<div class="okbox">Enrolled in <b>${esc(secName(a.section))}</b>. Welcome to S.Y. ${esc(a.sy)}!</div>` :
+      a.status === 'For compliance' ? `<div class="warn">Please bring to the Registrar: <b>${missing.map(k => REQS[k]).join(', ') || 'see the message below'}</b></div>` :
+      a.status === 'Not accepted' ? `<div class="warn">This application was not accepted. See the Registrar's message for details.</div>` :
+      `<p class="hint" style="margin:0">The Registrar will check your requirements. Bring the originals to the school.</p>`}`;
+}
+function mine(el){
+  const A = myApps().sort((a,b) => b.at - a.at);
+  el.innerHTML = A.length ? `<div class="stack">${A.map(a => `<div class="card appcard">${appSummary(a)}<div class="actions"><button class="btn ghost sm" onclick="viewApp(${a.no})">Details &amp; messages</button></div></div>`).join('')}</div>`
+    : `<div class="empty">You haven't submitted an enrollment yet. Go to the Enroll tab to start.</div>`;
+}
+
+/* ================= ADVISER ================= */
+function advisory(el){
+  const mySecs = P.db.sections.filter(s => s.adviser === P.me.u);
+  if (!mySecs.length) { el.innerHTML = '<div class="empty">You are not assigned to an advisory class yet. The Registrar assigns advisers in Sections &amp; Settings.</div>'; return; }
+  el.innerHTML = `<div class="stack">${mySecs.map(s => { const L = enrolledIn(s.id).sort((a,b) => a.sex.localeCompare(b.sex) || fullName(a).localeCompare(fullName(b)));
+    const m = L.filter(a => a.sex === 'Male').length;
+    return `<div class="card"><div class="printhead"><b>San Vicente National High School</b><br>Class list · S.Y. ${esc(P.db.settings.sy)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem"><div><h2>${esc(secName(s.id))}</h2>
+      <span class="sexcount">${L.length} enrolled · ${m} male · ${L.length - m} female · capacity ${s.cap}</span></div>
+      <button class="btn ghost sm noprint" onclick="window.print()">Print class list</button></div>
+      ${L.length ? `<div class="tablewrap"><table><tr><th>#</th><th>Name</th><th>LRN</th><th>Sex</th><th>Parent / guardian</th><th>Contact</th></tr>
+        ${L.map((a,i) => `<tr><td>${i+1}</td><td>${esc(fullName(a))}</td><td>${esc(a.lrn)}</td><td>${a.sex[0]}</td><td>${esc(a.guardian)}</td><td>${esc(a.phone)}</td></tr>`).join('')}</table></div>`
+        : '<div class="empty">No learners enrolled in this section yet.</div>'}</div>`; }).join('')}</div>`;
+}
+
+/* ================= DETAIL ================= */
+function viewApp(no){
+  const a = P.db.apps.find(x => x.no === no);
+  if (!a || (!P.isAdmin() && a.by !== P.me.u)) return;
+  const admin = P.isAdmin(), secs = P.db.sections.filter(s => s.grade === a.grade);
+  P.open(`
+    <div class="top"><div><div style="color:var(--brand-d);font-weight:600">${eno(a.no)}</div><h2>${esc(fullName(a))}</h2>
+      <div style="margin-top:.4rem">${sPill(a.status)}</div></div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <dl class="kv">
+      <dt>School year</dt><dd>${esc(a.sy)}</dd>
+      <dt>Grade level</dt><dd>${gradeLabel(a.grade)}${a.strand ? ' · ' + esc(a.strand) : ''}</dd>
+      <dt>Type</dt><dd>${esc(a.type)}</dd>
+      <dt>LRN</dt><dd>${esc(a.lrn)}</dd>
+      <dt>Birthdate · Sex</dt><dd>${fmtDate(a.birth)} · ${esc(a.sex)}</dd>
+      <dt>Address</dt><dd>${esc(a.address)}</dd>
+      <dt>Parent / guardian</dt><dd>${esc(a.guardian)} (${esc(a.rel)}) · ${esc(a.phone)}</dd>
+      ${a.lastSchool ? `<dt>Last school</dt><dd>${esc(a.lastSchool)}</dd>` : ''}
+      ${a.section ? `<dt>Section</dt><dd><b>${esc(secName(a.section))}</b></dd>` : ''}
+      <dt>Submitted</dt><dd>${when(a.at)}</dd>
+    </dl>
+    ${admin ? `<div class="box admin"><h3>Registrar actions</h3>
+      <label>Requirements received (originals checked)</label>
+      ${reqsFor(a).map(k => `<label class="reqrow"><span>${REQS[k]}<br><small>${a.decl[k] ? 'Learner says it is ready' : 'Learner did not tick this'}</small></span><input type="checkbox" id="v_${k}" ${a.ver[k]?'checked':''}></label>`).join('')}
+      <div class="row" style="margin-top:.6rem"><div><label>Section</label><select id="aSec"><option value="">— not yet —</option>${secs.map(s => `<option value="${s.id}" ${a.section===s.id?'selected':''}>${esc(s.name)} (${enrolledIn(s.id).length}/${s.cap})</option>`).join('')}</select></div>
+        <div><label>Status</label><select id="aStatus">${Object.keys(STATUS).map(s => `<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select></div></div>
+      <div id="aErr" class="err" hidden style="margin-bottom:.6rem"></div>
+      <textarea id="aMsg" style="min-height:3.5rem" placeholder="Message to the learner / parent (optional)"></textarea>
+      <div class="actions" style="margin-top:.6rem"><button class="btn" onclick="saveApp(${a.no})">Save</button></div></div>`
+    : `${appSummaryBox(a)}${a.status !== 'Enrolled' && a.status !== 'Not accepted' ? `<div class="box"><h3>Message the Registrar</h3><textarea id="aMsg" style="min-height:3.5rem"></textarea><div class="actions" style="margin-top:.6rem"><button class="btn" onclick="saveApp(${a.no})">Send</button></div></div>` : ''}`}
+    ${P.timeline(a)}`);
+}
+const appSummaryBox = a => `<div class="box"><h3>Requirements</h3>${reqsFor(a).map(k => `<div class="reqrow"><span>${REQS[k]}</span>${a.ver[k] ? '<span class="pill p-green">Received</span>' : '<span class="pill p-amber">Not yet received</span>'}</div>`).join('')}</div>`;
+function saveApp(no){
+  const a = P.db.apps.find(x => x.no === no), msg = $('aMsg').value.trim();
+  if (P.isAdmin()) {
+    const ver = Object.fromEntries(reqsFor(a).map(k => [k, $('v_' + k).checked]));
+    const sec = +$('aSec').value || null, st = $('aStatus').value;
+    const err = m => { $('aErr').textContent = m; $('aErr').hidden = false; };
+    if (st === 'Enrolled' && !sec) return err('Choose a section before marking as Enrolled.');
+    if (st === 'Enrolled' && reqsFor(a).some(k => !ver[k])) return err('All requirements must be received before marking as Enrolled. Use "For compliance" instead.');
+    const s = sec && secOf(sec);
+    if (st === 'Enrolled' && s && a.section !== sec && enrolledIn(sec).length >= s.cap) return err(s.name + ' is full. Choose another section or raise its capacity.');
+    for (const k of Object.keys(ver)) if (ver[k] && !a.ver[k]) P.log(a, REQS[k] + ' received');
+    a.ver = ver;
+    if (sec !== a.section) { a.section = sec; if (sec) P.log(a, 'Assigned to ' + secName(sec)); }
+    if (st !== a.status) { a.status = st; P.log(a, 'Status changed to ' + st); }
+  }
+  if (msg) P.log(a, msg);
+  P.save(); viewApp(no); P.refresh();
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

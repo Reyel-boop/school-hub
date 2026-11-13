@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPCR · LAC · Test Bank</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#be185d;--brand-d:#831843;--brand-soft:#fce7f3;--grad:linear-gradient(135deg,#ec4899,#831843)}
+  .ipcr th,.ipcr td{vertical-align:top}
+  .ipcr .kra td{background:#f1f5f9;font-weight:600;font-size:.82rem}
+  .ipcr textarea{min-height:3.2rem;font-size:.82rem;padding:.4rem .5rem}
+  .ipcr select,.ipcr input[type=number]{padding:.3rem .3rem;width:3.4rem;font-size:.85rem}
+  .ipcr .r{white-space:nowrap}
+  .ipcr .avg{font-weight:600;font-variant-numeric:tabular-nums}
+  .score{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+  .score b{font-size:2rem;font-variant-numeric:tabular-nums}
+  .adj{font-weight:600;padding:.2rem .7rem;border-radius:1rem;background:var(--brand-soft);color:var(--brand-d)}
+  .qitem{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:.8rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.4rem .8rem;align-items:start}
+  .qitem input[type=checkbox]{width:auto;margin-top:.3rem;accent-color:var(--brand)}
+  .qitem .qq{font-weight:500}
+  .qitem ol{margin:.3rem 0 0 1.1rem;font-size:.85rem;color:#334155}
+  .qitem li.ok{color:#15803d;font-weight:600}
+  .qitem .meta{grid-column:2/4;color:var(--muted);font-size:.75rem}
+  .selbar{position:sticky;bottom:0;background:var(--brand-d);color:#fff;border-radius:.7rem;padding:.7rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+  .selbar .btn{background:#fff;color:var(--brand-d)}
+  #printArea{display:none}
+  .paper{font:13px/1.55 Arial,sans-serif;color:#000;max-width:190mm;margin:0 auto}
+  .paper h1{font-size:16px;text-align:center}
+  .paper .hd{text-align:center;font-weight:700;line-height:1.3;margin-bottom:8px}
+  .paper ol.items > li{margin-bottom:10px;break-inside:avoid}
+  .paper .ch{display:grid;grid-template-columns:1fr 1fr;margin-left:6px}
+  .paper .key{break-before:page}
+  .cert{border:6px double #831843;padding:18mm 16mm;text-align:center;font-family:Georgia,serif;color:#000;max-width:250mm;margin:0 auto}
+  .cert h1{font-size:30px;letter-spacing:.06em;color:#831843}
+  .cert .nm{font-size:26px;font-weight:700;border-bottom:1px solid #000;display:inline-block;padding:0 20px;margin:12px 0}
+  .cert .sig{margin-top:22mm;display:inline-block;border-top:1px solid #000;padding-top:4px;min-width:70mm}
+  @media print{
+    body.printing > *:not(#printArea){display:none!important}
+    body.printing #printArea{display:block}
+    .printhead{display:block!important}
+  }
+  .printhead{display:none;margin-bottom:.8rem}
+  @media (max-width:760px){ .qitem{grid-template-columns:auto 1fr} }
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h12v14H6a2 2 0 0 0-2 2zm0 0a2 2 0 0 0 2 2h12"/><path d="M9 8l1.6 1.6L14 6.5"/><path d="M9 13h5"/></svg>';
+const SUBJECTS = ['Science','Math','English','Filipino','Araling Panlipunan','TLE','Values Education','MAPEH'];
+const RATING = [[4.5,'Outstanding'],[3.5,'Very Satisfactory'],[2.5,'Satisfactory'],[1.5,'Unsatisfactory'],[0,'Poor']];
+const adjectival = s => s ? RATING.find(([min]) => s >= min)[1] : '—';
+const ISTATUS = {'Draft':'p-gray','Submitted':'p-blue','Rated':'p-violet','Acknowledged':'p-green'};
+const pill = s => `<span class="pill ${ISTATUS[s]}">${s === 'Submitted' ? 'Submitted for rating' : s}</span>`;
+const DIFF = ['Easy','Average','Difficult'];
+const D = 864e5, now = Date.now(), T = todayStr();
+const off = d => ymd(new Date(Date.now() + d * D));
+
+// Sample objectives (paraphrased). Edit to match the IPCRF template DepEd issues for the school year.
+const TEMPLATE = [
+  ['Content Knowledge and Pedagogy','Apply knowledge of content within and across curriculum teaching areas.',10],
+  ['Content Knowledge and Pedagogy','Use a range of teaching strategies that enhance learner achievement in literacy and numeracy.',10],
+  ['Content Knowledge and Pedagogy','Apply teaching strategies that develop critical and creative thinking and higher-order thinking skills.',10],
+  ['Learning Environment and Diversity of Learners','Manage classroom structure to engage learners in meaningful exploration and hands-on activities.',10],
+  ['Learning Environment and Diversity of Learners','Use differentiated, developmentally appropriate learning experiences for learners\' gender, needs, strengths, interests, and experiences.',10],
+  ['Curriculum and Planning','Plan, manage, and implement developmentally sequenced teaching and learning processes to meet curriculum requirements.',10],
+  ['Curriculum and Planning','Select, develop, organize, and use appropriate teaching and learning resources, including ICT.',10],
+  ['Assessment and Reporting','Design, select, organize, and use diagnostic, formative, and summative assessment strategies consistent with curriculum requirements.',10],
+  ['Community Linkages and Professional Engagement','Build relationships with parents/guardians and the wider school community to support learning.',10],
+  ['Personal Growth and Professional Development','Participate in professional networks and LAC sessions to share knowledge and enhance practice.',10],
+];
+const newIpcr = (id, by, status) => ({id, by, sy:'2026–2027', status, remarks:'', at:now, log:[],
+  objectives: TEMPLATE.map(([kra, text, weight], i) => ({id:i + 1, kra, text, weight, mov:'', self:{q:'',e:'',t:''}, rate:{q:'',e:'',t:''}}))});
+const sampleIpcr2 = (() => { const x = newIpcr(2, 'teacher2', 'Rated'); x.remarks = 'Strong use of hands-on activities. Keep documenting learner outputs as MOV.';
+  x.objectives.forEach((o, i) => { o.mov = 'Lesson plans, learner outputs, observation notes'; o.self = {q:'5',e:'4',t:'5'}; o.rate = {q:String(4 + (i % 2)), e:'4', t:String(5 - (i % 3 === 0 ? 1 : 0))}; });
+  x.log = [{t:now - 20*D, m:'Submitted for rating', by:'teacher2'}, {t:now - 15*D, m:'Rated by the Principal', by:'principal'}]; return x; })();
+const sampleIpcr1 = (() => { const x = newIpcr(1, 'teacher', 'Draft');
+  x.objectives.slice(0, 4).forEach(o => { o.mov = 'Lesson plans (ILAW), sample learner outputs'; o.self = {q:'4',e:'4',t:'5'}; }); return x; })();
+
+const Q = (id, by, shared, subject, grade, quarter, comp, q, c, a, diff, stats) => ({id, by, shared, subject, grade, quarter, comp, type: c.length === 2 ? 'tf' : 'mc', q, c, a, diff, stats: stats || null});
+const CFG = {
+  key:'svnhs-rpms', title:'IPCR · LAC · Test Bank', subtitle:'SVNHS', icon:ICON, officeName:'School Head',
+  roles:{
+    principal:{admin:true, tagline:'Rate IPCRs, run LAC sessions, and browse the shared test bank.',
+      tabs:[['rate','IPCR Ratings <span class="count" id="cRate"></span>'],['lacadmin','LAC Sessions'],['bank','Test Bank']]},
+    teacher:{tagline:'Your IPCR, LAC sessions, and test bank in one place.',
+      tabs:[['ipcr','My IPCR'],['lac','LAC Sessions'],['bank','Test Bank'],['build','Make a Test <span class="count" id="cSel"></span>']]},
+  },
+  signup:{roles:[['teacher','Teacher']], posLabel:{teacher:'Position'}, posHint:{teacher:'e.g. Teacher I'}},
+  demo:[['principal','principal123','Principal / rater (admin)'],['teacher','teacher123','Teacher']],
+  sampleUsers:[
+    {u:'principal', p:'principal123', name:'School Principal', pos:'Principal I', role:'principal'},
+    {u:'teacher', p:'teacher123', name:'Grade 9 Adviser', pos:'Teacher I', role:'teacher'},
+    {u:'teacher2', p:'teacher123', name:'Science Coordinator', pos:'Teacher III', role:'teacher'},
+  ],
+  data:{
+    ipcrs:[sampleIpcr1, sampleIpcr2],
+    lac:[
+      {id:1, title:'Writing Good Multiple-Choice Items', topic:'Assessment', date:off(-40), time:'14:00', facilitator:'Science Coordinator', venue:'AVR', hours:3, attendees:['teacher','teacher2'], reflections:{teacher:'I learned to avoid "all of the above" and to write plausible distractors.'}},
+      {id:2, title:'Differentiated Instruction in Mixed-Ability Classes', topic:'Learner diversity', date:off(-12), time:'14:00', facilitator:'Master Teacher', venue:'Library', hours:2, attendees:['teacher2'], reflections:{}},
+      {id:3, title:'Using ICT Tools in Teaching', topic:'ICT integration', date:off(9), time:'14:00', facilitator:'ICT Coordinator', venue:'Computer Lab', hours:3, attendees:[], reflections:{}},
+    ],
+    items:[
+      Q(1,'teacher2',true,'Science',7,2,'Cell structure','What is the basic unit of life?',['Atom','Cell','Tissue','Organ'],1,'Easy',{n:40,correct:36}),
+      Q(2,'teacher2',true,'Science',7,2,'Cell structure','Which organelle controls the activities of the cell?',['Nucleus','Cell wall','Vacuole','Ribosome'],0,'Average',{n:40,correct:25}),
+      Q(3,'teacher2',true,'Science',7,2,'Plant vs animal cells','Which structure is found in plant cells but NOT in animal cells?',['Cell membrane','Cytoplasm','Cell wall','Mitochondria'],2,'Average',{n:40,correct:6}),
+      Q(4,'teacher2',true,'Science',7,2,'Photosynthesis','Chloroplasts are the site of photosynthesis.',['True','False'],0,'Easy'),
+      Q(5,'teacher',false,'Math',9,1,'Quadratic equations','What are the roots of x² − 5x + 6 = 0?',['2 and 3','−2 and −3','1 and 6','−1 and −6'],0,'Average'),
+      Q(6,'teacher',false,'Math',9,1,'Quadratic equations','The discriminant of x² + 4x + 4 = 0 is:',['0','4','8','16'],0,'Average'),
+      Q(7,'teacher',true,'Math',9,1,'Nature of roots','If the discriminant is negative, the roots are real and unequal.',['True','False'],1,'Difficult'),
+      Q(8,'teacher',false,'Math',9,1,'Quadratic formula','In the quadratic formula, what expression is under the square root?',['b² − 4ac','b² + 4ac','4ac − b²','2a'],0,'Easy'),
+    ],
+  },
+  counts(){
+    P.setCount('cRate', P.db.ipcrs.filter(x => x.status === 'Submitted').length);
+    P.setCount('cSel', sel.size);
+  },
+  views:{ipcr: ipcrView, rate: rateView, lac: lacView, lacadmin: lacAdmin, bank: bankView, build: buildView},
+};
+
+/* ================= IPCR ================= */
+const vals = r => ['q','e','t'].map(k => +r[k]).filter(Boolean);
+const avgOf = r => { const v = vals(r); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
+const finalScore = (x, which) => x.objectives.reduce((s, o) => s + avgOf(o[which]) * o.weight / 100, 0);
+const weightSum = x => x.objectives.reduce((s, o) => s + (+o.weight || 0), 0);
+const sel3 = (v, attr) => `<select ${attr}><option value="">–</option>${[5,4,3,2,1].map(n => `<option ${String(v) === String(n) ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+function ipcrTable(x, mode){ // mode: 'edit' (teacher draft), 'rate' (rater), 'view'
+  let lastKra = '';
+  const rows = x.objectives.map((o, i) => {
+    const head = o.kra !== lastKra ? `<tr class="kra"><td colspan="${mode === 'view' || mode === 'rate' ? 6 : 5}">KRA: ${esc(o.kra)}</td></tr>` : ''; lastKra = o.kra;
+    const self = mode === 'edit' ? ['q','e','t'].map(k => sel3(o.self[k], `data-self="${i}" data-k="${k}"`)).join(' ') : ['q','e','t'].map(k => o.self[k] || '–').join(' / ');
+    const rate = mode === 'rate' ? ['q','e','t'].map(k => sel3(o.rate[k], `data-rate="${i}" data-k="${k}"`)).join(' ') : ['q','e','t'].map(k => o.rate[k] || '–').join(' / ');
+    return head + `<tr>
+      <td>${mode === 'edit' ? `<textarea data-text="${i}">${esc(o.text)}</textarea>` : esc(o.text)}</td>
+      <td class="num">${mode === 'edit' ? `<input type="number" min="0" max="100" data-w="${i}" value="${o.weight}">` : o.weight}%</td>
+      <td>${mode === 'edit' ? `<textarea data-mov="${i}" placeholder="Means of verification (files, outputs, links)">${esc(o.mov)}</textarea>` : esc(o.mov) || '<span class="hint">—</span>'}</td>
+      <td class="r">${self}</td>
+      ${mode === 'edit' ? '' : `<td class="r">${rate}</td>`}
+      <td class="num avg" id="avg${i}">${(avgOf(mode === 'edit' ? o.self : o.rate) || 0).toFixed(2)}</td></tr>`;
+  }).join('');
+  return `<div class="tablewrap"><table class="ipcr"><tr><th style="width:38%">Objective</th><th class="num">Weight</th><th style="width:24%">MOV</th><th>Self (Q / E / T)</th>${mode === 'edit' ? '' : '<th>Rater (Q / E / T)</th>'}<th class="num">Average</th></tr>${rows}</table></div>`;
+}
+const scoreBox = (x, which) => { const s = finalScore(x, which);
+  return `<div class="score"><div><span class="hint">${which === 'rate' ? 'Final rating' : 'Self-rating'}</span><br><b>${s ? s.toFixed(3) : '—'}</b></div><span class="adj">${adjectival(s)}</span>
+    <span class="hint" style="margin:0">Weights total: ${weightSum(x)}%${weightSum(x) !== 100 ? ' <b style="color:#b91c1c">(must be 100%)</b>' : ''}</span></div>`; };
+const myIpcr = () => P.db.ipcrs.find(x => x.by === P.me.u);
+function ipcrView(el){
+  const x = myIpcr();
+  if (!x) { el.innerHTML = `<div class="card"><h2>IPCR · S.Y. 2026–2027</h2><p class="hint">Start your Individual Performance Commitment and Review. It begins with sample objectives you can edit.</p>
+    <button class="btn" onclick="startIpcr()">Start my IPCR</button></div>`; return; }
+  const edit = x.status === 'Draft';
+  el.innerHTML = `<div class="stack"><div class="card">
+    <div class="printhead"><b>San Vicente National High School</b><br>Individual Performance Commitment and Review · ${esc(P.me.name)}</div>
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;margin-bottom:.8rem">
+      <div><h2>My IPCR · S.Y. ${esc(x.sy)}</h2>${pill(x.status)}</div>
+      <div class="actions noprint">${edit ? `<span class="saved" id="iSaved" hidden>✓ Saved</span><button class="btn ghost" onclick="saveIpcr(false)">Save draft</button><button class="btn" onclick="saveIpcr(true)">Submit for rating</button>` : ''}
+        ${x.status === 'Rated' ? `<button class="btn" onclick="ackIpcr()">Acknowledge rating</button>` : ''}<button class="btn ghost" onclick="window.print()">Print</button></div></div>
+    <p class="hint noprint">Rate each objective from 1 (Poor) to 5 (Outstanding) for Quality, Efficiency, and Timeliness. The final rating is the weighted average.</p>
+    <div id="iErr" class="err" hidden style="margin-bottom:.6rem"></div>
+    ${ipcrTable(x, edit ? 'edit' : 'view')}
+    <div style="margin-top:1rem" id="scoreBox">${scoreBox(x, edit ? 'self' : x.status === 'Submitted' ? 'self' : 'rate')}</div>
+    ${x.remarks ? `<div class="box" style="margin-top:1rem"><h3>Rater's remarks</h3>${esc(x.remarks)}</div>` : ''}
+  </div>${P.timeline(x)}</div>`;
+  if (edit) {
+    const upd = () => { $('scoreBox').innerHTML = scoreBox(x, 'self'); x.objectives.forEach((o, i) => { const c = $('avg' + i); if (c) c.textContent = avgOf(o.self).toFixed(2); }); };
+    el.querySelectorAll('[data-self]').forEach(s => s.onchange = () => { x.objectives[+s.dataset.self].self[s.dataset.k] = s.value; upd(); });
+    el.querySelectorAll('[data-w]').forEach(s => s.oninput = () => { x.objectives[+s.dataset.w].weight = +s.value || 0; upd(); });
+    el.querySelectorAll('[data-text]').forEach(s => s.oninput = () => x.objectives[+s.dataset.text].text = s.value);
+    el.querySelectorAll('[data-mov]').forEach(s => s.oninput = () => x.objectives[+s.dataset.mov].mov = s.value);
+  }
+}
+function startIpcr(){ P.db.ipcrs.push(newIpcr(P.db.ipcrs.reduce((m, x) => Math.max(m, x.id), 0) + 1, P.me.u, 'Draft')); P.save(); P.refresh(); }
+function saveIpcr(submit){
+  const x = myIpcr(), err = m => { $('iErr').textContent = m; $('iErr').hidden = false; };
+  if (submit) {
+    if (weightSum(x) !== 100) return err('The weights must add up to 100% before you submit.');
+    const miss = x.objectives.findIndex(o => vals(o.self).length < 3 || !o.mov.trim());
+    if (miss >= 0) return err(`Objective ${miss + 1} needs a MOV and all three self-ratings (Q, E, T).`);
+    x.status = 'Submitted'; P.log(x, 'Submitted for rating');
+  }
+  P.save(); P.refresh(); if (!submit && $('iSaved')) $('iSaved').hidden = false;
+}
+function ackIpcr(){ const x = myIpcr(); x.status = 'Acknowledged'; P.log(x, 'Rating acknowledged by the teacher'); P.save(); P.refresh(); }
+let rateId = null;
+function rateView(el){
+  const L = P.db.ipcrs.slice().sort((a,b) => Object.keys(ISTATUS).indexOf(a.status) === 1 ? -1 : 1);
+  if (rateId) {
+    const x = P.db.ipcrs.find(i => i.id === rateId), can = x.status === 'Submitted';
+    el.innerHTML = `<div class="card"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;margin-bottom:.8rem">
+        <div><button class="btn ghost sm" onclick="rateId=null;P.refresh()">‹ All IPCRs</button><h2 style="margin-top:.6rem">${esc(P.userOf(x.by).name)} · S.Y. ${esc(x.sy)}</h2>${pill(x.status)}</div>
+        ${can ? `<button class="btn" onclick="saveRating()">Save rating</button>` : ''}</div>
+      <div id="rErr" class="err" hidden style="margin-bottom:.6rem"></div>
+      ${ipcrTable(x, can ? 'rate' : 'view')}
+      <div style="margin-top:1rem" id="scoreBox">${scoreBox(x, 'rate')}</div>
+      <label style="margin-top:1rem">Remarks / development plan</label><textarea id="rRem" ${can ? '' : 'disabled'}>${esc(x.remarks)}</textarea></div>`;
+    if (can) el.querySelectorAll('[data-rate]').forEach(s => s.onchange = () => { const o = x.objectives[+s.dataset.rate]; o.rate[s.dataset.k] = s.value; $('avg' + s.dataset.rate).textContent = avgOf(o.rate).toFixed(2); $('scoreBox').innerHTML = scoreBox(x, 'rate'); });
+    return;
+  }
+  const by = s => P.db.ipcrs.filter(x => x.status === s).length;
+  el.innerHTML = `<div class="stack"><div class="stats">${['Draft','Submitted','Rated','Acknowledged'].map(s => `<div class="stat"><b>${by(s)}</b><span>${s === 'Submitted' ? 'Waiting for your rating' : s}</span></div>`).join('')}</div>
+    <div class="card"><div class="tablewrap"><table><tr><th>Teacher</th><th>Position</th><th>Status</th><th class="num">Self</th><th class="num">Final</th><th>Adjectival</th></tr>
+      ${P.db.ipcrs.map(x => { const f = finalScore(x, 'rate'), u = P.userOf(x.by);
+        return `<tr class="clickable" onclick="rateId=${x.id};P.refresh()"><td>${esc(u.name)}</td><td>${esc(u.pos)}</td><td>${pill(x.status)}</td><td class="num">${finalScore(x, 'self') ? finalScore(x, 'self').toFixed(3) : '—'}</td><td class="num">${f ? f.toFixed(3) : '—'}</td><td>${['Rated','Acknowledged'].includes(x.status) ? adjectival(f) : '—'}</td></tr>`; }).join('')}
+    </table></div></div></div>`;
+}
+function saveRating(){
+  const x = P.db.ipcrs.find(i => i.id === rateId);
+  if (x.objectives.some(o => vals(o.rate).length < 3)) { $('rErr').textContent = 'Rate Q, E, and T for every objective.'; $('rErr').hidden = false; return; }
+  x.remarks = $('rRem').value.trim(); x.status = 'Rated'; P.log(x, `Rated by the Principal: ${finalScore(x, 'rate').toFixed(3)} (${adjectival(finalScore(x, 'rate'))})`);
+  P.save(); P.refresh();
+}
+
+/* ================= LAC ================= */
+const lacWhen = s => `${fmtDate(s.date)} · ${new Date('2000-01-01T' + s.time).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'})}`;
+function lacView(el){
+  const L = P.db.lac.slice().sort((a,b) => b.date.localeCompare(a.date)), mine = L.filter(s => s.attendees.includes(P.me.u));
+  const up = L.filter(s => s.date >= T).reverse(), past = L.filter(s => s.date < T);
+  el.innerHTML = `<div class="stack">
+    <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div class="stat"><b>${mine.reduce((s, x) => s + x.hours, 0)} hrs</b><span>My LAC hours</span></div>
+      <div class="stat"><b>${mine.length}</b><span>Sessions attended</span></div><div class="stat"><b>${up.length}</b><span>Upcoming sessions</span></div></div>
+    ${up.length ? `<div class="card"><h3 class="sec">Upcoming</h3><div class="list">${up.map(s => `<div class="tk" style="cursor:default"><span class="no">${fmtDate(s.date)}</span><span class="ttl">${esc(s.title)}</span><span class="pill p-blue">Upcoming</span>
+      <span class="meta">${lacWhen(s)} · ${esc(s.venue)} · ${s.hours} hrs · Facilitator: ${esc(s.facilitator)}</span></div>`).join('')}</div></div>` : ''}
+    <div class="card"><h3 class="sec">Past sessions</h3><div class="stack">${past.map(s => { const went = s.attendees.includes(P.me.u);
+      return `<div class="box"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap"><div><b>${esc(s.title)}</b><div class="hint" style="margin:0">${lacWhen(s)} · ${s.hours} hrs · ${esc(s.topic)}</div></div>
+        ${went ? '<span class="pill p-green">Attended</span>' : '<span class="pill p-gray">Not attended</span>'}</div>
+        ${went ? `<label style="margin-top:.7rem">My reflection (can be used as MOV for the IPCR)</label><textarea id="rf${s.id}">${esc(s.reflections[P.me.u] || '')}</textarea>
+          <div class="actions" style="margin-top:.5rem"><span class="saved" id="rfs${s.id}" hidden>✓ Saved</span><button class="btn ghost sm" onclick="printCert(${s.id})">Certificate</button><button class="btn sm" onclick="saveReflection(${s.id})">Save reflection</button></div>` : ''}</div>`; }).join('') || '<div class="empty">No past sessions.</div>'}</div></div></div>`;
+}
+function saveReflection(id){ const s = P.db.lac.find(x => x.id === id); s.reflections[P.me.u] = $('rf' + id).value.trim(); P.save(); $('rfs' + id).hidden = false; }
+function printCert(id){
+  const s = P.db.lac.find(x => x.id === id);
+  $('printArea').innerHTML = `<div class="cert"><div>Republic of the Philippines · Department of Education<br><b>SAN VICENTE NATIONAL HIGH SCHOOL</b></div>
+    <h1 style="margin-top:10mm">CERTIFICATE OF PARTICIPATION</h1><p>is awarded to</p><div class="nm">${esc(P.me.name)}</div>
+    <p>for actively participating in the Learning Action Cell (LAC) session<br><b>"${esc(s.title)}"</b><br>held on ${fmtDate(s.date)} at the ${esc(s.venue)}, with a total of ${s.hours} hours.</p>
+    <div class="sig"><b>${esc(P.userOf('principal').name)}</b><br>School Principal</div></div>`;
+  document.body.classList.add('printing'); setTimeout(() => { window.print(); document.body.classList.remove('printing'); }, 100);
+}
+function lacAdmin(el){
+  const L = P.db.lac.slice().sort((a,b) => b.date.localeCompare(a.date)), T_ = P.usersWith('teacher');
+  el.innerHTML = `<div class="stack">
+    <div class="card"><h3 class="sec">Schedule a LAC session</h3><form class="form three" id="lf">
+      <div class="full"><label>Title <i>*</i></label><input name="title" required></div>
+      <div><label>Topic / focus</label><input name="topic"></div><div><label>Facilitator <i>*</i></label><input name="facilitator" required></div><div><label>Venue</label><input name="venue" value="AVR"></div>
+      <div><label>Date <i>*</i></label><input type="date" name="date" required></div><div><label>Time</label><input type="time" name="time" value="14:00"></div><div><label>Hours <i>*</i></label><input type="number" name="hours" min="0.5" step="0.5" value="2" required></div>
+      <div class="full actions"><button class="btn">Add session</button></div></form></div>
+    <div class="card"><h3 class="sec">Sessions</h3><div class="tablewrap"><table><tr><th>Date</th><th>Title</th><th>Facilitator</th><th class="num">Hours</th><th class="num">Attended</th></tr>
+      ${L.map(s => `<tr class="clickable" onclick="viewLac(${s.id})"><td>${fmtDate(s.date)}</td><td>${esc(s.title)}</td><td>${esc(s.facilitator)}</td><td class="num">${s.hours}</td><td class="num">${s.attendees.length} / ${T_.length}</td></tr>`).join('')}</table></div></div></div>`;
+  $('lf').onsubmit = e => { e.preventDefault(); const d = Object.fromEntries(new FormData(e.target));
+    P.db.lac.push({id:P.db.lac.reduce((m, x) => Math.max(m, x.id), 0) + 1, title:d.title.trim(), topic:d.topic.trim(), facilitator:d.facilitator.trim(), venue:d.venue.trim(), date:d.date, time:d.time || '14:00', hours:+d.hours, attendees:[], reflections:{}});
+    P.save(); P.refresh(); };
+}
+function viewLac(id){
+  const s = P.db.lac.find(x => x.id === id), T_ = P.usersWith('teacher');
+  P.open(`<div class="top"><div><h2>${esc(s.title)}</h2><div class="hint" style="margin:0">${lacWhen(s)} · ${esc(s.venue)} · ${s.hours} hrs</div></div><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <div class="box admin"><h3>Attendance</h3>${T_.map(t => `<label class="check" style="margin-bottom:.4rem"><input type="checkbox" data-u="${t.u}" ${s.attendees.includes(t.u) ? 'checked' : ''}> <span>${esc(t.name)} <span class="hint">· ${esc(t.pos)}</span></span></label>`).join('')}
+      <div class="actions" style="margin-top:.6rem"><span class="saved" id="aSaved" hidden>✓ Saved</span><button class="btn" onclick="saveAttendance(${s.id})">Save attendance</button></div></div>
+    <div><h3 class="sec">Reflections</h3>${Object.entries(s.reflections).filter(([, v]) => v).map(([u, v]) => `<div class="desc" style="margin-bottom:.5rem"><b>${esc(P.userOf(u).name)}:</b> ${esc(v)}</div>`).join('') || '<div class="empty">No reflections yet.</div>'}</div>`);
+}
+function saveAttendance(id){ const s = P.db.lac.find(x => x.id === id); s.attendees = [...document.querySelectorAll('#drawer [data-u]')].filter(c => c.checked).map(c => c.dataset.u); P.save(); P.refresh(); viewLac(id); $('aSaved').hidden = false; }
+
+/* ================= TEST BANK ================= */
+const sel = new Set();
+let bf = {s:'', g:'', q:'', d:'', w:'all', text:''};
+const pval = it => it.stats && it.stats.n ? it.stats.correct / it.stats.n : null;
+const pLabel = p => p === null ? '' : p > 0.8 ? 'Very easy' : p > 0.6 ? 'Easy' : p > 0.4 ? 'Average' : p > 0.2 ? 'Difficult' : 'Very difficult';
+const canSee = it => it.by === P.me.u || it.shared;
+function itemCard(it, pick){
+  const p = pval(it), flag = p !== null && (p > 0.9 || p < 0.2);
+  return `<div class="qitem">${pick ? `<input type="checkbox" ${sel.has(it.id) ? 'checked' : ''} onchange="toggleSel(${it.id}, this.checked)">` : '<span></span>'}
+    <div><div class="qq">${esc(it.q)}</div><ol type="${it.type === 'tf' ? '1' : 'A'}">${it.c.map((c, j) => `<li class="${j === it.a ? 'ok' : ''}">${esc(c)}${j === it.a ? ' ✓' : ''}</li>`).join('')}</ol></div>
+    <div class="actions" style="flex-direction:column;align-items:flex-end;gap:.3rem"><span class="pill ${it.diff === 'Easy' ? 'p-green' : it.diff === 'Average' ? 'p-amber' : 'p-red'}">${it.diff}</span>
+      ${it.by === P.me.u ? `<button class="btn ghost sm" onclick="editItem(${it.id})">Edit</button>` : ''}</div>
+    <div class="meta">${esc(it.subject)} · Grade ${it.grade} · Q${it.quarter} · ${esc(it.comp)} · ${it.type === 'tf' ? 'True/False' : 'Multiple choice'} · by ${esc(P.userOf(it.by).name)}${it.shared ? ' · shared' : ' · private'}
+      ${p !== null ? ` · <b style="color:${flag ? '#b91c1c' : 'inherit'}">p = ${p.toFixed(2)} (${pLabel(p)})${flag ? ' – consider revising' : ''}</b>` : ''}</div></div>`;
+}
+function bankView(el){
+  const admin = P.isAdmin();
+  const L = P.db.items.filter(it => (admin ? it.shared : canSee(it)) && (!bf.s || it.subject === bf.s) && (!bf.g || it.grade === +bf.g) && (!bf.q || it.quarter === +bf.q) && (!bf.d || it.diff === bf.d)
+    && (admin || bf.w === 'all' || (bf.w === 'mine' ? it.by === P.me.u : it.shared && it.by !== P.me.u)) && (!bf.text || [it.q, it.comp, ...it.c].join(' ').toLowerCase().includes(bf.text)));
+  const opt = (k, list, label, fmt) => `<select data-f="${k}"><option value="">${label}</option>${list.map(v => `<option value="${v}" ${String(bf[k]) === String(v) ? 'selected' : ''}>${fmt ? fmt(v) : v}</option>`).join('')}</select>`;
+  el.innerHTML = `<div class="stack">
+    <div class="tools"><input id="bq" value="${esc(bf.text)}" placeholder="Search question or competency…">
+      ${opt('s', SUBJECTS, 'All subjects')}${opt('g', [7,8,9,10,11,12], 'All grades', g => 'Grade ' + g)}${opt('q', [1,2,3,4], 'All quarters', q => 'Quarter ' + q)}${opt('d', DIFF, 'Any difficulty')}
+      ${admin ? '' : `<select data-f="w"><option value="all" ${bf.w==='all'?'selected':''}>Mine + shared</option><option value="mine" ${bf.w==='mine'?'selected':''}>Only mine</option><option value="shared" ${bf.w==='shared'?'selected':''}>Shared by others</option></select>
+      <button class="btn" onclick="editItem(0)">＋ Add question</button>`}</div>
+    <p class="hint" style="margin:0">${L.length} question${L.length === 1 ? '' : 's'}${admin ? ' shared by teachers' : '. Tick questions to put them in a test.'}</p>
+    <div class="stack">${L.map(it => itemCard(it, !admin)).join('') || '<div class="empty">No questions match.</div>'}</div>
+    ${!admin && sel.size ? `<div class="selbar"><span><b>${sel.size}</b> selected for a test</span><span class="actions"><button class="btn ghost sm" style="background:transparent;color:#fff;border-color:#fff" onclick="sel.clear();P.refresh()">Clear</button><button class="btn sm" onclick="P.tab('build')">Make a test ›</button></span></div>` : ''}</div>`;
+  el.querySelectorAll('[data-f]').forEach(s => s.onchange = () => { bf[s.dataset.f] = s.value; bankView(el); });
+  const q = $('bq'); q.oninput = () => { bf.text = q.value.trim().toLowerCase(); const p = q.selectionStart; bankView(el); $('bq').focus(); $('bq').setSelectionRange(p,p); };
+}
+function toggleSel(id, on){ on ? sel.add(id) : sel.delete(id); P.refresh(); }
+function editItem(id){
+  const it = id ? P.db.items.find(x => x.id === id) : {id:0, subject:'Science', grade:7, quarter:1, comp:'', type:'mc', q:'', c:['','','',''], a:0, diff:'Average', shared:true};
+  const c4 = it.type === 'tf' ? ['True','False','',''] : it.c.concat(['','','','']).slice(0, 4);
+  P.open(`<div class="top"><h2>${id ? 'Edit question' : 'Add a question'}</h2><button class="x" onclick="P.close()" aria-label="Close">×</button></div>
+    <div class="form" style="gap:.7rem">
+      <div><label>Subject</label><select id="eS">${SUBJECTS.map(s => `<option ${it.subject === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div><label>Grade</label><select id="eG">${[7,8,9,10,11,12].map(g => `<option value="${g}" ${it.grade === g ? 'selected' : ''}>Grade ${g}</option>`).join('')}</select></div>
+      <div><label>Quarter</label><select id="eQ">${[1,2,3,4].map(q => `<option value="${q}" ${it.quarter === q ? 'selected' : ''}>Quarter ${q}</option>`).join('')}</select></div>
+      <div><label>Difficulty</label><select id="eD">${DIFF.map(d => `<option ${it.diff === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+      <div class="full"><label>Competency / topic</label><input id="eC" value="${esc(it.comp)}"></div>
+      <div class="full"><label>Type</label><div class="seg"><label><input type="radio" name="eT" value="mc" ${it.type === 'mc' ? 'checked' : ''}>Multiple choice</label><label><input type="radio" name="eT" value="tf" ${it.type === 'tf' ? 'checked' : ''}>True / False</label></div></div>
+      <div class="full"><label>Question <i>*</i></label><textarea id="eQq" style="min-height:4rem">${esc(it.q)}</textarea></div>
+      <div class="full" id="eChoices"></div>
+      <div class="full"><label class="check"><input type="checkbox" id="eSh" ${it.shared ? 'checked' : ''}> <span>Share with other teachers</span></label></div>
+      <div class="full" id="eErr" hidden><div class="err"></div></div>
+      <div class="full actions">${id ? `<button class="btn ghost" onclick="delItem(${id})">Delete</button>` : ''}<button class="btn" onclick="saveItem(${id})">Save question</button></div></div>`);
+  let a = it.a;
+  const drawChoices = () => { const tf = document.querySelector('input[name=eT]:checked').value === 'tf';
+    $('eChoices').innerHTML = `<label>Answer choices — tick the correct one</label>` + (tf ? ['True','False'] : c4).slice(0, tf ? 2 : 4).map((c, j) =>
+      `<div class="row" style="align-items:center;margin-bottom:.4rem"><input type="radio" name="eA" value="${j}" ${a === j ? 'checked' : ''} style="width:auto;flex:none;accent-color:#16a34a">${tf ? `<span>${c}</span>` : `<input class="eCh" value="${esc(c)}" placeholder="Choice ${'ABCD'[j]}">`}</div>`).join('');
+    $('eChoices').querySelectorAll('input[name=eA]').forEach(r => r.onchange = () => a = +r.value);
+    $('eChoices').querySelectorAll('.eCh').forEach((x, j) => x.oninput = () => c4[j] = x.value); };
+  document.querySelectorAll('input[name=eT]').forEach(r => r.onchange = () => { if (a > 1 && r.value === 'tf') a = 0; drawChoices(); });
+  drawChoices();
+}
+function saveItem(id){
+  const tf = document.querySelector('input[name=eT]:checked').value === 'tf';
+  const c = tf ? ['True','False'] : [...document.querySelectorAll('.eCh')].map(x => x.value.trim());
+  const a = +((document.querySelector('input[name=eA]:checked') || {}).value ?? -1), q = $('eQq').value.trim();
+  const err = m => { $('eErr').hidden = false; $('eErr').firstChild.textContent = m; };
+  if (!q) return err('Write the question.');
+  if (!tf && c.some(x => !x)) return err('Fill in all four choices.');
+  if (a < 0) return err('Tick the correct answer.');
+  const it = id ? P.db.items.find(x => x.id === id) : (() => { const n = {id:P.db.items.reduce((m, x) => Math.max(m, x.id), 0) + 1, by:P.me.u, stats:null}; P.db.items.push(n); return n; })();
+  Object.assign(it, {subject:$('eS').value, grade:+$('eG').value, quarter:+$('eQ').value, diff:$('eD').value, comp:$('eC').value.trim(), type: tf ? 'tf' : 'mc', q, c, a, shared:$('eSh').checked});
+  P.save(); P.close(); P.refresh();
+}
+function delItem(id){ if (!confirm('Delete this question?')) return; P.db.items = P.db.items.filter(x => x.id !== id); sel.delete(id); P.save(); P.close(); P.refresh(); }
+
+/* ================= MAKE A TEST ================= */
+let testTitle = 'Quarterly Test', testInstr = 'Read each question carefully. Choose the letter of the correct answer.', shuffle = false;
+const chosen = () => [...sel].map(id => P.db.items.find(x => x.id === id)).filter(Boolean);
+function buildView(el){
+  const L = chosen();
+  if (!L.length) { el.innerHTML = `<div class="empty">No questions selected. Go to <b>Test Bank</b> and tick the questions you want. <button class="btn sm" style="margin-left:.5rem" onclick="P.tab('bank')">Open Test Bank</button></div>`; return; }
+  el.innerHTML = `<div class="stack">
+    <div class="card"><div class="form">
+      <div><label>Test title</label><input id="tT" value="${esc(testTitle)}"></div>
+      <div><label class="check" style="margin-top:1.4rem"><input type="checkbox" id="tS" ${shuffle ? 'checked' : ''}> <span>Shuffle the question order when printing</span></label></div>
+      <div class="full"><label>Instructions</label><input id="tI" value="${esc(testInstr)}"></div>
+      <div class="full actions"><button class="btn ghost" onclick="toQuiz()">Send to Live Quiz</button><button class="btn" onclick="printTest()">Print test + answer key</button></div>
+      <div class="full" id="tMsg" hidden></div></div></div>
+    <div class="card"><h3 class="sec">Item analysis <span class="hint" style="font-weight:400">— after giving the test, enter how many learners got each item right</span></h3>
+      <div class="row" style="max-width:22rem;align-items:center"><label style="margin:0">Learners who took the test</label><input type="number" id="nTook" min="1" style="max-width:6rem"></div>
+      <div class="tablewrap"><table><tr><th>#</th><th>Question</th><th class="num">Correct</th><th class="num">p</th><th>Result</th></tr>
+        ${L.map((it, i) => `<tr><td>${i + 1}</td><td>${esc(it.q)}</td><td class="num"><input type="number" min="0" data-ia="${it.id}" style="width:5rem;text-align:right"></td><td class="num" id="p${it.id}">${pval(it) !== null ? pval(it).toFixed(2) : '—'}</td><td id="pl${it.id}">${pLabel(pval(it))}</td></tr>`).join('')}</table></div>
+      <div class="actions" style="margin-top:.8rem"><span class="saved" id="iaSaved" hidden>✓ Saved to the test bank</span><button class="btn" onclick="saveAnalysis()">Save item analysis</button></div>
+      <p class="hint" style="margin:.6rem 0 0">p = share of learners who answered correctly. Items above 0.90 or below 0.20 are flagged for revision.</p></div>
+    <div class="card"><h3 class="sec">Questions in this test (${L.length})</h3><div class="stack">${L.map(it => itemCard(it, true)).join('')}</div></div></div>`;
+  $('tT').oninput = e => testTitle = e.target.value; $('tI').oninput = e => testInstr = e.target.value; $('tS').onchange = e => shuffle = e.target.checked;
+  const live = () => { const n = +$('nTook').value; el.querySelectorAll('[data-ia]').forEach(x => { const id = +x.dataset.ia; if (n && x.value !== '') { const p = Math.min(1, +x.value / n); $('p' + id).textContent = p.toFixed(2); $('pl' + id).textContent = pLabel(p); } }); };
+  el.querySelectorAll('[data-ia]').forEach(x => x.oninput = live); $('nTook').oninput = live;
+}
+function saveAnalysis(){
+  const n = +$('nTook').value; if (!n) { $('nTook').focus(); return; }
+  document.querySelectorAll('[data-ia]').forEach(x => { if (x.value === '') return; const it = P.db.items.find(i => i.id === +x.dataset.ia); it.stats = {n, correct:Math.min(n, +x.value)}; });
+  P.save(); P.refresh(); $('iaSaved').hidden = false;
+}
+function printTest(){
+  let L = chosen(); if (shuffle) L = L.slice().sort(() => Math.random() - 0.5);
+  $('printArea').innerHTML = `<div class="paper"><div class="hd">SAN VICENTE NATIONAL HIGH SCHOOL<br>${esc(testTitle)}</div>
+    <p>Name: ______________________ Grade &amp; Section: ____________ Date: __________ Score: ____ / ${L.length}</p><p><i>${esc(testInstr)}</i></p>
+    <ol class="items">${L.map(it => `<li>${esc(it.q)}<div class="ch">${it.c.map((c, j) => `<span>${it.type === 'tf' ? '' : 'ABCD'[j] + '. '}${esc(c)}</span>`).join('')}</div></li>`).join('')}</ol>
+    <div class="key"><div class="hd">ANSWER KEY · ${esc(testTitle)}</div><ol>${L.map(it => `<li>${it.type === 'tf' ? it.c[it.a] : 'ABCD'[it.a] + '. ' + esc(it.c[it.a])}</li>`).join('')}</ol></div></div>`;
+  document.body.classList.add('printing'); setTimeout(() => { window.print(); document.body.classList.remove('printing'); }, 100);
+}
+// Adds this test as a quiz in Teacher Tools > Live Quiz (same browser storage).
+function toQuiz(){
+  const KEY = 'svnhs-tt-quizzes', L = chosen();
+  let qs; try { qs = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
+  if (!Array.isArray(qs)) qs = [];   // Teacher Tools not used yet: start its quiz list
+  const id = qs.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+  qs.push({id, title:testTitle, updated:Date.now(), questions:L.map(it => ({q:it.q, c: it.c.concat(['','','','']).slice(0, 4), a:it.a, t:20}))});
+  localStorage.setItem(KEY, JSON.stringify(qs));
+  $('tMsg').hidden = false; $('tMsg').innerHTML = `<div class="okbox">Added "<b>${esc(testTitle)}</b>" (${L.length} questions) to <b>Teacher Tools → Live Quiz</b>.</div>`;
+}
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>
