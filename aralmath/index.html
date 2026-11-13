@@ -281,6 +281,7 @@
   .snav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.7rem}
   .snav .mid{display:flex;align-items:center;gap:.8rem}
   .tts{font-size:.75rem;border:1px solid var(--line);border-radius:2rem;padding:.25rem .65rem;color:var(--muted);background:#fff}
+  .vsel{max-width:13rem;font-size:.75rem;padding:.25rem .5rem;border-radius:2rem;color:var(--muted)}
   .tts.on{border-color:var(--brand);color:var(--brand-d);background:var(--brand-soft)}
   #storyNext.pulse{animation:nudge 1.2s ease-in-out infinite}
   @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
@@ -1343,12 +1344,59 @@ function playStory(key, after){
 }
 /* ---- read-aloud (each character gets a voice) + typing blips ---- */
 const ttsOn = () => { try { return localStorage.getItem('aralmath-tts') === '1'; } catch (e) { return false; } };
-function toggleTTS(){ try { localStorage.setItem('aralmath-tts', ttsOn() ? '0' : '1'); } catch (e) {} const b = $('ttsBtn'); if (b) { b.classList.toggle('on', ttsOn()); b.textContent = ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'; } if (ttsOn()) speakPanel(); else stopStoryAudio(); }
-const VOICE = {gulo:[.55, .85], lolo:[.75, .85], buddy:[1.6, 1.05], mon:[1.35, 1.1], nar:[1, .95], crowd:[1, .95]};
+/* ---- read-aloud with the most natural voice on this device ----
+   Picks neural/"Natural" voices first (Edge, Chrome, Apple enhanced voices), prefers Philippine
+   English, skips novelty/robotic voices, casts a matching voice per character instead of
+   stretching the pitch, and reads math the way a teacher would say it. */
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|hysterical|deranged|fred|junior|ralph|kathy|grandma|grandpa|eddy|flo\b|reed|rocko|sandy|shelley|espeak/i;
+const MALE = /\b(james|guy|davis|andrew|brian|christopher|eric|roger|steffan|tony|ryan|thomas|william|daniel|alex|aaron|arthur|oliver|george|rishi|tom|evan|nathan|liam|male|david|mark|jacob|jason|ethan|noah|lee|gordon)\b/i;
+const FEMALE = /\b(rosa|jenny|aria|ana|emma|michelle|sara|samantha|ava|allison|susan|zira|karen|moira|tessa|serena|victoria|fiona|female|libby|sonia|natasha|jane|nancy|joanna|salli|kimberly|ivy|kendra|catherine|hazel|heera|neerja|clara|amber|ashley|cora|elizabeth|jessa|nicole|zoe|isabella|maisie|blessica)\b/i;
+let VOICES = [];
+function loadVoices(){
+  try { VOICES = speechSynthesis.getVoices().filter(v => /^en|^fil/i.test(v.lang) && !NOVELTY.test(v.name)); } catch (e) { VOICES = []; }
+  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
+}
+try { if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; } } catch (e) {}
+const voiceScore = v => { const n = v.name;
+  return (/natural/i.test(n) ? 60 : 0) + (/neural/i.test(n) ? 50 : 0) + (/premium|enhanced|siri/i.test(n) ? 40 : 0) + (/online/i.test(n) ? 20 : 0) + (/google/i.test(n) ? 25 : 0)
+    + (/en-PH|fil/i.test(v.lang) ? 30 : /en-(US|GB|AU)/i.test(v.lang) ? 10 : 0) + (v.localService === false ? 5 : 0); };
+const rankedVoices = () => VOICES.slice().sort((a, b) => voiceScore(b) - voiceScore(a));
+const chosenVoice = () => { try { return localStorage.getItem('aralmath-voice') || 'auto'; } catch (e) { return 'auto'; } };
+function setVoice(name){ try { localStorage.setItem('aralmath-voice', name); } catch (e) {} document.querySelectorAll('select.vsel').forEach(s => s.value = name);
+  speak(name === 'auto' ? "Hi! I'll pick a voice for each character." : "Hello! This is how I sound.", 'nar'); }
+function fillVoiceSelect(sel){
+  const top = rankedVoices().slice(0, 10), cur = chosenVoice();
+  sel.innerHTML = `<option value="auto">Voice: best for each character</option>` + top.map(v => `<option value="${esc(v.name)}" ${v.name === cur ? 'selected' : ''}>${esc(v.name.replace(/Microsoft |Online |\(Natural\)|- English.*$/g, '').trim())} (${v.lang})</option>`).join('');
+  sel.value = top.some(v => v.name === cur) ? cur : 'auto';
+}
+const voiceSelect = () => `<select class="vsel icb" onchange="setVoice(this.value)" title="Choose the voice that sounds most human on this device"></select>`;
+// who → [wanted gender, pitch, rate]: small, natural adjustments only
+const CAST = {lolo:['m', .95, .88], gulo:['m', .9, .92], buddy:['f', 1.08, 1], mon:['f', 1.05, 1.02], nar:['f', 1, .95], crowd:['f', 1, .95]};
+function voiceFor(who){
+  const all = rankedVoices(); if (!all.length) return null;
+  const pickName = chosenVoice(); if (pickName !== 'auto') return all.find(v => v.name === pickName) || all[0];
+  const [g] = CAST[who] || ['f'], same = all.filter(v => (g === 'm' ? MALE : FEMALE).test(v.name));
+  if (who === 'gulo' && same.length > 1) { const lolo = voiceFor('lolo'); return same.find(v => v !== lolo && voiceScore(v) >= voiceScore(same[0]) - 25) || same[0]; } // a different man from Lolo
+  return same[0] || all[0];
+}
+const ORD = {2:'half', 3:'third', 4:'fourth', 5:'fifth', 6:'sixth', 7:'seventh', 8:'eighth', 9:'ninth', 10:'tenth', 12:'twelfth'};
+function spoken(t){
+  return t.replace(/&amp;/g, '&').replace(/(\d+)\/(\d+)/g, (_, n, d) => ORD[d] ? `${n} ${ORD[d]}${+n === 1 ? '' : 's'}` : `${n} over ${d}`)
+    .replace(/[−-](?=\d)/g, ' negative ').replace(/×/g, ' times ').replace(/÷/g, ' divided by ').replace(/ = \?/g, ' equals what?').replace(/=/g, ' equals ')
+    .replace(/x²/g, 'x squared').replace(/√/g, 'square root of ').replace(/\.\.\./g, ', ').replace(/\s+/g, ' ').trim();
+}
+function speak(text, who = 'nar'){
+  if (!('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); const v = voiceFor(who), [, pitch, rate] = CAST[who] || ['f', 1, .95];
+    // one utterance per sentence: sounds more natural and avoids Chrome cutting off long lines
+    spoken(text).split(/(?<=[.!?])\s+/).filter(Boolean).forEach(sen => { const u = new SpeechSynthesisUtterance(sen);
+      if (v) { u.voice = v; u.lang = v.lang; } u.pitch = pitch; u.rate = rate; speechSynthesis.speak(u); }); } catch (e) {}
+}
+function toggleTTS(){ try { localStorage.setItem('aralmath-tts', ttsOn() ? '0' : '1'); } catch (e) {} const b = $('ttsBtn'); if (b) { b.classList.toggle('on', ttsOn()); b.textContent = ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'; }
+  if (ttsOn()) { if (LS && $('lsay')) speak($('lsay').textContent || '', 'lolo'); else speakPanel(); } else stopStoryAudio(); }
 function speakPanel(){
-  if (!ttsOn() || !STORY || !('speechSynthesis' in window)) return;
-  try { const [who, , text] = STORY.panels[STORY.k], [pitch, rate] = VOICE[who] || [1, 1], s = new SpeechSynthesisUtterance(fillText(text, STORY.b, STORY.i).replace(/&amp;/g, '&'));
-    s.pitch = pitch; s.rate = rate; speechSynthesis.cancel(); speechSynthesis.speak(s); } catch (e) {}
+  if (!ttsOn() || !STORY) return;
+  const [who, , text] = STORY.panels[STORY.k]; speak(fillText(text, STORY.b, STORY.i), who);
 }
 function stopStoryAudio(){ try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} if (STORY && STORY.timer) { clearInterval(STORY.timer); STORY.timer = null; } }
 function blip(who){
@@ -1380,10 +1428,10 @@ function storyView(el){
     <div class="bubble" id="bubble"><div class="whorow"><span class="avatar" id="avatar"></span><b class="who-n" id="whoN"></b></div>
       <p class="say"><span id="say"></span><i class="caret" id="caret"></i></p>
       <div class="snav"><button class="btn ghost sm" id="storyBack" onclick="storyStep(-1)">◀ Back</button>
-        <div class="mid"><div class="dots" id="sdots"></div><button class="tts ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button></div>
+        <div class="mid"><div class="dots" id="sdots"></div><button class="tts ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}</div>
         <button class="btn" id="storyNext" onclick="storyStep(1)">Next ▶</button></div>
     </div></div></div>`;
-  s.onStage = [];
+  s.onStage = []; document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
   setTimeout(() => STORY === s && renderPanel(), s.k === 0 ? 900 : 0); // let the title card show first
   document.onkeydown = e => { if (!STORY || (e.target.closest && e.target.closest('input,textarea,button'))) return;
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); storyStep(1); } else if (e.key === 'ArrowLeft') storyStep(-1); else if (e.key === 'Escape') endStory(); };
@@ -1644,8 +1692,9 @@ function lessonView(el){
       <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
       <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
         <div class="grow"><div class="lprog"><i id="lprog" style="width:0"></i></div></div>
-        <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>
+        <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
         <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div></div></div></div>`;
+  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
   const me = LS; setTimeout(() => { if (LS === me && !LS.started) runStep(); }, 400);
 }
 function lessonSay(text){
@@ -1653,7 +1702,7 @@ function lessonSay(text){
   if (LS.typer) clearInterval(LS.typer); let n = 0; s.textContent = ''; $('lcaret').classList.remove('off'); t.classList.add('talking');
   LS.typer = setInterval(() => { if (!LS || !$('lsay')) return; n = Math.min(text.length, n + 2); s.textContent = text.slice(0, n); if (n % 6 === 0) blip('lolo');
     if (n >= text.length) { clearInterval(LS.typer); LS.typer = null; $('lcaret').classList.add('off'); t.classList.remove('talking'); } }, 30);
-  if (ttsOn() && 'speechSynthesis' in window) try { const u = new SpeechSynthesisUtterance(text); u.pitch = .75; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+  if (ttsOn()) speak(text, 'lolo');
 }
 function runStep(){
   if (!LS || !$('bLines')) return;
