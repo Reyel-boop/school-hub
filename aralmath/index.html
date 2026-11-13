@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aral Math</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/proto.css">
 <style>
   :root{--brand:#0e7490;--brand-d:#155e75;--brand-soft:#cffafe;--grad:linear-gradient(135deg,#06b6d4,#4338ca)}
@@ -298,6 +298,122 @@
   .win .monsay{display:inline-block;background:var(--brand-soft);border-radius:.8rem;padding:.4rem .8rem;margin-top:.6rem;font-style:italic;font-size:.9rem}
   @media (max-width:640px){ .scene{height:15rem} .actor svg.mon{width:6.5rem;height:6.5rem} .actor.talker svg.mon{width:8.5rem;height:8.5rem} .actor.side svg.mon{width:5.2rem;height:5.2rem} .actor.crowd svg.mon{width:5rem;height:5rem} .cast{gap:.3rem} .say{font-size:1.02rem} .titlecard b{font-size:1.4rem} .palm{width:4rem} .palm.p2{display:none} }
   @media (prefers-reduced-motion: reduce){ .scene *, .scene{animation-duration:0s!important;animation-iteration-count:1!important} }
+  /* ===== Lesson show: Lolo Pawikan's animated classroom ===== */
+  .lshow{border-radius:1.2rem;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 18px 40px -20px rgba(15,23,42,.55)}
+  .cls{position:relative;height:27rem;overflow:hidden;background:linear-gradient(#67e8f9,#22d3ee 40%,#0891b2 76%,#b45309 76%,#92400e)}
+  .cls::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 2px,transparent 2px 60px);pointer-events:none}
+  .bunting{position:absolute;top:0;left:3%;right:3%;display:flex;justify-content:space-between;z-index:1}
+  .bunting::before{content:"";position:absolute;top:.25rem;left:0;right:0;height:2px;background:#0e7490}
+  .bunting span{width:1.7rem;height:2rem;clip-path:polygon(0 0,100% 0,50% 100%);display:grid;place-items:start center;padding-top:.2rem;font:700 .8rem 'Patrick Hand',cursive;color:#fff;transform-origin:50% 0;animation:flag 3s ease-in-out infinite}
+  .bunting span:nth-child(odd){animation-delay:-1.5s}
+  @keyframes flag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+  .clock{position:absolute;right:4%;top:2.6rem;width:3.4rem;height:3.4rem;border-radius:50%;background:#fff;border:4px solid #0e7490;z-index:1}
+  .clock i{position:absolute;left:50%;bottom:50%;width:3px;background:#0f172a;transform-origin:50% 100%;border-radius:2px}
+  .clock i.h{height:28%;animation:spin 60s linear infinite}.clock i.m{height:40%;animation:spin 6s linear infinite}
+  .board{position:absolute;left:3%;right:25%;top:2.6rem;bottom:6.4rem;background:radial-gradient(ellipse at 40% 30%,#2f5d4e,#1c3a31 70%);border:10px solid #a16207;border-radius:.5rem;box-shadow:inset 0 0 50px rgba(0,0,0,.45),0 6px 0 #713f12;padding:.6rem 1rem;color:#f8fafc;font-family:'Patrick Hand',cursive;overflow:hidden;z-index:1}
+  .board .bt{font-size:.85rem;opacity:.7;letter-spacing:.04em}
+  .blines{font-size:1.6rem;line-height:1.45;min-height:2.4rem}
+  .blines .fr{font-size:.9em}
+  .blines .small{font-size:1.15rem;line-height:1.35}
+  .chalk{display:inline-block;margin-right:.45rem;clip-path:inset(0 100% 0 0);animation:write .9s steps(22) forwards;text-shadow:0 0 1px rgba(255,255,255,.6)}
+  .chalk.dim{opacity:.55}
+  .brow.dim{opacity:.55}
+  @keyframes write{to{clip-path:inset(0 0 0 0)}}
+  .viz{position:relative;margin-top:.4rem;min-height:6rem}
+  /* number line */
+  .nl{position:relative;height:6.2rem;margin:0 .2rem}
+  .nl .ln{position:absolute;left:2%;right:2%;top:4rem;height:3px;background:#f8fafc;border-radius:2px}
+  .nl .ln::before,.nl .ln::after{content:"";position:absolute;top:-6px;border:7px solid transparent}
+  .nl .ln::before{left:-10px;border-right-color:#f8fafc}.nl .ln::after{right:-10px;border-left-color:#f8fafc}
+  .nl .nlt{position:absolute;top:3.7rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:.95rem}
+  .nl .nlt i{width:2px;height:.7rem;background:#f8fafc}
+  .nl .nlt.z b{color:#fde047}
+  .nl .tok{position:absolute;top:1.3rem;width:2.8rem;height:2.8rem;transform:translateX(-50%) scale(0);transition:left .38s ease-in-out,transform .3s;z-index:2}
+  .nl .tok.on{transform:translateX(-50%) scale(1)}
+  .nl .tok.hop{animation:hopx .38s ease-in-out}
+  @keyframes hopx{50%{margin-top:-1.6rem}}
+  .nl .arc{position:absolute;top:2.6rem;height:1.5rem;border:2.5px dashed #fde047;border-bottom:0;border-radius:50% 50% 0 0;opacity:0;animation:fadein .3s forwards}
+  .nl .arc.l{border-color:#fda4af}
+  .nl .arc em{position:absolute;top:-1.35rem;left:50%;transform:translateX(-50%);font-style:normal;font-size:.95rem;color:#fde047;white-space:nowrap}
+  .nl .arc.l em{color:#fda4af}
+  .nl .nlland{position:absolute;top:4.75rem;transform:translateX(-50%);background:#fde047;color:#422006;border-radius:1rem;padding:0 .5rem;font-size:1rem;animation:pop .5s backwards}
+  @keyframes fadein{to{opacity:1}}
+  /* fraction bars */
+  .fbars{display:flex;flex-direction:column;gap:.55rem}
+  .fbrow{display:flex;align-items:center;gap:.6rem;font-size:1.3rem}
+  .fbrow > b{width:3.2rem;text-align:right;font-weight:400}
+  .fbar{display:flex;height:2.1rem;width:min(100%,24rem);border:3px solid #f8fafc;border-radius:.35rem;overflow:hidden}
+  .fbar i{flex:1;border-right:2px solid rgba(248,250,252,.8);transition:background .35s,opacity .35s}
+  .fbar i:last-child{border-right:0}
+  .fbar i.a{background:#facc15}.fbar i.b{background:#38bdf8}
+  .fbar i.x{background:repeating-linear-gradient(45deg,rgba(248,113,113,.7) 0 4px,transparent 4px 8px)}
+  .fbar.cut i{animation:cutin .5s backwards}
+  @keyframes cutin{from{border-right-color:#fde047;box-shadow:inset 0 0 0 2px #fde047}}
+  /* area model */
+  .area{display:flex;align-items:center;gap:1rem}
+  .agrid{display:grid;width:9.5rem;height:9.5rem;border:3px solid #f8fafc}
+  .agrid i{border:1px solid rgba(248,250,252,.45);transition:background .35s}
+  .agrid i.c{background:rgba(250,204,21,.6)}.agrid i.r{background:rgba(56,189,248,.6)}.agrid i.c.r{background:#22c55e;animation:pop .5s}
+  .akey{font-size:1.15rem;line-height:1.6}
+  .akey span{display:inline-block;width:.9rem;height:.9rem;border-radius:2px;margin-right:.35rem;vertical-align:-.1rem}
+  /* decimal columns */
+  .dcol{font-size:1.9rem;line-height:1.25;display:inline-flex;flex-direction:column;align-items:flex-end;margin-left:1rem}
+  .drow{display:flex;transition:transform .8s cubic-bezier(.3,1.3,.5,1)}
+  .drow span{width:1.15em;text-align:center}
+  .drow span.op{color:#fde047}
+  .drow span.pt{color:#fde047}
+  .dcol.glow .pt{text-shadow:0 0 10px #fde047;animation:pop .6s}
+  .drow span.z{opacity:0;color:#86efac;transition:opacity .4s}
+  .dcol.zeros .z{opacity:1}
+  .drow.rule{border-top:3px solid #f8fafc;width:100%;height:0;margin:.2rem 0}
+  .drow.res span{opacity:0;color:#fde047;transition:opacity .3s}
+  .drow.res span.on{opacity:1;animation:pop .45s}
+  .drow.carry span{font-size:.55em;color:#fda4af;opacity:0;transition:opacity .3s;height:.9em}
+  .drow.carry span.on{opacity:1}
+  /* teacher, kids */
+  .teacher{position:absolute;right:1%;bottom:5.4rem;width:25%;z-index:2;transform-origin:50% 100%;animation:breathe 2.8s ease-in-out infinite}
+  .teacher svg{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 8px rgba(0,0,0,.25))}
+  .teacher .stick{position:absolute;left:-14%;top:44%;width:42%;height:5px;border-radius:3px;background:linear-gradient(90deg,#fef3c7 0 12%,#92400e 12%);transform-origin:100% 50%;transform:rotate(18deg);transition:transform .35s}
+  .teacher.point .stick{animation:pointit 1s ease-in-out}
+  .teacher.talking{animation:talk .3s ease-in-out infinite alternate}
+  @keyframes pointit{0%{transform:rotate(18deg)}30%,70%{transform:rotate(-8deg)}45%{transform:rotate(-2deg)}100%{transform:rotate(18deg)}}
+  .kids{position:absolute;left:0;right:0;bottom:-.3rem;display:flex;justify-content:space-around;padding:0 4% 0 2%;z-index:3}
+  .kid{position:relative;width:7rem;height:6.6rem}
+  .kid svg{position:absolute;left:50%;bottom:1.6rem;width:5.6rem;height:5.6rem;transform:translateX(-50%);animation:breathe 2.4s ease-in-out infinite}
+  .kid:nth-child(2) svg{animation-delay:-.8s}.kid:nth-child(3) svg{animation-delay:-1.6s}
+  .kid .desk{position:absolute;left:0;right:0;bottom:0;height:2.6rem;background:linear-gradient(#fbbf24,#d97706);border-radius:.5rem .5rem 0 0;box-shadow:inset 0 -6px 0 rgba(0,0,0,.12)}
+  .kid .desk::before{content:"";position:absolute;left:20%;top:.5rem;width:35%;height:.8rem;background:#fff;border-radius:2px;transform:rotate(-6deg)}
+  .kids.cheer .kid svg{animation:cheer .5s ease-in-out 4 alternate}
+  .kids.cheer .kid:nth-child(2) svg{animation-delay:.12s}.kids.cheer .kid:nth-child(3) svg{animation-delay:.24s}
+  @keyframes cheer{to{transform:translateX(-50%) translateY(-1.4rem) rotate(6deg)}}
+  /* try box */
+  .trybox{margin-top:.6rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;position:relative;font-family:Poppins,system-ui,sans-serif}
+  .trybox input{flex:1;min-width:8rem;max-width:14rem;font-size:1.15rem;border:3px solid #fde047;border-radius:.6rem;padding:.45rem .7rem;background:#fff;color:#0f172a}
+  .trybox .chk{background:#22c55e;color:#fff;font-weight:700;border-radius:.6rem;padding:.55rem 1.1rem;box-shadow:0 4px 0 #15803d}
+  .trybox .chk:active{transform:translateY(2px);box-shadow:0 2px 0 #15803d}
+  .trybox .arrow{position:absolute;left:-2.2rem;top:.35rem;font-size:1.6rem;color:#fde047;animation:arrow .7s ease-in-out infinite alternate}
+  @keyframes arrow{to{transform:translateX(.6rem)}}
+  .trybox .choices{width:100%}
+  .trybox .choices button{font-size:.95rem;padding:.45rem .7rem}
+  .trybox .tmsg{width:100%;font-size:.9rem;color:#fde68a}
+  .lbub{padding:.9rem 1.2rem 1rem;position:relative}
+  .lbub::before{content:"";position:absolute;right:13%;top:-.7rem;width:1.4rem;height:1.4rem;background:#fff;transform:rotate(45deg);border-radius:.2rem}
+  .lctl{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+  .lctl .grow{flex:1;min-width:6rem}
+  .lprog{height:.45rem;border-radius:1rem;background:var(--line);overflow:hidden}
+  .lprog i{display:block;height:100%;background:var(--brand);transition:width .4s}
+  .icb{border:1px solid var(--line);border-radius:2rem;padding:.3rem .7rem;font-size:.8rem;background:#fff}
+  .icb:hover{border-color:var(--brand);color:var(--brand)}
+  @media (max-width:760px){
+    .cls{height:30rem}
+    .board{right:3%;bottom:11.5rem;top:2.2rem}
+    .teacher{width:30%;bottom:4.6rem;right:2%}
+    .kids{justify-content:flex-start;gap:.2rem}
+    .kid{width:5rem;height:5.2rem}.kid svg{width:4.2rem;height:4.2rem;bottom:1.4rem}.kid .desk{height:2.2rem}
+    .kid:nth-child(3){display:none}
+    .blines{font-size:1.35rem}.dcol{font-size:1.5rem}.agrid{width:7.5rem;height:7.5rem}
+    .clock{display:none}
+  }
 </style>
 </head>
 <body>
@@ -970,6 +1086,7 @@ function setBand(b){ pref(P.me.u).band = b; P.save(); P.refresh(); }
 function go(s){ screen = s; P.refresh(); window.scrollTo(0, 0); }
 
 function learn(el){
+  if (LS) return lessonView(el);
   if (STORY) return storyView(el);
   if (S) return battle(el);
   if (isStudent() && !pref(P.me.u).buddy) return buddyPick(el);
@@ -1011,7 +1128,7 @@ function map(el){
         <div class="card"><h2>How to play</h2><ol style="padding-left:1.1rem;font-size:.85rem;line-height:1.7;color:var(--muted)">
           <li>Tap a monster on the map.</li><li>Answer ${ITEMS} questions. Every right answer hits the monster.</li>
           <li>Get ${MASTER} right to <b>catch</b> it (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
-          <li>Stuck? Tap <b>Show me how</b> for the lesson.</li><li>Spend coins on gear for your buddy.</li></ol></div>
+          <li>Stuck? Tap <b>🎬 Watch the lesson</b> and Lolo Pawikan will show you how.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div></div>`;
 }
 function buddyPick(el){
@@ -1021,16 +1138,15 @@ function buddyPick(el){
 }
 function chooseBuddy(b){ pref(P.me.u).buddy = b; P.save(); sfx('buy'); P.refresh(); }
 
-function startPractice(id, skipStory){
+function startPractice(id, skipStory, skipLesson){
   const sb = bandOf(P.me.u), ix = unitIndex(sb, id);
   if (isStudent() && !skipStory && ix >= 0 && !seenStory(`${sb}-${ix}-intro`)) return playStory(`${sb}-${ix}-intro`, () => startPractice(id, true));
+  if (!skipLesson && !(pref(P.me.u).watched || {})[id] && !myAttempts(P.me.u, id).length) return playLesson(id, () => startPractice(id, true, true));
   S = {id, items: Array.from({length: ITEMS}, () => SK[id].gen()), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
   screen = 'map'; P.tab('learn'); window.scrollTo(0, 0);
 }
 function leavePractice(){ S = null; P.refresh(); }
-function showLesson(){ if (S && !S.answered) S.hint[S.i] = true;
-  P.open(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h2>Show me how</h2><button class="btn ghost sm" onclick="P.close()">Got it</button></div>
-    <div class="lesson">${SK[S.id].learn}</div><p class="hint" style="margin-top:1rem">Tip: using the lesson gives half coins for this question, but no penalty on stars.</p>`); }
+function showLesson(){ if (S && !S.answered) S.hint[S.i] = true; playLesson(S.id, () => P.refresh()); }
 
 function battle(el){
   if (S.i >= ITEMS) return winScreen(el);
@@ -1052,7 +1168,7 @@ function battle(el){
       </div></div>
     <div class="card qcard"><div class="qtools"><small style="color:var(--muted)">Question ${S.i + 1} of ${ITEMS}${ko ? ' · <b style="color:#ca8a04">Bonus round: get them all for 3 stars!</b>' : ''}</small>
         <div class="dots">${S.items.map((_, k) => `<i class="${k < S.res.length ? (S.res[k].ok ? 'ok' : 'no') : k === S.i ? 'cur' : ''}"></i>`).join('')}</div>
-        <button class="linkbtn" onclick="showLesson()">💡 Show me how</button></div>
+        <button class="linkbtn" onclick="showLesson()">🎬 Watch the lesson</button></div>
       <div class="qbox ${it.words ? 'words' : ''}">${it.q}</div>
       ${it.kind === 'mc'
         ? `<div class="choices">${it.choices.map((c, k) => `<button id="ch${k}" ${S.answered ? 'disabled' : ''} class="${S.answered ? (k === it.ans ? 'right' : last.k === k ? 'wrong' : '') : ''}" onclick="answer(${k})">${c}</button>`).join('')}</div>`
@@ -1105,7 +1221,7 @@ function winScreen(el){
       <p style="margin-top:1rem;font-weight:600">${COIN} +${S.coins} coins${score === ITEMS ? ' (includes +20 perfect bonus)' : ''}</p>
       ${S.lvlUp ? `<p style="margin-top:.4rem;font-weight:700;color:#ca8a04">⬆ Level up! You are now Level ${levelOf(xpOf(u))}.</p>` : ''}
       ${stu ? '' : '<p class="hint">Preview only: nothing was saved.</p>'}
-      <div class="actions" style="justify-content:center;margin-top:1.2rem"><button class="btn ghost" onclick="leavePractice()">Back to map</button><button class="btn ghost" onclick="startPractice('${S.id}')">Battle again</button>
+      <div class="actions" style="justify-content:center;margin-top:1.2rem"><button class="btn ghost" onclick="leavePractice()">Back to map</button>${nowCaught ? '' : `<button class="btn ghost" onclick="const i='${S.id}';S=null;playLesson(i)">🎬 Watch the lesson</button>`}<button class="btn ghost" onclick="startPractice('${S.id}', true, true)">Battle again</button>
         ${nx && nx !== S.id ? `<button class="btn" onclick="startPractice('${nx}')">Next monster →</button>` : ''}</div></div>
     <details class="card"><summary style="cursor:pointer;font-weight:600">Review my answers</summary><div class="review">${S.items.map((it, k) => `<div><span class="mk ${S.res[k].ok ? 'ok' : 'no'}">${S.res[k].ok ? '✓' : '✗'}</span>
       <span style="flex:1;min-width:12rem">${it.q}</span><span>You: <b>${S.res[k].given || '—'}</b></span>${S.res[k].ok ? '' : `<span>Answer: <b>${it.show}</b></span>`}</div>`).join('')}</div></details></div>`;
@@ -1368,6 +1484,241 @@ function book(el){
       ${row(`${b}-${units.length - 1}-outro`, 'The Ending', 'A new friend', !stu || seenStory(`${b}-${units.length - 1}-outro`))}
     </div></div></div>`;
 }
+
+/* ================= LESSON SHOW: animated lessons with Lolo Pawikan =================
+   Plays like a short cartoon: the teacher explains at the chalkboard while the steps are
+   written in chalk and acted out (number-line hops, fraction bars, area grid, decimal
+   columns). Then it's the learner's turn; a wrong answer replays the demo with their numbers. */
+let LS = null;
+const FAMILY = {'i-add':'nl-add', 'i-sub':'nl-sub', 'i-mul':'nl-mul', 'f-add-sim':'bar-add', 'f-sub-sim':'bar-sub', 'f-add-dis':'bar-add-dis', 'f-sub-dis':'bar-sub-dis', 'f-mul':'area', 'd-add':'dec-add', 'd-sub':'dec-sub'};
+// animation steps run on timers; skipping ahead runs any pending ones at once so the board is never half-drawn
+const later = (fn, ms) => { if (!LS) return; const job = {fn, done:false}; job.id = setTimeout(() => { if (LS && !job.done) { job.done = true; fn(); } }, ms); LS.timers.push(job); };
+const flushLater = () => { if (!LS) return; const jobs = LS.timers; LS.timers = []; jobs.forEach(j => { clearTimeout(j.id); if (!j.done) { j.done = true; try { j.fn(); } catch (e) {} } }); };
+const DIS_PAIRS = [[2, 4], [2, 6], [3, 6], [4, 8], [2, 8], [2, 3], [3, 4], [4, 6], [2, 5]];
+function famGen(f){
+  let a, b, d, d1, d2;
+  if (f === 'nl-add') { do { a = R(-6, 6); b = nz(-5, 5); } while (Math.abs(a + b) > 9); return {a, b}; }
+  if (f === 'nl-sub') { do { a = R(-6, 6); b = nz(-5, 5); } while (Math.abs(a - b) > 9); return {a, b}; }
+  if (f === 'nl-mul') return {n: R(2, 3), b: nz(-3, 3)};
+  if (f === 'bar-add') { d = R(4, 8); a = R(1, d - 1); b = R(1, d - a); return {a, b, d}; }
+  if (f === 'bar-sub') { d = R(4, 8); a = R(2, d); b = R(1, a - 1); return {a, b, d}; }
+  if (f === 'bar-add-dis' || f === 'bar-sub-dis') { for (;;) { [d1, d2] = shuffle(pick(DIS_PAIRS).slice()); a = R(1, d1 - 1); b = R(1, d2 - 1);
+      if (f === 'bar-add-dis' ? a * d2 + b * d1 <= d1 * d2 : a * d2 > b * d1) return {a, b, d1, d2}; } }
+  if (f === 'area') { b = R(2, 5); d = R(2, 5); return {a: R(1, b - 1), b, c: R(1, d - 1), d}; }
+  const x = (R(11, 299) / 10).toFixed(1), y = (R(101, 999) / 100).toFixed(2);
+  if (f === 'dec-sub') return +x > +y ? {x, y} : {x: (R(110, 299) / 10).toFixed(1), y};
+  return Math.random() < .5 ? {x, y} : {x: y, y: x};
+}
+function famItem(f, v){
+  const it = f === 'nl-add' ? numItem(`${sn(v.a)} + ${sn(v.b)}`, v.a + v.b) : f === 'nl-sub' ? numItem(`${sn(v.a)} − ${sn(v.b)}`, v.a - v.b)
+    : f === 'nl-mul' ? numItem(`${v.n} × ${sn(v.b)}`, v.n * v.b)
+    : f === 'bar-add' ? fracItem(`${frH(v.a, v.d)} + ${frH(v.b, v.d)}`, F(v.a + v.b, v.d)) : f === 'bar-sub' ? fracItem(`${frH(v.a, v.d)} − ${frH(v.b, v.d)}`, F(v.a - v.b, v.d))
+    : f === 'bar-add-dis' ? fracItem(`${frH(v.a, v.d1)} + ${frH(v.b, v.d2)}`, fadd(F(v.a, v.d1), F(v.b, v.d2))) : f === 'bar-sub-dis' ? fracItem(`${frH(v.a, v.d1)} − ${frH(v.b, v.d2)}`, fsub(F(v.a, v.d1), F(v.b, v.d2)))
+    : f === 'area' ? fracItem(`${frH(v.a, v.b)} × ${frH(v.c, v.d)}`, fmul(F(v.a, v.b), F(v.c, v.d)))
+    : (() => { const r = f === 'dec-add' ? fadd(decF(v.x), decF(v.y)) : fsub(decF(v.x), decF(v.y)); return numItem(`${v.x} ${f === 'dec-add' ? '+' : '−'} ${v.y}`, r.n / r.d); })();
+  return Object.assign(it, {fam: f, data: v});
+}
+const ft = (n, d) => `${n}/${d}`;
+const said = f => f.d === 1 ? m(f.n) : ft(f.n, f.d);
+/* ---- visual helpers (all draw into the chalkboard's .viz) ---- */
+const pctNL = v => (v + 10) / 20 * 96 + 2;
+function drawNL(viz, id){
+  viz.innerHTML = `<div class="nl"><div class="ln"></div>${Array.from({length: 21}, (_, k) => k - 10).map(v => `<span class="nlt ${v ? '' : 'z'}" style="left:${pctNL(v)}%"><i></i><b>${m(v)}</b></span>`).join('')}
+    <div id="trail"></div><div class="tok" id="tok">${monsterSVG('mon-' + id, 'happy', [], 'mini')}</div></div>`;
+}
+function tokTo(v){ const t = $('tok'); if (!t) return; t.style.left = pctNL(v) + '%'; t.classList.add('on'); t.classList.remove('hop'); void t.offsetWidth; t.classList.add('hop'); }
+function hops(from, step, count, label){ // returns ms used
+  for (let k = 1; k <= count; k++) later(() => { const p = from + step * (k - 1), v = from + step * k, tr = $('trail'); tokTo(v); sfx('ok');
+    if (tr) tr.insertAdjacentHTML('beforeend', `<span class="arc ${step > 0 ? '' : 'l'}" style="left:${Math.min(pctNL(p), pctNL(v))}%;width:${Math.abs(pctNL(v) - pctNL(p))}%"><em>${label(k)}</em></span>`); }, k * 600);
+  return count * 600 + 300;
+}
+const landMark = v => { const n = document.querySelector('.nl'); if (n) n.insertAdjacentHTML('beforeend', `<span class="nlland" style="left:${pctNL(v)}%">${m(v)}</span>`); };
+const barRow = (label, n, id) => `<div class="fbrow"><b>${label}</b><div class="fbar" id="${id}">${'<i></i>'.repeat(n)}</div></div>`;
+function paint(id, from, count, cls, gap = 260, start = 0){ for (let k = 0; k < count; k++) later(() => { const c = $(id) && $(id).children[from + k]; if (c) { c.className = cls; sfx('buy'); } }, start + k * gap); return start + count * gap; }
+/* ---- scripts: each step = {say, write, clear, act(viz) -> ms} ---- */
+function famScript(f, v, id){
+  if (f === 'nl-add' || f === 'nl-sub') {
+    const add = f === 'nl-add', st = add ? v.b : -v.b, r = v.a + st, steps = [];
+    steps.push({clear:true, say:`Let's solve ${m(v.a)} ${add ? 'plus' : 'minus'} ${m(v.b)} on the number line!`, write:`${sn(v.a)} ${add ? '+' : '−'} ${sn(v.b)} <span class="qm">= ?</span>`, act: viz => { drawNL(viz, id); return 300; }});
+    if (!add) steps.push({say:`Subtracting is the same as adding the opposite. The opposite of ${m(v.b)} is ${m(-v.b)}.`, write:`= ${sn(v.a)} + ${sn(-v.b)}`});
+    steps.push({say:`Start at ${m(v.a)}.`, act: () => { tokTo(v.a); return 500; }});
+    steps.push({say: st > 0 ? `Adding a positive number moves to the right. Hop ${st} step${st > 1 ? 's' : ''} right!` : `Adding a negative number moves to the left. Hop ${-st} step${st < -1 ? 's' : ''} left!`,
+      act: () => hops(v.a, Math.sign(st), Math.abs(st), k => (st > 0 ? '+' : '−') + k)});
+    steps.push({say:`We landed on ${m(r)}. So the answer is ${m(r)}!`, write:`= ${m(r)}`, act: () => { landMark(r); sfx('win'); return 600; }});
+    return steps;
+  }
+  if (f === 'nl-mul') { const r = v.n * v.b;
+    return [{clear:true, say:`Multiplying is repeated adding. ${v.n} times ${m(v.b)} means ${v.n} jumps of ${m(v.b)}.`, write:`${v.n} × ${sn(v.b)} <span class="qm">= ?</span>`, act: viz => { drawNL(viz, id); return 300; }},
+      {say:`Start at zero.`, act: () => { tokTo(0); return 500; }},
+      {say:`Jump ${m(v.b)}, ${v.n} times!`, act: () => { let t = 0; for (let g = 0; g < v.n; g++) later(() => { const p = g * v.b, q = (g + 1) * v.b, tr = $('trail'); tokTo(q); sfx('ok');
+          if (tr) tr.insertAdjacentHTML('beforeend', `<span class="arc ${v.b > 0 ? '' : 'l'}" style="left:${Math.min(pctNL(p), pctNL(q))}%;width:${Math.abs(pctNL(q) - pctNL(p))}%"><em>${v.b > 0 ? '+' : ''}${m(v.b)}</em></span>`); }, (t = (g + 1) * 800)); return t + 300; }},
+      {say:`We land on ${m(r)}. ${v.b < 0 ? 'Positive times negative is negative.' : 'Positive times positive is positive.'}`, write:`${v.n} × ${sn(v.b)} = ${m(r)}`, act: () => { landMark(r); sfx('win'); return 600; }}];
+  }
+  if (f === 'bar-add' || f === 'bar-sub') { const add = f === 'bar-add', r = add ? v.a + v.b : v.a - v.b, red = F(r, v.d);
+    const s = [{clear:true, say:`Let's ${add ? 'add' : 'subtract'} ${ft(v.a, v.d)} ${add ? 'and' : 'minus'} ${ft(v.b, v.d)} using a fraction bar.`, write:`${frH(v.a, v.d)} ${add ? '+' : '−'} ${frH(v.b, v.d)} <span class="qm">= ?</span>`, act: viz => { viz.innerHTML = `<div class="fbars">${barRow('', v.d, 'barA')}</div>`; return 300; }},
+      {say:`The bar is cut into ${v.d} equal parts. Color ${v.a} of them to show ${ft(v.a, v.d)}.`, act: () => paint('barA', 0, v.a, 'a')},
+      add ? {say:`Now color ${v.b} more parts for ${ft(v.b, v.d)}.`, act: () => paint('barA', v.a, v.b, 'b')}
+          : {say:`Now take away ${v.b} of the colored parts.`, act: () => paint('barA', v.a - v.b, v.b, 'x')},
+      {say:`Count the parts that are left colored: ${r} out of ${v.d}. The denominator stays the same!`, write:`= ${frH(r, v.d)}`, act: () => { sfx('win'); return 400; }}];
+    if (red.d !== v.d && red.n) s.push({say: red.d === 1 ? `That's the whole bar, which equals ${red.n}!` : `We can simplify. ${ft(r, v.d)} is the same as ${said(red)}.`, write:`= ${fH(red)}`});
+    return s;
+  }
+  if (f === 'bar-add-dis' || f === 'bar-sub-dis') { const add = f === 'bar-add-dis', L = lcm(v.d1, v.d2), a2 = v.a * L / v.d1, b2 = v.b * L / v.d2, r = add ? a2 + b2 : a2 - b2, red = F(r, L);
+    const s = [{clear:true, say:`${ft(v.a, v.d1)} ${add ? 'plus' : 'minus'} ${ft(v.b, v.d2)}. Look, the parts are different sizes!`, write:`${frH(v.a, v.d1)} ${add ? '+' : '−'} ${frH(v.b, v.d2)} <span class="qm">= ?</span>`,
+        act: viz => { viz.innerHTML = `<div class="fbars">${barRow(ft(v.a, v.d1), v.d1, 'barA')}${barRow(ft(v.b, v.d2), v.d2, 'barB')}</div>`; return paint('barA', 0, v.a, 'a', 220) + paint('barB', 0, v.b, 'b', 220, 200); }},
+      {say:`We can't ${add ? 'add' : 'subtract'} pieces of different sizes. Let's cut both bars into ${L} equal parts. ${L} is the least common denominator.`, act: () => { later(() => {
+          $('barA').outerHTML = `<div class="fbar cut" id="barA">${Array.from({length: L}, (_, k) => `<i class="${k < a2 ? 'a' : ''}"></i>`).join('')}</div>`;
+          $('barB').outerHTML = `<div class="fbar cut" id="barB">${Array.from({length: L}, (_, k) => `<i class="${k < b2 ? 'b' : ''}"></i>`).join('')}</div>`;
+          document.querySelectorAll('.fbrow b')[0].textContent = ft(a2, L); document.querySelectorAll('.fbrow b')[1].textContent = ft(b2, L); sfx('ok'); }, 700); return 1400; }},
+      {say:`Now we have similar fractions: ${ft(a2, L)} ${add ? 'plus' : 'minus'} ${ft(b2, L)}.`, write:`= ${frH(a2, L)} ${add ? '+' : '−'} ${frH(b2, L)}`},
+      {say: add ? `Put them together: ${a2} plus ${b2} is ${r} parts out of ${L}.` : `Take ${b2} parts away from ${a2}: ${r} parts out of ${L} are left.`, write:`= ${frH(r, L)}`,
+        act: viz => { viz.querySelector('.fbars').insertAdjacentHTML('beforeend', barRow('=', L, 'barC')); return add ? paint('barC', 0, a2, 'a', 160) + paint('barC', a2, b2, 'b', 160, a2 * 160) : paint('barC', 0, r, 'a', 160); }}];
+    if (red.d !== L) s.push({say:`Simplify: ${ft(r, L)} equals ${said(red)}.`, write:`= ${fH(red)}`, act: () => { sfx('win'); return 300; }});
+    return s;
+  }
+  if (f === 'area') { const P2 = v.a * v.c, T = v.b * v.d, red = F(P2, T);
+    const s = [{clear:true, say:`Let's multiply ${ft(v.a, v.b)} times ${ft(v.c, v.d)} with a square.`, write:`${frH(v.a, v.b)} × ${frH(v.c, v.d)} <span class="qm">= ?</span>`,
+        act: viz => { viz.innerHTML = `<div class="area"><div class="agrid" id="ag" style="grid-template-columns:repeat(${v.b},1fr);grid-template-rows:repeat(${v.d},1fr)">${Array.from({length: T}, (_, k) => `<i data-c="${k % v.b}" data-r="${Math.floor(k / v.b)}"></i>`).join('')}</div>
+          <div class="akey" id="akey"></div></div>`; return 300; }},
+      {say:`Cut it into ${v.b} columns and shade ${v.a} of them. That's ${ft(v.a, v.b)}.`, act: () => { for (let c = 0; c < v.a; c++) later(() => { document.querySelectorAll(`#ag i[data-c="${c}"]`).forEach(x => x.classList.add('c')); sfx('buy'); }, c * 350);
+          later(() => $('akey').insertAdjacentHTML('beforeend', `<div><span style="background:#facc15"></span>${ft(v.a, v.b)}</div>`), v.a * 350); return v.a * 350 + 300; }},
+      {say:`Now cut it into ${v.d} rows and shade ${v.c} of them. That's ${ft(v.c, v.d)}.`, act: () => { for (let r = 0; r < v.c; r++) later(() => { document.querySelectorAll(`#ag i[data-r="${r}"]`).forEach(x => x.classList.add('r')); sfx('buy'); }, r * 350);
+          later(() => $('akey').insertAdjacentHTML('beforeend', `<div><span style="background:#38bdf8"></span>${ft(v.c, v.d)}</div>`), v.c * 350); return v.c * 350 + 300; }},
+      {say:`The green part is where they overlap: ${P2} out of ${T} squares. Numerator times numerator, denominator times denominator!`, write:`= ${frH(P2, T)}`,
+        act: () => { $('akey').insertAdjacentHTML('beforeend', `<div><span style="background:#22c55e"></span>${ft(P2, T)}</div>`); sfx('win'); return 400; }}];
+    if (red.d !== T) s.push({say:`Simplify: ${ft(P2, T)} equals ${said(red)}.`, write:`= ${fH(red)}`});
+    return s;
+  }
+  // decimals: line up the points, fill zeros, work right to left
+  const add = f === 'dec-add', [xi, xf = ''] = v.x.split('.'), [yi, yf = ''] = v.y.split('.'), dp = Math.max(xf.length, yf.length);
+  const X = Math.round(+v.x * 10 ** dp), Y = Math.round(+v.y * 10 ** dp), Rr = add ? X + Y : X - Y;
+  const rs = String(Rr).padStart(dp + 1, '0'), ri = rs.slice(0, -dp), rf = rs.slice(-dp), iw = Math.max(xi.length, yi.length, ri.length), W = iw + 1 + dp;
+  const cells = (ip, fp) => [...ip.padStart(iw, ' ')].map(ch => `<span>${ch === ' ' ? '' : ch}</span>`).join('') + '<span class="pt">.</span>' + [...fp.padEnd(dp, '0')].map((ch, k) => `<span class="${k >= fp.length ? 'z' : ''}">${ch}</span>`).join('');
+  const carries = Array(W).fill(''); if (add) { let c = 0; const xs = (xi.padStart(iw, '0') + xf.padEnd(dp, '0')), ys = (yi.padStart(iw, '0') + yf.padEnd(dp, '0'));
+    for (let k = xs.length - 1; k >= 0; k--) { const s = +xs[k] + +ys[k] + c; c = s >= 10 ? 1 : 0; if (c && k > 0) carries[k - 1 + (k - 1 >= iw ? 1 : 0)] = '1'; } }
+  return [{clear:true, say:`Let's ${add ? 'add' : 'subtract'} ${v.x} ${add ? 'and' : 'minus'} ${v.y}.`, write:`${v.x} ${add ? '+' : '−'} ${v.y} <span class="qm">= ?</span>`,
+      act: viz => { const sh = k => `style="transform:translateX(${k * 1.15}em)"`;
+        viz.innerHTML = `<div class="dcol" id="dcol"><div class="drow carry"><span></span>${carries.map(c => `<span>${c}</span>`).join('')}</div>
+          <div class="drow" ${sh(dp - xf.length)} id="dx"><span></span>${cells(xi, xf)}</div><div class="drow" ${sh(dp - yf.length)} id="dy"><span class="op">${add ? '+' : '−'}</span>${cells(yi, yf)}</div>
+          <div class="drow rule"></div><div class="drow res" id="dres"><span></span>${[...ri.padStart(iw, ' ')].map(c => `<span>${c === ' ' ? '' : c}</span>`).join('')}<span class="pt">.</span>${[...rf].map(c => `<span>${c}</span>`).join('')}</div></div>`; return 400; }},
+    {say:`First, line up the decimal points! They must be in one straight column.`, act: () => { later(() => { $('dx').style.transform = 'none'; $('dy').style.transform = 'none'; $('dcol').classList.add('glow'); sfx('ok'); }, 300); return 1300; }},
+    {say:`Fill the empty places with zeros, so both numbers have ${dp} decimal places.`, act: () => { later(() => { $('dcol').classList.add('zeros'); sfx('buy'); }, 200); return 700; }},
+    {say:`Now ${add ? 'add' : 'subtract'} each column from right to left${add ? ', carrying when a column makes 10 or more' : ', borrowing when you need to'}.`,
+      act: () => { const rc = [...$('dres').children], cc = [...document.querySelectorAll('.drow.carry span')]; let t = 0;
+        for (let k = rc.length - 1; k >= 1; k--) { const kk = k; later(() => { rc[kk].classList.add('on'); let j = kk - 1; if (rc[j] && rc[j].classList.contains('pt')) j--; if (!rc[kk].classList.contains('pt') && cc[j] && cc[j].textContent) cc[j].classList.add('on'); sfx('ok'); }, (t = (rc.length - k) * 520)); }
+        return t + 500; }},
+    {say:`Bring the decimal point straight down. The answer is ${rs.slice(0, -dp) || '0'}.${rf}!`, write:`= ${numStr(Rr / 10 ** dp)}`, act: () => { sfx('win'); return 300; }}];
+}
+// any other lesson: walk through its worked example in chalk, one step at a time
+function genericScript(id){
+  const L = SK[id].learn, exm = L.match(/<div class="ex">([\s\S]*?)<\/div>/), ex = exm ? exm[1] : '';
+  const text = L.replace(/<div class="ex">[\s\S]*?<\/div>/, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const sents = text.split(/(?<=[.!?:])\s+(?=[A-Z(])/).filter(Boolean), exs = ex.split(/&nbsp;·&nbsp;/).map(s => s.trim()).filter(Boolean);
+  const steps = [{clear:true, say: sents[0] || SK[id].title, write: `<span class="small">${sents[0] || ''}</span>`, act: viz => { viz.innerHTML = ''; return 200; }}];
+  sents.slice(1).forEach(s => steps.push({say: s, write: `<span class="small">${s}</span>`, dimPrev: true}));
+  if (exs.length) {
+    const parts = exs[0].split(/ (?=[=→] )/);
+    steps.push({clear:true, say: 'Let me show you an example.', write: parts[0]});
+    parts.slice(1).forEach((p, k) => steps.push({say: k === parts.length - 2 ? 'And that is the answer!' : pick(['Next step...', 'Then...', 'Keep going...']), write: p}));
+    exs.slice(1).forEach(e => steps.push({say: 'Here is another one.', write: e}));
+  }
+  return steps;
+}
+/* ---- player ---- */
+function playLesson(id, after){
+  stopLesson(); LS = {id, fam: FAMILY[id], timers: [], k: 0, playing: true, phase: 'demo', after: after || null, tries: 0};
+  LS.steps = LS.fam ? famScript(LS.fam, famGen(LS.fam), id) : genericScript(id);
+  P.tab('learn'); window.scrollTo(0, 0);
+}
+function stopLesson(){ if (!LS) return; LS.timers.forEach(j => clearTimeout(j.id)); LS.timers = []; clearTimeout(LS.adv); if (LS.typer) clearInterval(LS.typer); try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} }
+function lessonView(el){
+  const kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
+  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="closeLesson()">✕ Close</button><div class="grow"><b style="font-weight:600">🎬 Lesson: ${SK[LS.id].title}</b><br><small style="color:var(--muted)">Watch Lolo Pawikan, then try one yourself</small></div></div>
+    <div class="lshow"><div class="cls">
+      <div class="bunting">${['1', '+', '2', '−', '3', '×', '4', '÷', '5', '='].map((s, k) => `<span style="background:${['#f43f5e', '#facc15', '#22c55e', '#a855f7', '#3b82f6'][k % 5]}">${s}</span>`).join('')}</div>
+      <div class="clock"><i class="h"></i><i class="m"></i></div>
+      <div class="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
+      <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
+      <div class="kids" id="kids">${kids}</div></div>
+    <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
+      <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
+      <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
+        <div class="grow"><div class="lprog"><i id="lprog" style="width:0"></i></div></div>
+        <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>
+        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div></div></div></div>`;
+  const me = LS; setTimeout(() => { if (LS === me && !LS.started) runStep(); }, 400);
+}
+function lessonSay(text){
+  const s = $('lsay'), t = $('teacher'); if (!s) return;
+  if (LS.typer) clearInterval(LS.typer); let n = 0; s.textContent = ''; $('lcaret').classList.remove('off'); t.classList.add('talking');
+  LS.typer = setInterval(() => { if (!LS || !$('lsay')) return; n = Math.min(text.length, n + 2); s.textContent = text.slice(0, n); if (n % 6 === 0) blip('lolo');
+    if (n >= text.length) { clearInterval(LS.typer); LS.typer = null; $('lcaret').classList.add('off'); t.classList.remove('talking'); } }, 30);
+  if (ttsOn() && 'speechSynthesis' in window) try { const u = new SpeechSynthesisUtterance(text); u.pitch = .75; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+}
+function runStep(){
+  if (!LS || !$('bLines')) return;
+  LS.started = true;
+  clearTimeout(LS.adv); if (!LS.keepPending) flushLater(); LS.keepPending = false;
+  const st = LS.steps[LS.k], lines = $('bLines');
+  if (st.clear) { lines.innerHTML = ''; $('tryBox').innerHTML = ''; }
+  if (st.dimPrev) [...lines.children].forEach(c => c.classList.add('dim'));
+  if (st.write) { const cont = /^[=→]/.test(st.write);
+    if (cont) lines.querySelectorAll('.qm').forEach(x => x.remove());
+    const row = cont && lines.lastElementChild ? lines.lastElementChild : (lines.insertAdjacentHTML('beforeend', '<div class="brow"></div>'), lines.lastElementChild);
+    row.insertAdjacentHTML('beforeend', `<span class="chalk">${st.write}</span>`); const t = $('teacher'); t.classList.remove('point'); void t.offsetWidth; t.classList.add('point'); }
+  const actMs = st.act ? (st.act($('viz')) || 0) : 0;
+  const say = fillText(st.say, null, null).replace(/&amp;/g, '&');
+  lessonSay(say);
+  $('lprog').style.width = Math.round(100 * (LS.k + 1) / LS.steps.length) + '%';
+  $('lnext').textContent = LS.k === LS.steps.length - 1 && !st.wait ? (LS.phase === 'demo' ? 'Your turn ▶' : 'Try again ▶') : 'Next ▶';
+  $('lnext').disabled = !!st.wait; $('lnext').style.opacity = st.wait ? .4 : 1;
+  if (st.wait) return;
+  const dur = Math.max(actMs + 700, say.length * 48 + 1100);
+  LS.adv = setTimeout(() => { if (LS && LS.playing) lessonNext(); }, dur);
+}
+function lessonNext(){
+  if (!LS) return;
+  if (!LS.started) return runStep();
+  if (LS.steps[LS.k] && LS.steps[LS.k].wait) return;
+  if (LS.k < LS.steps.length - 1) { LS.k++; runStep(); } else startTry();
+}
+function lessonPause(){ if (!LS) return; LS.playing = !LS.playing; $('lplay').textContent = LS.playing ? '⏸ Pause' : '▶ Play'; if (LS.playing) lessonNext(); else clearTimeout(LS.adv); }
+function lessonReplay(){ if (!LS) return; stopLesson(); LS.phase = 'demo'; LS.k = 0; LS.playing = true; $('lplay').textContent = '⏸ Pause'; LS.steps = LS.fam ? famScript(LS.fam, famGen(LS.fam), LS.id) : genericScript(LS.id); runStep(); }
+function startTry(){
+  if (!LS) return;
+  LS.phase = 'try'; LS.item = LS.fam ? famItem(LS.fam, famGen(LS.fam)) : SK[LS.id].gen();
+  LS.steps = [{clear:true, wait:true, say:`Your turn, {name}! Solve this one. Type your answer and press Check.`, write: LS.item.q, act: () => { renderTry(); $('viz').innerHTML = ''; return 0; }}];
+  LS.k = 0; runStep();
+}
+function renderTry(msg){
+  const it = LS.item, box = $('tryBox'); if (!box) return;
+  box.innerHTML = `<div class="trybox">${it.kind === 'mc' ? `<div class="choices">${it.choices.map((c, k) => `<button onclick="lessonCheck(${k})">${c}</button>`).join('')}</div>`
+    : `<span class="arrow">➜</span><input id="tryIn" autocomplete="off" placeholder="${it.kind === 'frac' ? 'e.g. 3/4' : 'answer'}"><button class="chk" onclick="lessonCheck()">Check</button>`}
+    ${msg ? `<div class="tmsg">${msg}</div>` : ''}</div>`;
+  const i = $('tryIn'); if (i) { i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lessonCheck(); } }; }
+}
+function lessonCheck(k){
+  const it = LS.item, raw = it.kind === 'mc' ? k : $('tryIn').value, r = checkItem(it, raw);
+  if (r.invalid) return renderTry(r.msg);
+  LS.tries++;
+  if (r.ok) {
+    sfx('win'); confetti(); const kids = $('kids'); kids.classList.remove('cheer'); void kids.offsetWidth; kids.classList.add('cheer');
+    $('teacher').innerHTML = `<span class="stick"></span>${turtleSVG('happy', 't')}`;
+    lessonSay(fillText(pick(["Excellent, {name}! You've got it!", "Magaling, {name}! That's right!", "Perfect! You're ready for the battle, {name}!"]), null, null));
+    $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? '⚔ Start the battle!' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">Try another</button></div>`;
+    return;
+  }
+  sfx('no');
+  lessonSay(`Not quite. ${r.note ? r.note + ' ' : ''}The answer is ${it.show.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}. Let's work it out together!`);
+  $('tryBox').innerHTML = `<div class="trybox"><div class="tmsg">Answer: <b>${it.show}</b></div></div>`;
+  later(() => { LS.timers = []; LS.phase = 'redemo'; LS.k = 0; LS.steps = it.fam ? famScript(it.fam, it.data, LS.id) : genericScript(LS.id); runStep(); }, 3400);
+}
+function finishLesson(){
+  if (!LS) return; const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[LS.id]: true}); P.save();
+  const after = LS.after; stopLesson(); LS = null;
+  if (after) after(); else P.refresh();
+}
+function closeLesson(){ const id = LS && LS.id, back = LS && LS.after && S; stopLesson(); if (id) { const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); } LS = null; P.refresh(); }
 
 /* ================= MY PROGRESS (learner) ================= */
 function progress(el){
