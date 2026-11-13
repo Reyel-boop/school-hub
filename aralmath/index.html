@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aral Math</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#0e7490;--brand-d:#155e75;--brand-soft:#cffafe;--grad:linear-gradient(135deg,#06b6d4,#4338ca)}
+  /* stacked fraction */
+  .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .12em;font-size:.92em;line-height:1.1}
+  .fr span:first-child{border-bottom:1.5px solid currentColor;padding:0 .15em}
+  .fr span:last-child{padding:0 .15em}
+  .rad{border-top:1.5px solid currentColor;padding:0 .1em}
+  .bandsw{display:inline-flex;border:1px solid var(--line);border-radius:.6rem;overflow:hidden;background:#fff}
+  .bandsw button{padding:.5rem 1rem;font-size:.85rem;color:var(--muted)}
+  .bandsw button.on{background:var(--brand);color:#fff;font-weight:500}
+  .unit h3{font-size:.95rem;font-weight:600;margin-bottom:.7rem}
+  .skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.6rem}
+  .skill{display:flex;flex-direction:column;gap:.35rem;text-align:left;border:1px solid var(--line);border-radius:.7rem;padding:.75rem .85rem;background:#fff;transition:border-color .15s,box-shadow .15s}
+  .skill:hover{border-color:var(--brand);box-shadow:0 4px 14px -6px rgba(14,116,144,.35)}
+  .skill b{font-weight:500;font-size:.88rem;line-height:1.3}
+  .skill small{color:var(--muted);font-size:.72rem}
+  .skill .pill{align-self:flex-start}
+  .ptop{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+  .ptop .grow{flex:1;min-width:10rem}
+  .ptop h2{margin:0}
+  .dots{display:flex;gap:.25rem;flex-wrap:wrap}
+  .dots i{width:.7rem;height:.7rem;border-radius:50%;background:var(--line)}
+  .dots i.ok{background:#16a34a}.dots i.no{background:#dc2626}.dots i.cur{outline:2px solid var(--brand);outline-offset:1px}
+  .lesson{background:var(--brand-soft);border-radius:.7rem;padding:.9rem 1rem;font-size:.9rem;line-height:1.6}
+  .lesson summary{cursor:pointer;font-weight:600;color:var(--brand-d)}
+  .lesson .ex{margin-top:.5rem;background:#fff;border-radius:.5rem;padding:.6rem .8rem}
+  .qbox{font-size:1.35rem;line-height:1.9;padding:.6rem 0 1rem}
+  .qbox.words{font-size:1rem;line-height:1.6}
+  .ansrow{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+  .ansrow input{flex:1;min-width:10rem;font-size:1.1rem}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+  .choices button{border:1px solid #cbd5e1;border-radius:.6rem;padding:.7rem .9rem;text-align:left;background:#fff;font-size:1rem;line-height:1.6}
+  .choices button:hover:not(:disabled){border-color:var(--brand);background:var(--brand-soft)}
+  .choices button.right{border-color:#16a34a;background:#dcfce7}
+  .choices button.wrong{border-color:#dc2626;background:#fee2e2}
+  .fb{margin-top:1rem;border-radius:.6rem;padding:.7rem .9rem;font-size:.92rem;line-height:1.6}
+  .fb.ok{background:#dcfce7;color:#14532d}.fb.no{background:#fee2e2;color:#7f1d1d}.fb.info{background:#fef3c7;color:#78350f}
+  .bar{height:.5rem;border-radius:1rem;background:var(--line);overflow:hidden;min-width:5rem}
+  .bar i{display:block;height:100%;background:var(--brand)}
+  table.t{width:100%;border-collapse:collapse;font-size:.85rem}
+  table.t th{text-align:left;font-weight:500;color:var(--muted);font-size:.75rem;padding:.5rem;border-bottom:1px solid var(--line)}
+  table.t td{padding:.55rem .5rem;border-bottom:1px solid var(--line);vertical-align:middle}
+  .review{display:flex;flex-direction:column;gap:.4rem;margin-top:1rem}
+  .review div{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:.5rem;padding:.4rem .7rem;font-size:.9rem;line-height:1.8}
+  .review .mk{font-weight:700;width:1.2rem}
+  .review .mk.ok{color:#16a34a}.review .mk.no{color:#dc2626}
+  .big{font-size:2.4rem;font-weight:700;color:var(--brand-d)}
+  /* printable worksheet */
+  #printArea{display:none}
+  .sheet{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:1.4rem;color:#0f172a}
+  .sheet h1{font-size:1.15rem;font-weight:700;margin-bottom:.2rem}
+  .sheet .who{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;margin:.6rem 0 1rem}
+  .sheet .who span{flex:1;min-width:10rem;border-bottom:1px solid #94a3b8;padding-bottom:.2rem}
+  .sheet ol{columns:2;column-gap:2rem;padding-left:1.4rem}
+  .sheet li{break-inside:avoid;margin-bottom:1.1rem;line-height:1.9}
+  .sheet .line{display:block;border-bottom:1px solid #94a3b8;width:70%;height:1.4rem}
+  .sheet .mcs{font-size:.92em}
+  .sheet .key{break-before:page;margin-top:1.5rem}
+  .sheet .key ol li{margin-bottom:.3rem}
+  @media print{
+    body.printing > *:not(#printArea){display:none!important}
+    body.printing #printArea{display:block}
+    body.printing .sheet{border:0;padding:0}
+  }
+  @media (max-width:640px){ .choices{grid-template-columns:1fr} .sheet ol{columns:1} .qbox{font-size:1.15rem} }
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8.5h4M9 6.5v4M13.5 8.5h4M7 15l3 3M10 15l-3 3M13.5 15.2h4M13.5 17.8h4"/></svg>';
+
+/* ================= MATH HELPERS ================= */
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[R(0, a.length - 1)];
+const nz = (a, b) => { let x = 0; while (!x) x = R(a, b); return x; };          // random non-zero integer
+const sgn = n => Math.random() < .5 ? -n : n;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = R(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+const lcm = (a, b) => Math.abs(a * b) / gcd(a, b);
+const MINUS = '−';
+const m = n => n < 0 ? MINUS + (-n) : '' + n;                                  // number with a proper minus sign
+const sn = n => n < 0 ? `(${MINUS}${-n})` : '' + n;                            // negative numbers in parentheses
+const r2 = x => Math.round((x + Number.EPSILON) * 100) / 100;
+const numStr = x => m(+(+x).toFixed(6));
+const NAMES = ['Ana','Ben','Carlo','Dina','Elmer','Faye','Gino','Hana','Ivy','Jun','Kaye','Lito','Mara','Noel','Rico','Tess'];
+
+// exact fractions {n, d}
+const F = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return {n: n / g, d: d / g}; };
+const fadd = (x, y) => F(x.n * y.d + y.n * x.d, x.d * y.d);
+const fsub = (x, y) => F(x.n * y.d - y.n * x.d, x.d * y.d);
+const fmul = (x, y) => F(x.n * y.n, x.d * y.d);
+const fdiv = (x, y) => F(x.n * y.d, x.d * y.n);
+const feq = (x, y) => x.n * y.d === y.n * x.d;
+const mixF = (w, n, d) => F(w * d + n, d);
+const decF = s => { s = String(s); const neg = s[0] === '-'; s = s.replace('-', ''); const [i, f = ''] = s.split('.'); const k = 10 ** f.length; return F((neg ? -1 : 1) * (+(i || 0) * k + +(f || 0)), k); };
+const frH = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const fH = f => { if (f.d === 1) return m(f.n); const s = f.n < 0 ? MINUS : '', a = Math.abs(f.n);
+  return a > f.d ? `${s}${Math.floor(a / f.d)}${frH(a % f.d, f.d)}` : s + frH(a, f.d); };
+const fT = f => { if (f.d === 1) return m(f.n); const s = f.n < 0 ? MINUS : '', a = Math.abs(f.n);
+  return a > f.d ? `${s}${Math.floor(a / f.d)} ${a % f.d}/${f.d}` : `${s}${a}/${f.d}`; };
+const mixH = (w, n, d) => `${w}${frH(n, d)}`;
+const sfr = f => f.n < 0 ? `(${MINUS}${frH(-f.n, f.d)})` : frH(f.n, f.d);     // signed simple fraction for questions
+const sup = (b, e) => `${b}<sup>${e}</sup>`;
+
+// polynomials as coefficient arrays (index = power of x)
+const pclean = a => { a = a.slice(); while (a.length > 1 && !a[a.length - 1]) a.pop(); return a; };
+const padd = (a, b) => pclean(Array.from({length: Math.max(a.length, b.length)}, (_, i) => (a[i] || 0) + (b[i] || 0)));
+const pscale = (a, k) => pclean(a.map(c => c * k));
+const pmul = (a, b) => { const r = Array(a.length + b.length - 1).fill(0); a.forEach((x, i) => b.forEach((y, j) => r[i + j] += x * y)); return pclean(r); };
+const pshift = (a, k) => pclean(Array(k).fill(0).concat(a));
+const polyH = (a, v = 'x') => { const t = [];
+  for (let e = a.length - 1; e >= 0; e--) { const c = a[e]; if (!c) continue;
+    const abs = Math.abs(c), co = abs === 1 && e > 0 ? '' : abs, vv = e === 0 ? '' : e === 1 ? v : sup(v, e);
+    t.push((t.length ? (c < 0 ? ` ${MINUS} ` : ' + ') : (c < 0 ? MINUS : '')) + co + vv); }
+  return t.join('') || '0'; };
+const randPoly = (deg, k = 9) => { const a = []; for (let i = 0; i <= deg; i++) a.push(i === deg ? nz(-k, k) : R(-k, k)); return a; };
+const mono = (c, v, e) => (e === 0 ? m(c) : (c === 1 ? '' : c === -1 ? MINUS : m(c)) + (e === 1 ? v : sup(v, e)));
+const bin = (a, b, v = 'x') => `(${a === 1 ? '' : a === -1 ? MINUS : a}${v} ${b < 0 ? MINUS : '+'} ${Math.abs(b)})`;
+
+/* ================= ITEM BUILDERS ================= */
+const fracItem = (q, ans, extra) => Object.assign({q, kind:'frac', ans, show: fH(ans)}, extra);
+const numItem = (q, ans, unit = '', tol = 1e-9, extra) => Object.assign({q, kind:'num', ans, tol, show: numStr(ans) + (unit ? ' ' + unit : '')}, extra);
+const mcItem = (q, correct, wrongs, keepOrder) => {
+  const set = [correct]; for (const w of wrongs) { if (set.length >= 4) break; if (!set.includes(w)) set.push(w); }
+  if (!keepOrder) shuffle(set);
+  return {q, kind:'mc', choices:set, ans:set.indexOf(correct), show:correct};
+};
+const W = (q, item) => Object.assign(item, {words:true}); // word problem: smaller question text
+
+/* ================= SKILLS =================
+   Each skill: title, learn (short lesson in our own words), gen() -> one practice item.
+   The order and worksheet numbers follow the DepEd ARAL Math Learner's Worksheets. */
+const SK = {};
+const skill = (id, title, learn, gen) => SK[id] = {id, title, learn, gen};
+
+// ---------- Fractions ----------
+skill('f-add-sim', 'Adding similar fractions',
+  `When fractions have the <b>same denominator</b>, add the numerators and keep the denominator. Then write the answer in lowest terms.
+   <div class="ex">${frH(5,12)} + ${frH(3,12)} = ${frH(8,12)} = ${frH(2,3)}</div>`,
+  () => { const d = R(3, 20), a = R(1, d - 1), b = R(1, d - 1); return fracItem(`${frH(a,d)} + ${frH(b,d)}`, F(a + b, d)); });
+skill('f-sub-sim', 'Subtracting similar fractions',
+  `Same denominator? Subtract the numerators and keep the denominator, then simplify.
+   <div class="ex">${frH(7,9)} − ${frH(4,9)} = ${frH(3,9)} = ${frH(1,3)}</div>`,
+  () => { const d = R(3, 30), a = R(2, d), b = R(1, a - 1); return fracItem(`${frH(a,d)} − ${frH(b,d)}`, F(a - b, d)); });
+skill('f-mixed-sim', 'Adding & subtracting mixed numbers',
+  `Work on the whole numbers and the fractions separately. When subtracting and the fraction you take away is bigger, <b>borrow 1</b> from the whole number first.
+   <div class="ex">5${frH(1,4)} − 2${frH(3,4)} = 4${frH(5,4)} − 2${frH(3,4)} = 2${frH(2,4)} = 2${frH(1,2)}</div>`,
+  () => { const d = R(3, 12), n1 = R(1, d - 1), n2 = R(1, d - 1), w2 = R(1, 9), add = Math.random() < .5, w1 = add ? R(1, 12) : w2 + R(1, 8);
+    const a = mixF(w1, n1, d), b = mixF(w2, n2, d);
+    return fracItem(`${mixH(w1,n1,d)} ${add ? '+' : '−'} ${mixH(w2,n2,d)}`, add ? fadd(a, b) : fsub(a, b)); });
+skill('f-add-dis', 'Adding dissimilar fractions',
+  `Make the fractions similar first: rewrite them with the <b>least common denominator (LCD)</b>, then add.
+   <div class="ex">${frH(2,3)} + ${frH(1,4)} = ${frH(8,12)} + ${frH(3,12)} = ${frH(11,12)}</div>`,
+  () => { let d1 = R(2, 12), d2 = R(2, 12); while (d2 === d1) d2 = R(2, 12); const a = R(1, d1 - 1), b = R(1, d2 - 1);
+    return fracItem(`${frH(a,d1)} + ${frH(b,d2)}`, fadd(F(a,d1), F(b,d2))); });
+skill('f-sub-dis', 'Subtracting dissimilar fractions',
+  `Rewrite both fractions with the LCD, then subtract the numerators.
+   <div class="ex">${frH(5,6)} − ${frH(1,4)} = ${frH(10,12)} − ${frH(3,12)} = ${frH(7,12)}</div>`,
+  () => { let d1 = R(2, 12), d2 = R(2, 12); while (d2 === d1) d2 = R(2, 12); let x = F(R(1, d1 - 1), d1), y = F(R(1, d2 - 1), d2);
+    if (feq(x, y)) x = fadd(x, F(1, 1)); if (x.n * y.d < y.n * x.d) [x, y] = [y, x];
+    return fracItem(`${fH(x)} − ${fH(y)}`, fsub(x, y)); });
+skill('f-word', 'Word problems: adding & subtracting fractions',
+  `Read the question carefully. Words like <b>in all, altogether, total</b> mean add. Words like <b>left, remain, how much more</b> mean subtract. Then solve and simplify.
+   <div class="ex">Mia studied ${frH(2,3)} hour on Friday and ${frH(5,6)} hour on Saturday. In all: ${frH(4,6)} + ${frH(5,6)} = ${frH(9,6)} = 1${frH(1,2)} hours.</div>`,
+  () => { const n1 = pick(NAMES); let n2 = pick(NAMES); while (n2 === n1) n2 = pick(NAMES);
+    let d1 = R(2, 10), d2 = R(2, 10); let x = F(R(1, d1 - 1), d1), y = F(R(1, d2 - 1), d2); if (feq(x, y)) y = F(1, d2 === 2 ? 3 : 2);
+    const big = x.n * y.d >= y.n * x.d ? x : y, small = big === x ? y : x;
+    const t = R(0, 3);
+    if (t === 0) return W(0, fracItem(`${n1} walked ${frH(x.n,x.d)} km in the morning and ${frH(y.n,y.d)} km in the afternoon. How many kilometers did ${n1} walk in all?`, fadd(x, y), {words:true}));
+    if (t === 1) return W(0, fracItem(`A pitcher had ${frH(big.n,big.d)} liter of juice. ${n1} drank ${frH(small.n,small.d)} liter. How much juice is left?`, fsub(big, small), {words:true}));
+    if (t === 2) return W(0, fracItem(`${n1} painted ${frH(x.n,x.d)} of a fence and ${n2} painted ${frH(y.n,y.d)} of it. What part of the fence did they paint altogether?`, fadd(x, y), {words:true}));
+    return W(0, fracItem(`${n1} bought ${frH(big.n,big.d)} kg of rice and ${n2} bought ${frH(small.n,small.d)} kg. How much more rice did ${n1} buy?`, fsub(big, small), {words:true})); });
+skill('f-mul', 'Multiplying fractions',
+  `Multiply the numerators, then multiply the denominators. To keep numbers small, <b>cancel</b> first: divide a numerator and a denominator by their common factor.
+   <div class="ex">${frH(4,9)} × ${frH(3,8)} → cancel 4 with 8 and 3 with 9 → ${frH(1,3)} × ${frH(1,2)} = ${frH(1,6)}</div>`,
+  () => { const b = R(2, 12), d = R(2, 12), a = R(1, b + 2), c = R(1, d + 2); return fracItem(`${frH(a,b)} × ${frH(c,d)}`, fmul(F(a,b), F(c,d))); });
+skill('f-mul-mixed', 'Multiplying mixed numbers',
+  `Change every mixed number to an <b>improper fraction</b> first, multiply, then change the answer back to a mixed number.
+   <div class="ex">2${frH(1,2)} × 1${frH(1,3)} = ${frH(5,2)} × ${frH(4,3)} = ${frH(20,6)} = 3${frH(1,3)}</div>`,
+  () => { const d1 = R(2, 9), d2 = R(2, 9), w1 = R(1, 9), n1 = R(1, d1 - 1), t = R(0, 2);
+    const a = mixF(w1, n1, d1), aH = mixH(w1, n1, d1);
+    if (t === 0) { const w2 = R(1, 9), n2 = R(1, d2 - 1); return fracItem(`${aH} × ${mixH(w2,n2,d2)}`, fmul(a, mixF(w2, n2, d2))); }
+    if (t === 1) { const k = R(2, 15); return fracItem(`${k} × ${aH}`, fmul(F(k), a)); }
+    const n2 = R(1, d2 - 1); return fracItem(`${frH(n2,d2)} × ${aH}`, fmul(F(n2, d2), a)); });
+skill('f-div', 'Dividing fractions',
+  `To divide, <b>keep</b> the first fraction, <b>change</b> ÷ to ×, and <b>flip</b> the second fraction (use its reciprocal).
+   <div class="ex">${frH(3,4)} ÷ ${frH(1,2)} = ${frH(3,4)} × ${frH(2,1)} = ${frH(6,4)} = 1${frH(1,2)}</div>`,
+  () => { const t = R(0, 3), b = R(2, 12), d = R(2, 12), a = R(1, b), c = R(1, d);
+    if (t === 0) { const k = R(1, 9); return fracItem(`${k} ÷ ${frH(c,d)}`, fdiv(F(k), F(c, d))); }
+    if (t === 1) { const k = R(2, 9); return fracItem(`${frH(a,b)} ÷ ${k}`, fdiv(F(a, b), F(k))); }
+    return fracItem(`${frH(a,b)} ÷ ${frH(c,d)}`, fdiv(F(a, b), F(c, d))); });
+skill('f-div-mixed', 'Dividing mixed numbers',
+  `Change mixed numbers to improper fractions, then multiply by the reciprocal of the divisor.
+   <div class="ex">3${frH(1,4)} ÷ 2${frH(2,3)} = ${frH(13,4)} ÷ ${frH(8,3)} = ${frH(13,4)} × ${frH(3,8)} = ${frH(39,32)} = 1${frH(7,32)}</div>`,
+  () => { const d1 = R(2, 9), w1 = R(1, 9), n1 = R(1, d1 - 1), t = R(0, 2), a = mixF(w1, n1, d1), aH = mixH(w1, n1, d1);
+    if (t === 0) { const d2 = R(2, 9), w2 = R(1, 9), n2 = R(1, d2 - 1); return fracItem(`${aH} ÷ ${mixH(w2,n2,d2)}`, fdiv(a, mixF(w2, n2, d2))); }
+    if (t === 1) { const k = R(2, 9); return fracItem(`${aH} ÷ ${k}`, fdiv(a, F(k))); }
+    const k = R(2, 9); return fracItem(`${k} ÷ ${aH}`, fdiv(F(k), a)); });
+
+// ---------- Decimals ----------
+const dec = (maxInt, places) => { const k = 10 ** places; return (R(1, maxInt * k) / k).toFixed(places); };
+skill('d-add', 'Adding decimals',
+  `Write the numbers in a column with the <b>decimal points lined up</b>. Fill empty places with zeros, then add like whole numbers.
+   <div class="ex">12.5 + 3.75 → 12.50 + 3.75 = 16.25</div>`,
+  () => { const n = R(2, 3), xs = Array.from({length: n}, () => dec(pick([9, 99, 999]), R(1, 4)));
+    const sum = xs.reduce((s, x) => fadd(s, decF(x)), F(0)); return numItem(xs.join(' + '), sum.n / sum.d); });
+skill('d-sub', 'Subtracting decimals',
+  `Line up the decimal points, add zeros so both numbers have the same number of decimal places, then subtract (regroup when needed).
+   <div class="ex">20 − 4.35 → 20.00 − 4.35 = 15.65</div>`,
+  () => { let a = Math.random() < .3 ? String(R(20, 999)) : dec(999, R(1, 4)), b = dec(pick([9, 99]), R(1, 4));
+    if (+b > +a) [a, b] = [b, a]; const f = fsub(decF(a), decF(b)); return numItem(`${a} − ${b}`, f.n / f.d); });
+skill('d-mul', 'Multiplying decimals',
+  `Multiply as if there were no decimal points. Then count the decimal places in both factors and put that many places in the answer.
+   <div class="ex">2.15 × 0.16 → 215 × 16 = 3440 → 4 places → 0.3440 = 0.344</div>`,
+  () => { const a = dec(pick([9, 99]), R(1, 2)), b = pick([String(R(2, 9)), '0.' + R(1, 9), '0.0' + R(1, 9), dec(9, 1)]);
+    const f = fmul(decF(a), decF(b)); return numItem(`${a} × ${b}`, f.n / f.d); });
+skill('d-div', 'Dividing decimals',
+  `If the divisor is a whole number, divide and place the decimal point straight up. If the divisor is a decimal, move its decimal point to the right until it is a whole number, and move the dividend's point the same number of places.
+   <div class="ex">4.3 ÷ 0.2 → 43 ÷ 2 = 21.5</div>`,
+  () => { const q = decF(dec(pick([9, 99]), R(1, 2))), t = Math.random() < .5;
+    const dv = t ? F(R(2, 9)) : decF(pick(['0.' + R(1, 9), '0.0' + R(1, 9)])); const dd = fmul(q, dv);
+    return numItem(`${numStr(dd.n / dd.d)} ÷ ${numStr(dv.n / dv.d)}`, q.n / q.d); });
+skill('d-div-round', 'Dividing by a decimal & rounding',
+  `Make the divisor a whole number by moving both decimal points, divide to three decimal places, then <b>round to the nearest hundredth</b>.
+   <div class="ex">863 ÷ 3.9 → 8630 ÷ 39 = 221.282… ≈ 221.28</div>`,
+  () => { const a = R(100, 9999), b = decF(pick([dec(9, 1), dec(9, 2)])); if (!b.n) return SK['d-div-round'].gen();
+    return numItem(`${a} ÷ ${numStr(b.n / b.d)} <small style="font-size:.6em;color:var(--muted)">(nearest hundredth)</small>`, r2(a * b.d / b.n), '', 1e-6); });
+skill('d-div-pow', 'Dividing by 10, 100, 1000 and by 0.1, 0.01, 0.001',
+  `Dividing by <b>10, 100, 1000</b> moves the decimal point 1, 2 or 3 places to the <b>left</b>. Dividing by <b>0.1, 0.01, 0.001</b> moves it 1, 2 or 3 places to the <b>right</b>.
+   <div class="ex">4.65 ÷ 100 = 0.0465 &nbsp;·&nbsp; 0.039 ÷ 0.01 = 3.9</div>`,
+  () => { const d = pick(['10', '100', '1000', '0.1', '0.01', '0.001']), x = pick([dec(1, R(2, 4)), dec(99, 2), dec(999, 2)]);
+    const f = fdiv(decF(x), decF(d)); return numItem(`${x} ÷ ${d}`, f.n / f.d); });
+
+// ---------- Geometry & measurement ----------
+const SOLIDS = [
+  ['A prism whose two bases are triangles is called a…', 'triangular prism', ['triangular pyramid', 'cone', 'cube']],
+  ['How many faces does a cube have?', '6', ['4', '8', '12']],
+  ['How many edges does a cube have?', '12', ['6', '8', '10']],
+  ['How many vertices (corners) does a cube have?', '8', ['6', '12', '4']],
+  ['The lateral faces of a pyramid are always…', 'triangles', ['rectangles', 'circles', 'squares']],
+  ['A solid with two parallel circular bases is a…', 'cylinder', ['cone', 'sphere', 'prism']],
+  ['A solid with one circular base and one pointed top (apex) is a…', 'cone', ['cylinder', 'pyramid', 'sphere']],
+  ['Every point on a sphere is the same distance from its…', 'center', ['base', 'edge', 'apex']],
+  ['A pyramid whose base has 5 sides is called a…', 'pentagonal pyramid', ['hexagonal pyramid', 'pentagonal prism', 'square pyramid']],
+  ['How many edges does a triangular prism have?', '9', ['6', '12', '5']],
+  ['How many faces does a triangular prism have?', '5', ['4', '6', '3']],
+  ['How many faces does a square pyramid have?', '5', ['4', '6', '8']],
+  ['Which of these is a plane (flat) figure, not a solid?', 'circle', ['sphere', 'cylinder', 'cube']],
+  ['Which object is shaped like a cylinder?', 'a can of sardines', ['a die', 'a party hat', 'a basketball']],
+  ['Which object is shaped like a cone?', 'an ice cream cone', ['a ball', 'a shoebox', 'a coin']],
+  ['Which object is shaped like a sphere?', 'a basketball', ['a drum', 'a book', 'a tent']],
+  ['Which object is shaped like a rectangular prism?', 'a shoebox', ['a ball', 'a party hat', 'a drinking glass']],
+  ['A prism or pyramid is named after the shape of its…', 'base', ['lateral faces', 'edges', 'height']],
+  ['Half of a sphere is called a…', 'hemisphere', ['semicircle', 'cone', 'radius']],
+  ['The distance from the center of a sphere to its surface is the…', 'radius', ['diameter', 'apex', 'edge']],
+];
+skill('g-solids', 'Solid figures',
+  `<b>Prisms</b> have two parallel, matching bases and rectangular side faces; they are named by the shape of the base. <b>Pyramids</b> have one base and triangular faces that meet at the apex. A <b>cube</b> has 6 square faces, 12 edges and 8 vertices. A <b>cylinder</b> has two circular bases, a <b>cone</b> has one circular base and an apex, and every point of a <b>sphere</b> is the same distance from its center.`,
+  () => { const [q, a, w] = pick(SOLIDS); return Object.assign(mcItem(q, a, w), {words:true}); });
+skill('g-sdt', 'Speed, distance & time',
+  `<b>Distance = Speed × Time</b>, <b>Speed = Distance ÷ Time</b>, <b>Time = Distance ÷ Speed</b>. Keep the units matching (km with hours, m with seconds).
+   <div class="ex">A car travels 120 km in 2 hours → speed = 120 ÷ 2 = 60 km/h</div>`,
+  () => { const t = R(0, 3);
+    if (t === 0) { const s = R(4, 12) * 5, h = R(2, 6); return numItem(`A jeepney travels ${s * h} km in ${h} hours. What is its average speed in km/h?`, s, 'km/h', 1e-9, {words:true}); }
+    if (t === 1) { const s = R(3, 8) * 5, h = pick([0.5, 1.5, 2, 2.5, 3]); return numItem(`A tricycle runs at a steady ${s} km/h for ${h} hours. How many kilometers does it travel?`, s * h, 'km', 1e-9, {words:true}); }
+    if (t === 2) { const s = R(4, 12) * 10, h = R(2, 6); return numItem(`A bus must cover ${s * h} km at an average speed of ${s} km/h. How many hours will the trip take?`, h, 'hours', 1e-9, {words:true}); }
+    const s = R(4, 9), sec = R(10, 40); return numItem(`${pick(NAMES)} ran ${s * sec} meters in ${sec} seconds. What was the average speed in m/s?`, s, 'm/s', 1e-9, {words:true}); });
+const PI = 3.14, piNote = ' <small style="color:var(--muted)">(π = 3.14, round to the nearest hundredth)</small>';
+skill('g-composite', 'Area of composite figures',
+  `Split the figure into shapes you know, find each area, then add (or subtract a hole). Rectangle = l × w, Triangle = ½ × b × h, Circle = πr², Semicircle = ½πr².
+   <div class="ex">Rectangle 10 cm × 6 cm with a triangle (base 10 cm, height 5 cm) on top → 60 + 25 = 85 cm²</div>`,
+  () => { const u = pick(['cm', 'm']), t = R(0, 4);
+    if (t === 0) { const l = R(4, 14), w = R(3, 10), h = R(2, 9); return numItem(`A figure is a rectangle ${l} ${u} long and ${w} ${u} wide with a triangle on top. The triangle's base is the ${l} ${u} side and its height is ${h} ${u}. What is the total area?`, r2(l * w + l * h / 2), u + '²', .011, {words:true}); }
+    if (t === 1) { const l = R(5, 14), d = 2 * R(1, 5); return numItem(`A figure is a rectangle ${l} ${u} by ${d} ${u} with a semicircle attached to its ${d} ${u} side. What is the total area?${piNote}`, r2(l * d + PI * (d / 2) ** 2 / 2), u + '²', .011, {words:true}); }
+    if (t === 2) { const l = R(6, 14), d = 2 * R(1, 4); return numItem(`A running track is a rectangle ${l} ${u} by ${d} ${u} with a semicircle on each ${d} ${u} end. What is the total area?${piNote}`, r2(l * d + PI * (d / 2) ** 2), u + '²', .011, {words:true}); }
+    if (t === 3) { const s = R(4, 12), r = R(1, 3); return numItem(`A square garden is ${s} ${u} on each side. A circular fountain with radius ${r} ${u} sits in the middle. What is the grass area around the fountain?${piNote}`, r2(s * s - PI * r * r), u + '²', .011, {words:true}); }
+    const s = R(3, 10), h = R(2, 8); return numItem(`A figure is a square with ${s} ${u} sides and a triangle on one side (base ${s} ${u}, height ${h} ${u}). What is the total area?`, r2(s * s + s * h / 2), u + '²', .011, {words:true}); });
+skill('g-sa-prism', 'Surface area: rectangular prism & cube',
+  `Surface area is the total area of all faces. Rectangular prism: <b>SA = 2(lw + lh + wh)</b>. Cube: <b>SA = 6s²</b>.
+   <div class="ex">l = 6, w = 9, h = 8 → 2(54 + 48 + 72) = 2(174) = 348 mm²</div>`,
+  () => { const u = pick(['cm', 'm', 'mm']);
+    if (Math.random() < .35) { const s = R(2, 25); return numItem(`Find the surface area of a cube with edges ${s} ${u} long.`, 6 * s * s, u + '²', 1e-9, {words:true}); }
+    const l = R(3, 30), w = R(2, 20), h = R(2, 20); return numItem(`Find the surface area of a rectangular prism: length ${l} ${u}, width ${w} ${u}, height ${h} ${u}.`, 2 * (l * w + l * h + w * h), u + '²', 1e-9, {words:true}); });
+skill('g-sa-tri', 'Surface area: triangular prism',
+  `For a triangular prism with an isosceles triangle base: <b>SA = bh + 2ls + lb</b>, where b and h are the triangle's base and height, s is its slanted side, and l is the length of the prism.
+   <div class="ex">h = 5, b = 9, l = 15, s = 7 → 45 + 210 + 135 = 390 cm²</div>`,
+  () => { const b = R(4, 16), h = R(3, 12), s = Math.max(h + 1, R(5, 18)), l = R(8, 40);
+    return numItem(`A triangular prism has a triangle with base b = ${b} cm and height h = ${h} cm, slanted sides s = ${s} cm, and length l = ${l} cm. Find its surface area.`, b * h + 2 * l * s + l * b, 'cm²', 1e-9, {words:true}); });
+skill('g-sa-pyr', 'Surface area: square pyramid',
+  `A square pyramid has a square base and 4 triangular faces: <b>SA = b² + 2bl</b>, where b is the base edge and l is the slant height.
+   <div class="ex">b = 6 cm, l = 8 cm → 36 + 96 = 132 cm²</div>`,
+  () => { const b = R(4, 20), l = R(4, 20); return numItem(`A square pyramid has base edge ${b} cm and slant height ${l} cm. Find its surface area.`, b * b + 2 * b * l, 'cm²', 1e-9, {words:true}); });
+skill('g-sa-round', 'Surface area: cylinder, cone & sphere',
+  `Cylinder: <b>SA = 2πr² + 2πrh</b>. Cone: <b>SA = πrs + πr²</b> (s = slant height). Sphere: <b>SA = 4πr²</b>. Use π = 3.14.
+   <div class="ex">Sphere with r = 3 cm → 4 × 3.14 × 9 = 113.04 cm²</div>`,
+  () => { const t = R(0, 2), r = R(2, 15);
+    if (t === 0) { const h = R(3, 30); return numItem(`Find the surface area of a cylinder with radius ${r} cm and height ${h} cm.${piNote}`, r2(2 * PI * r * r + 2 * PI * r * h), 'cm²', .011, {words:true}); }
+    if (t === 1) { const s = r + R(2, 15); return numItem(`Find the surface area of a cone with radius ${r} cm and slant height ${s} cm.${piNote}`, r2(PI * r * s + PI * r * r), 'cm²', .011, {words:true}); }
+    return numItem(`Find the surface area of a sphere with radius ${r} m.${piNote}`, r2(4 * PI * r * r), 'm²', .011, {words:true}); });
+skill('c-outcomes', 'Counting possible outcomes',
+  `If one choice can be made in <b>m</b> ways and a second choice in <b>n</b> ways, together there are <b>m × n</b> outcomes. You can check by listing them or drawing a tree diagram.
+   <div class="ex">3 kinds of burgers × 5 drinks = 15 possible orders</div>`,
+  () => { const t = R(0, 5), nm = pick(NAMES);
+    if (t === 0) { const a = R(2, 6), b = R(2, 6); return numItem(`A carinderia offers ${a} kinds of ulam and ${b} kinds of drinks. If ${nm} picks 1 ulam and 1 drink, how many different meals are possible?`, a * b, '', 1e-9, {words:true}); }
+    if (t === 1) { const a = R(2, 5), b = R(2, 4), c = R(2, 3); return numItem(`${nm} has ${a} shirts, ${b} pairs of pants and ${c} pairs of shoes. How many different outfits of 1 shirt, 1 pair of pants and 1 pair of shoes can ${nm} wear?`, a * b * c, '', 1e-9, {words:true}); }
+    if (t === 2) { const n = R(2, 4); return numItem(`A coin is tossed ${n} times in a row. How many possible outcomes (like HT${n > 2 ? 'H' : ''}) are there?`, 2 ** n, '', 1e-9, {words:true}); }
+    if (t === 3) { const k = R(3, 6); return numItem(`${nm} flips a coin and spins a spinner with ${k} colors. How many combined outcomes are possible?`, 2 * k, '', 1e-9, {words:true}); }
+    if (t === 4) { const L = R(2, 5), D = R(3, 9); return numItem(`A locker code is 1 letter (from ${'ABCDE'.slice(0, L).split('').join(', ')}) followed by 1 digit (from 1 to ${D}). How many different codes can be made?`, L * D, '', 1e-9, {words:true}); }
+    return numItem(`Two ordinary dice are rolled. In how many outcomes are <b>both</b> numbers even?`, 9, '', 1e-9, {words:true}); });
+
+// ---------- Integers ----------
+const iv = () => Math.random() < .6 ? nz(-20, 20) : sgn(R(21, 999));
+skill('i-add', 'Adding integers',
+  `<b>Same signs:</b> add the numbers and keep the sign. <b>Different signs:</b> subtract the smaller from the larger (ignoring signs) and use the sign of the larger.
+   <div class="ex">(−6) + (−3) = −9 &nbsp;·&nbsp; 20 + (−54) = −34 &nbsp;·&nbsp; (−9) + 8 = −1</div>`,
+  () => { const a = iv(), b = iv(); return numItem(`${sn(a)} + ${sn(b)}`, a + b); });
+skill('i-sub', 'Subtracting integers',
+  `Change subtraction into addition: <b>add the opposite</b> of the number being subtracted, then follow the rules for adding integers.
+   <div class="ex">4 − 11 = 4 + (−11) = −7 &nbsp;·&nbsp; (−8) − (−20) = −8 + 20 = 12</div>`,
+  () => { const a = iv(), b = iv(); return numItem(`${sn(a)} − ${sn(b)}`, a - b); });
+skill('i-mul', 'Multiplying integers',
+  `Multiply the numbers. <b>Same signs → positive</b> answer. <b>Different signs → negative</b> answer. With three factors, count the negative signs: an even count gives a positive answer.
+   <div class="ex">(−11) × (−7) = 77 &nbsp;·&nbsp; 12 × (−4) = −48</div>`,
+  () => { if (Math.random() < .2) { const a = nz(-12, 12), b = nz(-9, 9), c = nz(-9, 9); return numItem(`${sn(a)} × ${sn(b)} × ${sn(c)}`, a * b * c); }
+    const a = Math.random() < .7 ? nz(-15, 15) : sgn(R(16, 250)), b = nz(-12, 12); return numItem(`${sn(a)} × ${sn(b)}`, a * b); });
+skill('i-div', 'Dividing integers',
+  `Divide the numbers and use the same sign rule as multiplication: <b>same signs → positive</b>, <b>different signs → negative</b>.
+   <div class="ex">(−20) ÷ (−2) = 10 &nbsp;·&nbsp; (−56) ÷ 8 = −7</div>`,
+  () => { const q = nz(-30, 30), b = nz(-25, 25); return numItem(`${sn(q * b)} ÷ ${sn(b)}`, q); });
+skill('i-frac', 'Signed fractions',
+  `Use the integer rules on fractions. Adding or subtracting with the same denominator: work on the numerators and keep the denominator. Multiplying: multiply numerators and denominators, then fix the sign. Simplify at the end.
+   <div class="ex">${frH(1,6)} + (−${frH(5,6)}) = −${frH(4,6)} = −${frH(2,3)} &nbsp;·&nbsp; (−${frH(2,3)}) × (−${frH(5,2)}) = ${frH(5,3)} = 1${frH(2,3)}</div>`,
+  () => { const t = R(0, 2), d = R(2, 12);
+    if (t === 2) { const x = F(sgn(R(1, 12)), R(2, 12)), y = F(sgn(R(1, 12)), R(2, 12)); return fracItem(`${sfr(x)} × ${sfr(y)}`, fmul(x, y)); }
+    const a = sgn(R(1, 25)), b = sgn(R(1, 25)); const x = {n:a, d}, y = {n:b, d};
+    return t === 0 ? fracItem(`${sfr(x)} + ${sfr(y)}`, F(a + b, d)) : fracItem(`${sfr(x)} − ${sfr(y)}`, F(a - b, d)); });
+
+// ---------- Fractions & decimals together (G9–10) ----------
+const fracOrMixed = () => { const d = R(2, 9), n = R(1, d - 1); return Math.random() < .5 ? F(n, d) : mixF(R(1, 9), n, d); };
+const fdH = x => typeof x === 'string' ? x : x.d === 1 ? m(x.n) : (Math.abs(x.n) > x.d ? fH(x) : frH(x.n, x.d));
+const fdV = x => typeof x === 'string' ? decF(x) : x;
+const shortDec = () => pick(['0.5', '0.25', '0.75', '1.2', '1.5', '2.5', '0.4', '0.8', '3.5', '2.1', '0.6', '1.25', '4.2', '6.8', '9.5']);
+skill('fd-addsub', 'Adding & subtracting decimals and fractions',
+  `Change the decimal to a fraction in lowest terms, make the fractions similar, then add or subtract. Write the answer as a proper fraction or mixed number.
+   <div class="ex">${frH(3,4)} + 0.5 = ${frH(3,4)} + ${frH(1,2)} = ${frH(3,4)} + ${frH(2,4)} = 1${frH(1,4)}</div>`,
+  () => { let a = Math.random() < .5 ? dec(20, R(1, 2)) : fracOrMixed(), b = typeof a === 'string' ? fracOrMixed() : dec(9, R(1, 2));
+    let add = Math.random() < .5; let v = add ? fadd(fdV(a), fdV(b)) : fsub(fdV(a), fdV(b));
+    if (v.n <= 0) { [a, b] = [b, a]; v = fsub(fdV(a), fdV(b)); if (v.n <= 0) { add = true; v = fadd(fdV(a), fdV(b)); } }
+    return fracItem(`${fdH(a)} ${add ? '+' : '−'} ${fdH(b)}`, v); });
+skill('fd-muldiv', 'Multiplying & dividing decimals and fractions',
+  `Change decimals to fractions and mixed numbers to improper fractions. Then multiply (or multiply by the reciprocal to divide) and simplify.
+   <div class="ex">2${frH(1,4)} ÷ 0.4 = ${frH(9,4)} ÷ ${frH(2,5)} = ${frH(9,4)} × ${frH(5,2)} = ${frH(45,8)} = 5${frH(5,8)}</div>`,
+  () => { const a = fracOrMixed(), b = shortDec(), mul = Math.random() < .5, first = Math.random() < .5;
+    const [x, y] = first ? [a, b] : [b, a];
+    return fracItem(`${fdH(x)} ${mul ? '×' : '÷'} ${fdH(y)}`, mul ? fmul(fdV(x), fdV(y)) : fdiv(fdV(x), fdV(y))); });
+skill('fd-order', 'Order of operations with fractions & decimals',
+  `Do <b>× and ÷ first</b> (left to right), then <b>+ and −</b> (left to right). Change decimals to fractions as you go.
+   <div class="ex">1${frH(1,4)} + 3.5 × 2.1 = 1${frH(1,4)} + ${frH(7,2)} × ${frH(21,10)} = 1${frH(1,4)} + 7${frH(7,20)} = 8${frH(3,5)}</div>`,
+  () => { for (let tries = 0; tries < 50; tries++) {
+      const vals = [0, 1, 2].map(() => Math.random() < .5 ? shortDec() : fracOrMixed()), ops = pick([['+', '×'], ['−', '÷'], ['×', '−'], ['÷', '+'], ['+', '−'], ['−', '×']]);
+      const [a, b, c] = vals.map(fdV), ap = (x, o, y) => o === '+' ? fadd(x, y) : o === '−' ? fsub(x, y) : o === '×' ? fmul(x, y) : fdiv(x, y);
+      const hi = o => o === '×' || o === '÷'; let v;
+      if (hi(ops[1]) && !hi(ops[0])) v = ap(a, ops[0], ap(b, ops[1], c)); else v = ap(ap(a, ops[0], b), ops[1], c);
+      if (v.n > 0 && v.d <= 400) return fracItem(`${fdH(vals[0])} ${ops[0]} ${fdH(vals[1])} ${ops[1]} ${fdH(vals[2])}`, v);
+    } return SK['fd-addsub'].gen(); });
+skill('i-order', 'Order of operations with integers',
+  `Follow <b>GEMDAS</b>: Grouping symbols first, then Exponents, then Multiplication and Division (left to right), then Addition and Subtraction (left to right).
+   <div class="ex">7 − 4[2 + 3] = 7 − 4(5) = 7 − 20 = −13</div>`,
+  () => { const t = R(0, 4), a = nz(-20, 20), b = nz(-9, 9), c = nz(-9, 9), d = nz(-12, 12);
+    if (t === 0) return numItem(`${m(a)} + ${sn(b)} × ${sn(c)}`, a + b * c);
+    if (t === 1) return numItem(`${m(a)} × ${sn(b)} − ${sn(c)} × ${sn(d)}`, a * b - c * d);
+    if (t === 2) return numItem(`${m(a)} − ${sn(b * c)} ÷ ${sn(c)}`, a - b);
+    if (t === 3) return numItem(`(${m(a)} + ${sn(b)}) × ${sn(c)}`, (a + b) * c);
+    return numItem(`${m(d)} × (${m(b)} − ${sn(c)}) + ${sn(a)}`, d * (b - c) + a); });
+
+// ---------- Exponents ----------
+skill('e-eval', 'Evaluating exponents',
+  `The exponent tells how many times to multiply the base by itself.
+   <div class="ex">5⁴ = 5 × 5 × 5 × 5 = 625</div>`,
+  () => { let b, e; do { b = R(2, 12); e = R(2, 6); } while (b ** e > 2e6);
+    if (Math.random() < .3) { let b2, e2; do { b2 = R(2, 9); e2 = R(2, 4); } while (b2 ** e2 > 1e4); const plus = Math.random() < .6;
+      return numItem(`${sup(b, e)} ${plus ? '+' : '−'} ${sup(b2, e2)}`, plus ? b ** e + b2 ** e2 : b ** e - b2 ** e2); }
+    return numItem(sup(b, e), b ** e); });
+skill('e-notation', 'Writing numbers in exponential form',
+  `Find how many times the base must be multiplied by itself to make the number.
+   <div class="ex">81 = 3 × 3 × 3 × 3 = 3⁴ → the exponent is 4</div>`,
+  () => { let b, e; do { b = R(2, 10); e = R(2, 7); } while (b ** e > 1e6);
+    return numItem(`Write ${(b ** e).toLocaleString()} as a power of ${b}. What is the exponent? &nbsp; ${b ** e} = ${sup(b, '?')}`, e, '', 1e-9, {words:true, show: `${e} &nbsp;(${(b ** e).toLocaleString()} = ${sup(b, e)})`}); });
+skill('e-laws', 'Laws of exponents',
+  `Same base: <b>multiply → add</b> the exponents (aᵐ × aⁿ = aᵐ⁺ⁿ), <b>divide → subtract</b> them (aᵐ ÷ aⁿ = aᵐ⁻ⁿ), <b>power of a power → multiply</b> them ((aᵐ)ⁿ = aᵐⁿ).
+   <div class="ex">5⁴ × 5⁶ = 5¹⁰ &nbsp;·&nbsp; 10⁸ ÷ 10⁶ = 10² &nbsp;·&nbsp; (8⁵)² = 8¹⁰</div>`,
+  () => { const a = R(2, 25), x = R(2, 12), y = R(2, 12), t = R(0, 2);
+    if (t === 0) return numItem(`${sup(a, x)} × ${sup(a, y)} = ${sup(a, '?')}`, x + y, '', 1e-9, {show: sup(a, x + y)});
+    if (t === 1) { const [p, q] = x > y ? [x, y] : [y + x, y]; return numItem(`${sup(a, p)} ÷ ${sup(a, q)} = ${sup(a, '?')}`, p - q, '', 1e-9, {show: sup(a, p - q)}); }
+    return numItem(`(${sup(a, x)})<sup>${y}</sup> = ${sup(a, '?')}`, x * y, '', 1e-9, {show: sup(a, x * y)}); });
+skill('e-zero-neg', 'Zero and negative exponents',
+  `Any non-zero number to the power 0 is <b>1</b>. A negative exponent means a <b>reciprocal</b>: a⁻ⁿ = 1/aⁿ.
+   <div class="ex">8⁰ = 1 &nbsp;·&nbsp; 5⁻² + 2⁴ = ${frH(1,25)} + 16 = 16${frH(1,25)}</div>`,
+  () => { const t = R(0, 4), a = R(2, 12), b = R(2, 9);
+    if (t === 0) { const k = R(2, 3); return fracItem(`${sup(a, 0)} + ${sup(b, k)}`, F(1 + b ** k)); }
+    if (t === 1) { const k = a > 6 ? 2 : R(1, 3); return fracItem(sup(a, MINUS + k), F(1, a ** k)); }
+    if (t === 2) return fracItem(`${sup(a, MINUS + 1)} + ${sup(b, MINUS + 1)}`, fadd(F(1, a), F(1, b)));
+    if (t === 3) { const p = R(1, 4), q = p + R(1, 2); return fracItem(`${sup(b, p)} ÷ ${sup(b, q)}`, F(1, b ** (q - p))); }
+    const k = R(2, 3); return fracItem(`${sup(b, k)} − ${sup(a, 0)} + ${sup(a, MINUS + 1)}`, fadd(F(b ** k - 1), F(1, a))); });
+skill('e-vars', 'Exponents with variables',
+  `Combine the numbers first, then apply the laws of exponents to each variable. A simplified answer has no negative exponents.
+   <div class="ex">2x³ · 3x² = 6x⁵ &nbsp;·&nbsp; 12y⁷ ÷ 4y³ = 3y⁴ &nbsp;·&nbsp; (2a³)² = 4a⁶</div>`,
+  () => { const v = pick(['x', 'y', 'a', 'm', 'k']), t = R(0, 2);
+    if (t === 0) { const c1 = nz(-6, 9), c2 = R(2, 7), e1 = R(1, 7), e2 = R(2, 6);
+      return mcItem(`(${mono(c1, v, e1)})(${mono(c2, v, e2)})`, mono(c1 * c2, v, e1 + e2), [mono(c1 * c2, v, e1 * e2), mono(c1 + c2, v, e1 + e2), mono(c1 * c2, v, e1 + e2 + 1), mono(-c1 * c2, v, e1 + e2)]); }
+    if (t === 1) { const k = R(2, 9), c2 = R(2, 8), e2 = R(1, 5), e1 = e2 + R(1, 6);
+      return mcItem(`${mono(k * c2, v, e1)} ÷ ${mono(c2, v, e2)}`, mono(k, v, e1 - e2), [mono(k, v, e1 + e2), mono(k * c2 - c2, v, e1 - e2), mono(k, v, e1 - e2 + 1), mono(k + 1, v, e1 - e2)]); }
+    const c = R(2, 5), e = R(2, 5), n = R(2, 3);
+    return mcItem(`(${mono(c, v, e)})<sup>${n}</sup>`, mono(c ** n, v, e * n), [mono(c, v, e * n), mono(c ** n, v, e + n), mono(c * n, v, e * n), mono(c * n, v, e + n)]); });
+
+// ---------- Square roots ----------
+const rt = x => `√<span class="rad">${x}</span>`;
+skill('r-perfect', 'Square roots of perfect squares',
+  `The square root of a number is the number that, multiplied by itself, gives it. For big numbers, list the prime factors and take one from each pair.
+   <div class="ex">√49 = 7 because 7 × 7 = 49 &nbsp;·&nbsp; 900 = (2×2)(3×3)(5×5) → √900 = 2 × 3 × 5 = 30</div>`,
+  () => { const k = Math.random() < .5 ? R(2, 15) : R(16, 50); return numItem(rt(k * k), k); });
+skill('r-simplify', 'Simplifying square roots',
+  `If the number is not a perfect square, find its biggest perfect-square factor and take its root out of the radical.
+   <div class="ex">√56 = √(4 × 14) = 2√14</div>`,
+  () => { const b = pick([2, 3, 5, 6, 7, 10, 11, 13]), a = R(2, 7);
+    return mcItem(rt(a * a * b), `${a}${rt(b)}`, [`${b}${rt(a)}`, `${a * a}${rt(b)}`, `${a + 1}${rt(b)}`, `${a}${rt(a * b)}`, `${2 * a}${rt(b)}`]); });
+
+// ---------- Algebraic expressions ----------
+skill('a-translate', 'Translating words into expressions',
+  `Key words: <b>plus, more than, increased by</b> → +; <b>minus, less than, decreased by</b> → −; <b>times, product, twice</b> → ×; <b>divided by, quotient</b> → ÷. Careful: "4 less than x" is <b>x − 4</b>, and "subtract x from 7" is <b>7 − x</b>. Write the number before the variable: 3 × y → 3y.`,
+  () => { const v = pick(['x', 'y', 'n', 'a', 'm', 'p']), n = R(2, 20), t = R(0, 8);
+    const T = [
+      [`${n} more than ${v}`, `${v} + ${n}`, [`${n} − ${v}`, `${n}${v}`, `${v} − ${n}`]],
+      [`${n} less than ${v}`, `${v} − ${n}`, [`${n} − ${v}`, `${v} + ${n}`, `${n}${v}`]],
+      [`the product of ${n} and ${v}`, `${n}${v}`, [`${n} + ${v}`, sup(v, n), `${v} ÷ ${n}`]],
+      [`${v} divided by ${n}`, `${v} ÷ ${n}`, [`${n} ÷ ${v}`, `${v} − ${n}`, `${n}${v}`]],
+      [`twice ${v} decreased by ${n}`, `2${v} − ${n}`, [`2(${v} − ${n})`, `${n} − 2${v}`, `2${v} + ${n}`]],
+      [`${n} times the sum of ${v} and 3`, `${n}(${v} + 3)`, [`${n}${v} + 3`, `${n} + ${v} + 3`, `3(${v} + ${n})`]],
+      [`subtract ${v} from ${n}`, `${n} − ${v}`, [`${v} − ${n}`, `${n} + ${v}`, `${MINUS}${n}${v}`]],
+      [`the square of ${v} increased by ${n}`, `${sup(v, 2)} + ${n}`, [`2${v} + ${n}`, `(${v} + ${n})<sup>2</sup>`, `${sup(v, 2)} − ${n}`]],
+      [`${n} decreased by three times ${v}`, `${n} − 3${v}`, [`3${v} − ${n}`, `3(${n} − ${v})`, `${n} + 3${v}`]],
+    ][t];
+    return Object.assign(mcItem(`Write as an expression: <b>${T[0]}</b>`, T[1], T[2]), {words:true}); });
+skill('a-evaluate', 'Evaluating expressions',
+  `Replace each variable with its value <b>inside parentheses</b>, then compute using the order of operations.
+   <div class="ex">If a = −2 and b = 3: a² − 2b = (−2)² − 2(3) = 4 − 6 = −2</div>`,
+  () => { for (let i = 0; i < 30; i++) {
+      const a = nz(-6, 6), b = nz(-6, 6), c = nz(-6, 6), t = R(0, 8);
+      const T = [
+        [`a − b`, F(a - b)], [`2(b − c)`, F(2 * (b - c))], [`${sup('a', 2)} + b`, F(a * a + b)], [`ab − c`, F(a * b - c)],
+        [`${sup('a', 2)} − 2b`, F(a * a - 2 * b)], [`3a + 2b − c`, F(3 * a + 2 * b - c)], [`(a + b)<sup>2</sup>`, F((a + b) ** 2)],
+        [`${sup('a', 3)} − bc`, F(a ** 3 - b * c)], [`<span class="fr"><span>a − b</span><span>c</span></span>`, F(a - b, c)],
+      ][t];
+      if (T[1].d <= 12) return Object.assign(fracItem(`If a = ${m(a)}, b = ${m(b)} and c = ${m(c)}, find &nbsp;${T[0]}`, T[1]), {words:true});
+    } return SK['i-add'].gen(); });
+
+// ---------- Polynomials ----------
+const flipOne = p => { const q = p.slice(), idx = q.map((c, i) => c ? i : -1).filter(i => i >= 0); const i = pick(idx); q[i] = -q[i]; return q; };
+const nudge = p => { const q = p.slice(), idx = q.map((c, i) => c ? i : -1).filter(i => i >= 0); const i = pick(idx); q[i] += pick([-1, 1]); return pclean(q); };
+skill('p-add', 'Adding polynomials',
+  `Combine <b>like terms</b> only: add the numbers in front of terms with the same variable and exponent. Terms with no partner are copied.
+   <div class="ex">(7x² + 2) + (−x² + 3x − 6) = 6x² + 3x − 4</div>`,
+  () => { const A = randPoly(R(1, 3)), B = randPoly(R(1, 3)), S = padd(A, B);
+    return mcItem(`(${polyH(A)}) + (${polyH(B)})`, polyH(S), [polyH(padd(A, pscale(B, -1))), polyH(flipOne(S)), polyH(nudge(S)), polyH(flipOne(flipOne(S)))]); });
+skill('p-sub', 'Subtracting polynomials',
+  `Change the sign of <b>every</b> term in the polynomial being subtracted, then add like terms.
+   <div class="ex">(2x − 19) − (−x + 13) = 2x − 19 + x − 13 = 3x − 32</div>`,
+  () => { const A = randPoly(R(1, 3)), B = randPoly(R(1, 3)), D = padd(A, pscale(B, -1));
+    const onlyFirst = B.slice(); onlyFirst[onlyFirst.length - 1] *= -1; // forgot to change all signs
+    return mcItem(`(${polyH(A)}) − (${polyH(B)})`, polyH(D), [polyH(padd(A, B)), polyH(padd(A, onlyFirst)), polyH(flipOne(D)), polyH(nudge(D))]); });
+skill('p-mul-mono', 'Multiplying by a monomial',
+  `Use the <b>distributive property</b>: multiply the outside term by every term inside. When multiplying powers of x, add the exponents.
+   <div class="ex">−2(4x² − 3x + 1) = −8x² + 6x − 2 &nbsp;·&nbsp; 3x(2x − 5) = 6x² − 15x</div>`,
+  () => { const k = nz(-9, 9), e = R(0, 2), P = randPoly(R(1, 2)), Mn = Array(e).fill(0).concat([k]), Pr = pmul(Mn, P);
+    const firstOnly = pshift(P.map((c, i) => i === P.length - 1 ? c * k : c), e);
+    return mcItem(`${mono(k, 'x', e)}(${polyH(P)})`, polyH(Pr), [polyH(firstOnly), polyH(flipOne(Pr)), polyH(pscale(P, k)), polyH(nudge(Pr))]); });
+skill('p-foil', 'Multiplying binomials (FOIL)',
+  `Multiply <b>F</b>irst, <b>O</b>uter, <b>I</b>nner, <b>L</b>ast terms, then combine the middle terms.
+   <div class="ex">(2x + 3)(x − 5) = 2x² − 10x + 3x − 15 = 2x² − 7x − 15</div>`,
+  () => { const a = R(1, 5), b = nz(-9, 9), c = R(1, 5), d = nz(-9, 9), P = pmul([b, a], [d, c]);
+    return mcItem(`${bin(a, b)}${bin(c, d)}`, polyH(P), [polyH(pclean([b * d, 0, a * c])), polyH([b * d, a * d - b * c, a * c]), polyH([-b * d, a * d + b * c, a * c]), polyH([b * d, a * d + b * c + 1, a * c])]); });
+skill('p-div-mono', 'Dividing by a monomial',
+  `Divide <b>each term</b> by the monomial: divide the numbers and subtract the exponents.
+   <div class="ex">(18x⁴ − 10x² + 6x⁷) ÷ 2x² = 9x² − 5 + 3x⁵</div>`,
+  () => { const k = nz(-6, 6) || 2, j = R(1, 3), Q = randPoly(R(1, 3), 8), Dd = pmul(pshift([k], j), Q);
+    return mcItem(`(${polyH(Dd)}) ÷ ${mono(k, 'x', j)}`, polyH(Q), [polyH(pshift(Q, 1)), polyH(flipOne(Q)), polyH(nudge(Q)), polyH(pscale(Q, -1))]); });
+
+// ---------- Equations & inequalities ----------
+skill('eq-linear', 'Solving linear equations',
+  `Do the same thing to <b>both sides</b> to get x alone: remove parentheses, collect the x terms on one side and the numbers on the other, then divide.
+   <div class="ex">5x − 2 = 13 → 5x = 15 → x = 3 &nbsp;·&nbsp; 2(x − 4) = 6 → 2x − 8 = 6 → 2x = 14 → x = 7</div>`,
+  () => { const x = nz(-10, 10), t = R(0, 3), a = nz(-9, 9), b = nz(-15, 15);
+    if (t === 0) return fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${m(a * x + b)}`, F(x));
+    if (t === 1) return fracItem(`Solve for x: &nbsp;${m(a)}(x ${b < 0 ? MINUS : '+'} ${Math.abs(b)}) = ${m(a * (x + b))}`, F(x));
+    if (t === 2) { let c = nz(-9, 9); while (c === a) c = nz(-9, 9); const d = a * x + b - c * x; return fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${polyH([d, c])}`, F(x)); }
+    const k = R(2, 6), xx = k * R(-5, 5); return fracItem(`Solve for x: &nbsp;${frH('x', k)} + ${sn(b)} = ${m(xx / k + b)}`, F(xx)); });
+const INEQ = {'<': (a, b) => a < b, '>': (a, b) => a > b, '≤': (a, b) => a <= b, '≥': (a, b) => a >= b};
+const FLIP = {'<': '>', '>': '<', '≤': '≥', '≥': '≤'};
+skill('ineq-check', 'Is it a solution of the inequality?',
+  `Put the given number in place of the variable. If the statement is <b>true</b>, the number is a solution.
+   <div class="ex">x + 3 < 8 with x = 4 → 7 < 8 is true → 4 is a solution</div>`,
+  () => { const a = nz(-9, 9), b = R(-15, 15), x = R(-10, 15), s = pick(Object.keys(INEQ)), c = a * x + b + R(-6, 6);
+    return mcItem(`${polyH([b, a])} ${s} ${m(c)} &nbsp; when x = ${m(x)}`, INEQ[s](a * x + b, c) ? 'Solution' : 'Not a solution',
+      [INEQ[s](a * x + b, c) ? 'Not a solution' : 'Solution'], true); });
+skill('ineq-solve', 'Solving linear inequalities',
+  `Solve like an equation, but <b>flip the inequality sign</b> whenever you multiply or divide both sides by a negative number.
+   <div class="ex">−9x < 81 → x > −9 (divided by −9, so &lt; became &gt;)</div>`,
+  () => { const a = nz(-9, 9), k = R(-9, 9), b = R(-12, 12), s = pick(Object.keys(INEQ)), c = a * k + b, sol = a < 0 ? FLIP[s] : s;
+    const alt = {'<': '≤', '>': '≥', '≤': '<', '≥': '>'};
+    return mcItem(`${polyH([b, a])} ${s} ${m(c)}`, `x ${sol} ${m(k)}`, [`x ${FLIP[sol]} ${m(k)}`, `x ${sol} ${m(-k || 1)}`, `x ${alt[sol]} ${m(k)}`, `x ${FLIP[sol]} ${m(-k || 1)}`]); });
+
+// ---------- Factoring ----------
+const facPair = (p, q) => { const [x, y] = p >= q ? [p, q] : [q, p]; return `${bin(1, x)}${bin(1, y)}`; };
+skill('fac-gcf', 'Factoring out the greatest common factor',
+  `Find the biggest number and the highest power of the variable that divide <b>every</b> term, write it outside, and write what is left inside the parentheses.
+   <div class="ex">6x² + 9x = 3x(2x + 3)</div>`,
+  () => { const g = R(2, 9), e = R(0, 2), inner = [nz(-9, 9), R(1, 9)]; if (gcd(inner[0], inner[1]) !== 1) inner[0] = inner[0] > 0 ? 1 : -1;
+    const P = pmul(pshift([g], e), inner), G = mono(g, 'x', e), inH = polyH(inner);
+    return mcItem(polyH(P), `${G}(${inH})`, [`${mono(g, 'x', Math.max(0, e - 1))}(${polyH(pshift(inner, e ? 1 : 0))})`, `${G}(${polyH(flipOne(inner))})`, `${mono(g * 2, 'x', e)}(${polyH(inner)})`, `${G}(${polyH(nudge(inner))})`]); });
+skill('fac-tri', 'Factoring x² + bx + c',
+  `Find two numbers that <b>multiply to c</b> and <b>add to b</b>. Those numbers go in the two binomials.
+   <div class="ex">x² + 7x + 10 → 2 × 5 = 10 and 2 + 5 = 7 → (x + 2)(x + 5)</div>`,
+  () => { let p = nz(-9, 9), q = nz(-9, 9); if (p === -q) q = q + 1 || 2; const P = [p * q, p + q, 1];
+    return mcItem(polyH(P), facPair(p, q), [facPair(-p, -q), facPair(p, -q), facPair(-p, q), facPair(p + 1, q - 1), facPair(p - 1, q + 1)]); });
+skill('fac-sq', 'Special products: squares',
+  `<b>Difference of two squares:</b> a² − b² = (a + b)(a − b). <b>Perfect square trinomial:</b> a² + 2ab + b² = (a + b)² and a² − 2ab + b² = (a − b)².
+   <div class="ex">4x² − 25 = (2x + 5)(2x − 5) &nbsp;·&nbsp; x² − 6x + 9 = (x − 3)²</div>`,
+  () => { const a = R(1, 6), b = R(1, 12);
+    if (Math.random() < .5) return mcItem(polyH([-b * b, 0, a * a]), `${bin(a, b)}${bin(a, -b)}`, [`${bin(a, -b)}<sup>2</sup>`, `${bin(a, b)}<sup>2</sup>`, `${bin(a, b + 1)}${bin(a, -(b + 1))}`]);
+    const s = pick([1, -1]); return mcItem(polyH([b * b, 2 * a * b * s, a * a]), `${bin(a, s * b)}<sup>2</sup>`, [`${bin(a, -s * b)}<sup>2</sup>`, `${bin(a, b)}${bin(a, -b)}`, `${bin(a, s * 2 * b)}<sup>2</sup>`]); });
+skill('fac-ax2', 'Factoring ax² + bx + c',
+  `When the x² term has a number in front, list factor pairs of a and of c, and try them (trial and error) until the outer + inner products give the middle term.
+   <div class="ex">10x² + 23x + 12 → (5x + 4)(2x + 3) because 15x + 8x = 23x</div>`,
+  () => { let a, b, c, d; do { a = R(1, 5); c = R(1, 5); b = nz(-7, 7); d = nz(-7, 7); } while (a * c < 2 || gcd(a, b) !== 1 || gcd(c, d) !== 1);
+    const P = pmul([b, a], [d, c]), ok = `${bin(a, b)}${bin(c, d)}`, alt = `${bin(a, d)}${bin(c, b)}`;
+    const wrongs = [`${bin(a, -b)}${bin(c, -d)}`, `${bin(a, b)}${bin(c, -d)}`, `${bin(a, -b)}${bin(c, d)}`];
+    if (polyH(pmul([d, a], [b, c])) !== polyH(P)) wrongs.unshift(alt);
+    return mcItem(polyH(P), ok, wrongs.filter(w => w !== alt || polyH(pmul([d, a], [b, c])) !== polyH(P))); });
+skill('fac-cubes', 'Sum and difference of two cubes',
+  `<b>a³ + b³ = (a + b)(a² − ab + b²)</b> and <b>a³ − b³ = (a − b)(a² + ab + b²)</b>. Tip: the sign in the binomial matches the original; the middle sign of the trinomial is the opposite.
+   <div class="ex">8x³ − 27 = (2x − 3)(4x² + 6x + 9)</div>`,
+  () => { const a = R(1, 5), b = R(1, 6), s = pick([1, -1]);
+    const tri = (mid) => `(${polyH([b * b, mid, a * a])})`;
+    return mcItem(polyH([s * b ** 3, 0, 0, a ** 3]), `${bin(a, s * b)}${tri(-s * a * b)}`,
+      [`${bin(a, s * b)}${tri(s * a * b)}`, `${bin(a, -s * b)}${tri(-s * a * b)}`, `${bin(a, -s * b)}${tri(s * a * b)}`, `${bin(a, s * b)}${tri(-s * 2 * a * b)}`]); });
+
+/* ================= COURSE OUTLINE (follows the ARAL worksheet order) ================= */
+const BANDS = {
+  '78': {label:'Grades 7–8', units:[
+    ['Fractions', [['f-add-sim','1, 5'],['f-sub-sim','2, 5'],['f-mixed-sim','3, 5'],['f-add-dis','4, 6, 7'],['f-sub-dis','6, 7'],['f-word','8'],['f-mul','9'],['f-mul-mixed','10–11'],['f-div','12'],['f-div-mixed','13']]],
+    ['Decimals', [['d-add','14, 15, 18'],['d-sub','16, 17'],['d-mul','19, 20'],['d-div','21'],['d-div-round','22'],['d-div-pow','23–26']]],
+    ['Solid figures', [['g-solids','27–34']]],
+    ['Speed, distance & time', [['g-sdt','35–37']]],
+    ['Area & surface area', [['g-composite','38–40'],['g-sa-prism','41, 43, 44'],['g-sa-tri','42'],['g-sa-pyr','43, 44'],['g-sa-round','45–47']]],
+    ['Counting outcomes', [['c-outcomes','48–51']]],
+    ['Integers', [['i-add','52–55'],['i-sub','56–60'],['i-mul','61–64'],['i-div','65–67'],['i-frac','54, 59, 61–63']]],
+  ]},
+  '910': {label:'Grades 9–10', units:[
+    ['Integers', [['i-add','1–4'],['i-sub','5–9'],['i-mul','10–13'],['i-div','14–16'],['i-frac','3, 8, 10–12']]],
+    ['Fractions & decimals together', [['fd-addsub','17'],['fd-muldiv','18–19'],['fd-order','20–24'],['i-order','25']]],
+    ['Exponents', [['e-eval','26'],['e-notation','26'],['e-laws','27'],['e-zero-neg','28'],['e-vars','29–32']]],
+    ['Square roots', [['r-perfect','33'],['r-simplify','33']]],
+    ['Algebraic expressions', [['a-translate','34'],['a-evaluate','35']]],
+    ['Polynomials', [['p-add','36–37'],['p-sub','38–39'],['p-mul-mono','40'],['p-foil','41, 44–45'],['p-div-mono','42–45']]],
+    ['Equations & inequalities', [['eq-linear','46'],['ineq-check','47, 49'],['ineq-solve','48–49']]],
+    ['Factoring', [['fac-gcf','50, 52'],['fac-tri','50'],['fac-sq','50, 57'],['fac-ax2','51'],['fac-cubes','53–55']]],
+  ]},
+};
+const bandSkills = b => BANDS[b].units.flatMap(([, list]) => list.map(([id]) => id));
+const wsOf = (b, id) => { for (const [, list] of BANDS[b].units) for (const [s, w] of list) if (s === id) return w; return ''; };
+const ITEMS = 10, MASTER = 8;
+
+/* ================= ANSWER CHECKING ================= */
+function parseAns(raw){
+  const s = String(raw).trim().replace(/[−–—]/g, '-').replace(/,/g, '').replace(/\s+/g, ' ');
+  let x;
+  if ((x = s.match(/^(-?)(\d+) (\d+)\/(\d+)$/))) { const w = +x[2], n = +x[3], d = +x[4]; if (!d) return null;
+    return {f: F((x[1] ? -1 : 1) * (w * d + n), d), reduced: n < d && gcd(n, d) === 1}; }
+  if ((x = s.match(/^(-?\d+)\/(-?\d+)$/))) { const n = +x[1], d = +x[2]; if (!d) return null; return {f: F(n, d), reduced: gcd(n, d) === 1 && d > 0}; }
+  if (/^-?(\d+\.?\d*|\.\d+)$/.test(s)) { const f = decF(s.startsWith('-.') ? '-0' + s.slice(1) : s.startsWith('.') ? '0' + s : s); return {f, reduced:true, dec: s.includes('.')}; }
+  return null;
+}
+function checkItem(it, raw){
+  if (it.kind === 'mc') return {ok: raw === it.ans};
+  const p = parseAns(raw);
+  if (!p) return {invalid:true, msg: it.kind === 'frac' ? 'Type a whole number, a fraction like 3/4, or a mixed number like 2 1/3.' : 'Type a number, for example 12.5 or −7.'};
+  if (it.kind === 'num') return {ok: Math.abs(p.f.n / p.f.d - it.ans) <= it.tol + 1e-9};
+  if (!feq(p.f, it.ans)) return {ok:false};
+  if (p.dec && it.ans.d !== 1) return {ok:false, note:'Right value, but write it as a fraction or mixed number.'};
+  if (!p.reduced) return {ok:false, note:'Right value, but it is not in lowest terms yet.'};
+  return {ok:true};
+}
+
+/* ================= DATA & HELPERS ================= */
+const D = 864e5, now = Date.now();
+const pref = u => P.db.prefs[u] || (P.db.prefs[u] = {});
+const bandOf = u => pref(u).band || (/\b(9|10)\b/.test(P.userOf(u).pos || '') ? '910' : '78');
+const myAttempts = (u, id) => P.db.attempts.filter(a => a.u === u && (!id || a.skill === id));
+const bestOf = (u, id) => { const a = myAttempts(u, id); return a.length ? Math.max(...a.map(x => x.score)) : null; };
+const status = best => best == null ? ['Not started', 'p-gray'] : best >= MASTER ? ['Mastered', 'p-green'] : best >= 5 ? ['Practicing', 'p-amber'] : ['Needs help', 'p-red'];
+const sPill = best => { const [t, c] = status(best); return `<span class="pill ${c}">${t}${best != null ? ` · ${best}/${ITEMS}` : ''}</span>`; };
+const isStudent = () => P.me.role === 'student';
+
+// sample progress so the teacher view isn't empty in the demo
+const seed = (u, list) => list.map(([skill, score, days], i) => ({u, skill, score, total:ITEMS, at: now - days * D - i * 36e5}));
+const SEED = [
+  ...seed('student',  [['f-add-sim',9,6],['f-sub-sim',8,6],['f-mixed-sim',6,5],['f-mixed-sim',8,4],['f-add-dis',5,3],['f-sub-dis',4,2],['f-mul',7,1]]),
+  ...seed('student2', [['f-add-sim',7,5],['f-add-sim',10,4],['f-sub-sim',9,4],['f-mixed-sim',9,3],['f-add-dis',8,2],['f-sub-dis',8,2],['f-word',6,1],['d-add',10,1]]),
+  ...seed('student5', [['f-add-sim',4,3],['f-add-sim',6,2],['f-sub-sim',3,1]]),
+  ...seed('student3', [['i-add',10,6],['i-sub',9,5],['i-mul',8,4],['i-div',9,4],['i-frac',6,3],['fd-addsub',5,2],['e-eval',9,1]]),
+  ...seed('student4', [['i-add',8,4],['i-sub',5,3],['i-sub',7,2],['i-mul',4,1]]),
+];
+
+/* ================= CONFIG ================= */
+const CFG = {
+  key:'svnhs-aralmath', title:'Aral Math', subtitle:'ARAL Program · Mathematics', icon:ICON,
+  roles:{
+    teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets']]},
+    student:{tagline:'Short lessons and practice for the ARAL Math program.', tabs:[['learn','Lessons & Practice'],['progress','My Progress']]},
+  },
+  signup:{roles:[['student','Learner']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 8 – Rizal'}},
+  demo:[['teacher','teacher123','Math teacher'],['student','student123','Learner']],
+  sampleUsers:[
+    {u:'teacher', p:'teacher123', name:'Juan Dela Cruz', pos:'Math Teacher · ARAL', role:'teacher'},
+    {u:'student', p:'student123', name:'Ana Reyes', pos:'Grade 8 – Rizal', role:'student'},
+    {u:'student2', p:'student123', name:'Mark Santos', pos:'Grade 7 – Sampaguita', role:'student'},
+    {u:'student5', p:'student123', name:'Joy Villanueva', pos:'Grade 7 – Sampaguita', role:'student'},
+    {u:'student3', p:'student123', name:'Liza Ramos', pos:'Grade 9 – Narra', role:'student'},
+    {u:'student4', p:'student123', name:'Paolo Cruz', pos:'Grade 10 – Molave', role:'student'},
+  ],
+  data:{attempts: SEED, prefs:{}},
+  views:{learn, progress, class: classView, print: printView},
+};
+
+/* ================= LESSONS & PRACTICE ================= */
+let S = null; // current practice session
+function bandSwitch(b, fn){
+  return `<div class="bandsw">${Object.entries(BANDS).map(([k, v]) => `<button class="${k === b ? 'on' : ''}" onclick="${fn}('${k}')">${v.label}</button>`).join('')}</div>`;
+}
+function setBand(b){ pref(P.me.u).band = b; P.save(); P.refresh(); }
+
+function learn(el){
+  if (S) return practice(el);
+  const b = bandOf(P.me.u), all = bandSkills(b), mastered = isStudent() ? all.filter(id => bestOf(P.me.u, id) >= MASTER).length : 0;
+  el.innerHTML = `<div class="stack">
+    <div class="card"><div class="ptop"><div class="grow"><h2>${isStudent() ? 'Choose a lesson' : 'Lessons (preview)'}</h2>
+      <p class="hint" style="margin:0">${isStudent() ? `Read the short lesson, then answer ${ITEMS} practice items. Get ${MASTER} or more right to master it.` : 'Try any lesson the way learners see it. Practice done here is not saved.'}</p></div>
+      ${bandSwitch(b, 'setBand')}</div>
+      ${isStudent() ? `<div style="margin-top:1rem;display:flex;align-items:center;gap:.8rem"><div class="bar" style="flex:1"><i style="width:${Math.round(100 * mastered / all.length)}%"></i></div><small>${mastered} of ${all.length} mastered</small></div>` : ''}
+    </div>
+    ${BANDS[b].units.map(([name, list]) => `<div class="card unit"><h3>${name}</h3><div class="skills">
+      ${list.map(([id, ws]) => `<button class="skill" onclick="startPractice('${id}')"><b>${SK[id].title}</b><small>Worksheet${/[,–]/.test(ws) ? 's' : ''} ${ws}</small>${isStudent() ? sPill(bestOf(P.me.u, id)) : '<span class="pill p-blue">Preview</span>'}</button>`).join('')}
+    </div></div>`).join('')}
+  </div>`;
+}
+function startPractice(id){
+  S = {id, items: Array.from({length: ITEMS}, () => SK[id].gen()), i:0, res:[], answered:false};
+  P.tab('learn'); window.scrollTo(0, 0);
+}
+function leavePractice(){ S = null; P.refresh(); }
+function practice(el){
+  const sk = SK[S.id], b = bandOf(P.me.u);
+  if (S.i >= ITEMS) return summary(el);
+  const it = S.items[S.i];
+  el.innerHTML = `<div class="stack">
+    <div class="card"><div class="ptop"><button class="btn ghost sm" onclick="leavePractice()">← All lessons</button>
+      <div class="grow"><h2>${sk.title}</h2><small style="color:var(--muted)">${BANDS[b].label} · Worksheet ${wsOf(b, S.id) || '—'}</small></div>
+      <div class="dots">${S.items.map((_, k) => `<i class="${k < S.res.length ? (S.res[k].ok ? 'ok' : 'no') : k === S.i ? 'cur' : ''}"></i>`).join('')}</div></div>
+      <details class="lesson" style="margin-top:1rem" ${S.i === 0 ? 'open' : ''}><summary>Lesson</summary><div style="margin-top:.4rem">${sk.learn}</div></details>
+    </div>
+    <div class="card"><small style="color:var(--muted)">Item ${S.i + 1} of ${ITEMS}</small>
+      <div class="qbox ${it.words ? 'words' : ''}">${it.q}</div>
+      ${it.kind === 'mc'
+        ? `<div class="choices">${it.choices.map((c, k) => `<button id="ch${k}" onclick="answer(${k})">${c}</button>`).join('')}</div>`
+        : `<div class="ansrow"><input id="ans" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="${it.kind === 'frac' ? 'e.g. 3/4 or 2 1/3' : 'Your answer'}"><button class="btn" id="chk" onclick="answer()">Check</button></div>
+           <small style="color:var(--muted);display:block;margin-top:.4rem">${it.kind === 'frac' ? 'Fractions: 3/4 · mixed numbers: 2 1/3 · negatives: -5/6. Answer in lowest terms.' : 'Numbers only. Use - for negative.'}</small>`}
+      <div id="fb"></div>
+    </div></div>`;
+  const inp = $('ans');
+  if (inp) { inp.focus(); inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); S.answered ? next() : answer(); } }; }
+}
+function answer(k){
+  if (S.answered) return;
+  const it = S.items[S.i], raw = it.kind === 'mc' ? k : $('ans').value, r = checkItem(it, raw);
+  if (r.invalid) { $('fb').innerHTML = `<div class="fb info">${r.msg}</div>`; return; }
+  S.answered = true;
+  S.res.push({ok: r.ok, given: it.kind === 'mc' ? it.choices[k] : esc(raw)});
+  if (it.kind === 'mc') it.choices.forEach((_, j) => { const bt = $('ch' + j); bt.disabled = true; if (j === it.ans) bt.classList.add('right'); else if (j === k) bt.classList.add('wrong'); });
+  else { $('ans').disabled = true; $('chk').style.display = 'none'; }
+  const last = S.i === ITEMS - 1;
+  $('fb').innerHTML = `<div class="fb ${r.ok ? 'ok' : 'no'}">${r.ok ? '<b>Correct!</b>' : `<b>Not quite.</b> ${r.note ? r.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
+    <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${last ? 'See my score' : 'Next item →'}</button></div>`;
+  $('nextBtn').focus();
+}
+function next(){ S.i++; S.answered = false; P.refresh(); }
+function summary(el){
+  const score = S.res.filter(r => r.ok).length, b = bandOf(P.me.u);
+  if (!S.saved && isStudent()) { P.db.attempts.push({u:P.me.u, skill:S.id, band:b, score, total:ITEMS, at:Date.now()}); P.save(); }
+  S.saved = true;
+  const msg = score >= MASTER ? 'Great job! You mastered this lesson.' : score >= 5 ? 'Good effort! Practice once more to master it.' : 'Read the lesson again, then try another set.';
+  el.innerHTML = `<div class="stack"><div class="card done-msg" style="text-align:center">
+      <small style="color:var(--muted)">${SK[S.id].title}</small><div class="big">${score} / ${ITEMS}</div><p>${msg}</p>
+      ${isStudent() ? '' : '<p class="hint">Preview only: this score was not saved.</p>'}
+      <div class="actions" style="justify-content:center;margin-top:1rem"><button class="btn ghost" onclick="leavePractice()">All lessons</button><button class="btn" onclick="startPractice('${S.id}')">Practice again</button></div></div>
+    <div class="card"><h2>Review</h2><div class="review">${S.items.map((it, k) => `<div><span class="mk ${S.res[k].ok ? 'ok' : 'no'}">${S.res[k].ok ? '✓' : '✗'}</span>
+      <span style="flex:1;min-width:12rem">${it.q}</span><span>You: <b>${S.res[k].given || '—'}</b></span>${S.res[k].ok ? '' : `<span>Answer: <b>${it.show}</b></span>`}</div>`).join('')}</div></div></div>`;
+}
+
+/* ================= MY PROGRESS (learner) ================= */
+function progress(el){
+  const u = P.me.u, b = bandOf(u), all = bandSkills(b), bests = all.map(id => bestOf(u, id));
+  const cnt = k => bests.filter(x => status(x)[0] === k).length, mine = P.db.attempts.filter(a => a.u === u).sort((x, y) => y.at - x.at);
+  el.innerHTML = `<div class="stack">
+    <div class="card"><div class="ptop"><div class="grow"><h2>My progress</h2><p class="hint" style="margin:0">${BANDS[b].label} · ${all.length} lessons</p></div>${bandSwitch(b, 'setBand')}</div></div>
+    <div class="stats"><div class="stat"><b>${cnt('Mastered')}</b><span>Mastered</span></div><div class="stat"><b>${cnt('Practicing')}</b><span>Practicing</span></div>
+      <div class="stat"><b>${cnt('Needs help')}</b><span>Needs help</span></div><div class="stat"><b>${mine.length}</b><span>Practice sets done</span></div></div>
+    ${BANDS[b].units.map(([name, list]) => `<div class="card"><h3 style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">${name}</h3><div class="tablewrap"><table class="t">
+      <tr><th>Lesson</th><th>Status</th><th>Sets</th><th>Last practiced</th><th></th></tr>
+      ${list.map(([id]) => { const a = myAttempts(u, id); return `<tr><td>${SK[id].title}</td><td>${sPill(bestOf(u, id))}</td><td>${a.length}</td><td>${a.length ? ago(Math.max(...a.map(x => x.at))) : '—'}</td>
+        <td style="text-align:right"><button class="btn ghost sm" onclick="startPractice('${id}')">Practice</button></td></tr>`; }).join('')}
+    </table></div></div>`).join('')}
+  </div>`;
+}
+
+/* ================= CLASS PROGRESS (teacher) ================= */
+let classBand = null;
+function setClassBand(b){ classBand = b; P.refresh(); }
+function classView(el){
+  const b = classBand || '78', all = bandSkills(b);
+  const kids = P.usersWith('student').filter(s => bandOf(s.u) === b);
+  const rows = kids.map(s => { const bests = all.map(id => bestOf(s.u, id)), at = P.db.attempts.filter(a => a.u === s.u);
+    return {s, mastered: bests.filter(x => x >= MASTER).length, help: bests.filter(x => x != null && x < 5).length, sets: at.length, last: at.length ? Math.max(...at.map(a => a.at)) : 0}; })
+    .sort((x, y) => x.mastered - y.mastered);
+  const week = P.db.attempts.filter(a => kids.some(k => k.u === a.u) && a.at > now - 7 * D).length;
+  const struggle = all.map(id => ({id, n: kids.filter(k => { const x = bestOf(k.u, id); return x != null && x < 5; }).length})).filter(x => x.n).sort((x, y) => y.n - x.n).slice(0, 5);
+  const avg = rows.length ? Math.round(100 * rows.reduce((s, r) => s + r.mastered, 0) / (rows.length * all.length)) : 0;
+  el.innerHTML = `<div class="stack">
+    <div class="card"><div class="ptop"><div class="grow"><h2>Class progress</h2><p class="hint" style="margin:0">Learners are grouped by the grade in their profile. Mastered = ${MASTER}+ out of ${ITEMS}.</p></div>${bandSwitch(b, 'setClassBand')}</div></div>
+    <div class="stats"><div class="stat"><b>${kids.length}</b><span>Learners</span></div><div class="stat"><b>${avg}%</b><span>Average lessons mastered</span></div>
+      <div class="stat"><b>${week}</b><span>Practice sets this week</span></div><div class="stat"><b>${rows.filter(r => r.help).length}</b><span>Learners needing help</span></div></div>
+    <div class="twocol">
+      <div class="card"><h2>Learners</h2><div class="tablewrap"><table class="t"><tr><th>Name</th><th>Mastered</th><th>Sets</th><th>Last active</th><th></th></tr>
+        ${rows.map(r => `<tr><td><b style="font-weight:500">${esc(r.s.name)}</b><br><small style="color:var(--muted)">${esc(r.s.pos)}</small></td>
+          <td><div style="display:flex;align-items:center;gap:.5rem"><div class="bar" style="flex:1"><i style="width:${Math.round(100 * r.mastered / all.length)}%"></i></div><small>${r.mastered}/${all.length}</small></div>${r.help ? `<span class="pill p-red" style="margin-top:.3rem">${r.help} need help</span>` : ''}</td>
+          <td>${r.sets}</td><td>${r.last ? ago(r.last) : '—'}</td><td style="text-align:right"><button class="btn ghost sm" onclick="viewLearner('${r.s.u}')">View</button></td></tr>`).join('') || `<tr><td colspan="5"><div class="empty">No learners in ${BANDS[b].label} yet.</div></td></tr>`}
+      </table></div></div>
+      <div class="card"><h2>Where learners struggle</h2><p class="hint">Lessons where learners scored below 5 out of ${ITEMS}.</p>
+        ${struggle.length ? struggle.map(x => `<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--line);font-size:.88rem">
+          <span>${SK[x.id].title}<br><small style="color:var(--muted)">Worksheet ${wsOf(b, x.id)}</small></span><span class="pill p-red" style="align-self:center">${x.n} learner${x.n > 1 ? 's' : ''}</span></div>`).join('') : '<div class="empty">No problem areas yet.</div>'}
+        <div class="actions" style="margin-top:1rem"><button class="btn ghost sm" onclick="P.tab('print')">Print a practice sheet</button></div></div>
+    </div></div>`;
+}
+function viewLearner(u){
+  const s = P.userOf(u), b = bandOf(u);
+  P.open(`<div class="head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><div><h2>${esc(s.name)}</h2><small style="color:var(--muted)">${esc(s.pos)} · ${BANDS[b].label}</small></div><button class="btn ghost sm" onclick="P.close()">Close</button></div>
+    ${BANDS[b].units.map(([name, list]) => `<h3 style="font-size:.85rem;font-weight:600;margin:1rem 0 .4rem">${name}</h3><table class="t">
+      ${list.map(([id]) => { const a = myAttempts(u, id); return `<tr><td>${SK[id].title}</td><td>${sPill(bestOf(u, id))}</td><td style="color:var(--muted);font-size:.78rem">${a.length ? a.length + ' set' + (a.length > 1 ? 's' : '') : ''}</td></tr>`; }).join('')}</table>`).join('')}`);
+}
+
+/* ================= PRINT WORKSHEETS (teacher) ================= */
+let sheet = null;
+function printView(el){
+  const b = (sheet && sheet.band) || classBand || '78';
+  el.innerHTML = `<div class="stack"><div class="card"><h2>Print a practice sheet</h2>
+    <p class="hint">Make a fresh worksheet for learners without devices. Every sheet has new items and an answer key on the last page.</p>
+    <form class="form" id="pf">
+      <div><label>Grade level</label><select name="band" onchange="sheet={band:this.value};P.refresh()">${Object.entries(BANDS).map(([k, v]) => `<option value="${k}" ${k === b ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
+      <div><label>Lesson</label><select name="skill">${BANDS[b].units.map(([name, list]) => `<optgroup label="${name}">${list.map(([id, ws]) => `<option value="${id}" ${sheet && sheet.id === id ? 'selected' : ''}>${SK[id].title} (WS ${ws})</option>`).join('')}</optgroup>`).join('')}</select></div>
+      <div><label>Number of items</label><select name="n">${[10, 15, 20].map(n => `<option ${sheet && sheet.items && sheet.items.length === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      <div style="align-self:end"><button class="btn" type="submit">Make worksheet</button></div>
+    </form></div>
+    ${sheet && sheet.items ? `<div class="card"><div class="actions" style="justify-content:space-between;margin-bottom:1rem"><h2 style="margin:0">Preview</h2><div class="actions"><button class="btn ghost" onclick="makeSheet()">New items</button><button class="btn" onclick="printSheet()">Print</button></div></div>${sheetHTML()}</div>` : ''}
+  </div>`;
+  $('pf').onsubmit = e => { e.preventDefault(); const f = e.target; sheet = {band:f.band.value, id:f.skill.value, n:+f.n.value}; makeSheet(); };
+}
+function makeSheet(){ sheet.items = Array.from({length: sheet.n}, () => SK[sheet.id].gen()); P.refresh(); }
+function sheetHTML(){
+  const L = 'abcd';
+  return `<div class="sheet"><h1>ARAL Math · ${SK[sheet.id].title}</h1><small>${BANDS[sheet.band].label} · Worksheet ${wsOf(sheet.band, sheet.id)} · San Vicente National High School</small>
+    <div class="who"><span>Name:</span><span>Grade &amp; Section:</span><span>Date:</span><span>Score: &nbsp;&nbsp;&nbsp;&nbsp;/ ${sheet.items.length}</span></div>
+    <p style="font-size:.85rem;margin-bottom:.8rem">${sheet.items[0].kind === 'mc' ? 'Choose the letter of the correct answer.' : 'Solve each item. Show your solution. Write fractions in lowest terms.'}</p>
+    <ol>${sheet.items.map(it => `<li>${it.q}${it.kind === 'mc' ? `<div class="mcs">${it.choices.map((c, k) => `${L[k]}) ${c}`).join(' &nbsp;&nbsp; ')}</div>` : '<span class="line"></span>'}</li>`).join('')}</ol>
+    <div class="key"><h1>Answer key</h1><ol>${sheet.items.map(it => `<li>${it.kind === 'mc' ? `${L[it.ans]}) ${it.show}` : it.show}</li>`).join('')}</ol></div></div>`;
+}
+function printSheet(){
+  $('printArea').innerHTML = sheetHTML();
+  document.body.classList.add('printing');
+  const done = () => { document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>
