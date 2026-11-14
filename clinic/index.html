@@ -610,7 +610,7 @@ function resetDemo(){
 // ================= BOOT =================
 let saved0 = null; try{ saved0 = sessionStorage.getItem(K.session); }catch(e){}
 let as0 = null; try{ as0 = new URLSearchParams(location.search).get('as'); }catch(e){} // opened from the School Hub: already signed in
-const acc0 = (as0 && users.find(x => x.u === as0)) || (saved0 && users.find(x => x.u === saved0));
+const acc0 = as0 ? users.find(x => x.u === as0) : saved0 && users.find(x => x.u === saved0); // Hub names the account: never fall back to the last user in this tab
 if(acc0) start(acc0); else $('login').hidden = false;
 </script>
 <script src="../shared/hublock.js"></script>

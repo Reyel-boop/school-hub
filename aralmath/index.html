@@ -1994,7 +1994,7 @@ function renderNotes(force){
     return; }
   const lbl = $('naddBtn'); if (lbl && !force) { lbl.textContent = `+ Add note at ${fmtT(LS.T[LS.k])}`; return; }
   const ns = myNotes();
-  nb.innerHTML = `<div class="nadd"><textarea id="noteIn" placeholder="Write a note about this part of the lesson…"></textarea><button class="btn sm" id="naddBtn" onclick="addNote()">+ Add note at ${fmtT(LS.T[LS.k])}</button></div>
+  nb.innerHTML = `<div class="nadd"><textarea id="noteIn" onfocus="if (LS && LS.playing) lessonPause()" placeholder="Write a note about this part of the lesson… (the lesson pauses while you type)"></textarea><button class="btn sm" id="naddBtn" onclick="addNote()">+ Add note at ${fmtT(LS.T[LS.k])}</button></div>
     ${ns.length ? ns.slice().sort((a, b) => a.t - b.t).map(n => `<div class="nrow" onclick="jumpTo(${n.k})"><span class="nt">${fmtT(n.t)}</span><span>${esc(n.text)}</span><button class="ndel" title="Delete note" onclick="event.stopPropagation();delNote(${n.at})">✕</button></div>`).join('')
       : '<div class="nempty">No notes yet. Pause anytime, write what you learned, and tap a note later to jump back to that moment.</div>'}`;
 }

@@ -110,7 +110,8 @@ const P = {
     // Opened from the School Hub (?as=username): the Hub already signed the person in, so skip the password.
     let as = null; try { as = new URLSearchParams(location.search).get('as'); } catch(e) {}
     let saved = null; try { saved = sessionStorage.getItem(cfg.key + '-session'); } catch(e) {}
-    const acc = (as && P.users.find(x => x.u === as)) || (saved && P.users.find(x => x.u === saved));
+    // When the Hub names an account, use only that one: never fall back to whoever last used this tab.
+    const acc = as ? P.users.find(x => x.u === as) : saved && P.users.find(x => x.u === saved);
     if (acc) P.start(acc); else $('login').hidden = false;
   },
 
