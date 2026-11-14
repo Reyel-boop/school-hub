@@ -1,6 +1,6 @@
 // POST {step:'start', name, email, u, role, pos, pw}  -> emails a 6-digit code
 // POST {step:'verify', email, code}                   -> creates the account (students: signed in; teacher/staff: waits for admin)
-import {getUser, userByEmail, createUser, hashPw, newCode, useCode, sendCode, mailReady, setSession, send, body, wrap, accountsFor, publicUser} from './_lib.js';
+import {dropCode, getUser, userByEmail, createUser, hashPw, newCode, useCode, sendCode, mailReady, setSession, send, body, wrap, accountsFor, publicUser} from './_lib.js';
 const ROLES = {student: 'Student', teacher: 'Teacher', staff: 'Staff'};
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export default wrap(async (req, res) => {
@@ -19,7 +19,7 @@ export default wrap(async (req, res) => {
     if (await userByEmail(email)) return send(res, 409, {error: 'That email already has an account. Use “Forgot password?” to get back in.'});
     const r = await newCode(email, 'signup', {name, u, role, pos: pos || ROLES[role], pwHash: hashPw(pw)});
     if (r.wait) return send(res, 429, {error: `Please wait ${r.wait} seconds before asking for another code.`});
-    try { await sendCode(email, r.code, 'signup', name.split(' ')[0]); } catch (e) { console.error('email failed', e.message); return send(res, 502, {error: 'We couldn’t send the email right now. Please try again in a few minutes, or tell the school admin.'}); }
+    try { await sendCode(email, r.code, 'signup', name.split(' ')[0]); } catch (e) { console.error('email failed', e.message); await dropCode(email, 'signup'); return send(res, 502, {error: 'We couldn’t send the email right now. Please try again in a few minutes, or tell the school admin.'}); }
     return send(res, 200, {ok: true, email, ...(process.env.VERCEL ? {} : {devCode: r.code})});
   }
   if (b.step === 'verify') {

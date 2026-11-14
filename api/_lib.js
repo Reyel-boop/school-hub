@@ -87,6 +87,10 @@ export async function newCode(email, purpose, data){ // returns {code} or {wait:
     on conflict (email, purpose) do update set code = excluded.code, data = excluded.data, tries = 0, sent_at = now(), expires_at = excluded.expires_at`;
   return {code};
 }
+export async function dropCode(email, purpose){ // e.g. the email could not be sent: let them try again right away
+  const q = await sql(), e = String(email || '').toLowerCase();
+  if (q) await q`delete from email_codes where email = ${e} and purpose = ${purpose}`; else MEMC.delete(e + '|' + purpose);
+}
 export async function useCode(email, purpose, code){ // returns {ok, data} or {error}
   const q = await sql(), e = String(email || '').toLowerCase(), k = e + '|' + purpose;
   const row = q ? (await q`select code, data, tries, expires_at from email_codes where email = ${e} and purpose = ${purpose}`)[0] : MEMC.get(k);

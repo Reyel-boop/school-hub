@@ -1,6 +1,6 @@
 // Forgot password. POST {step:'start', who: username or email} -> emails a code (same answer whether or not the account exists)
 //                  POST {step:'verify', who, code, pw}           -> sets the new password
-import {getUser, userByEmail, newCode, useCode, sendCode, mailReady, setPassword, send, body, wrap} from './_lib.js';
+import {dropCode, getUser, userByEmail, newCode, useCode, sendCode, mailReady, setPassword, send, body, wrap} from './_lib.js';
 const find = async who => { const w = String(who || '').trim().toLowerCase(); return w.includes('@') ? userByEmail(w) : getUser(w); };
 export default wrap(async (req, res) => {
   if (req.method !== 'POST') return send(res, 405, {error: 'POST only'});
@@ -10,7 +10,7 @@ export default wrap(async (req, res) => {
     const user = await find(b.who); let dev = {};
     if (user && user.email) { const r = await newCode(user.email, 'reset');
       if (r.wait) return send(res, 429, {error: `Please wait ${r.wait} seconds before asking for another code.`});
-      try { await sendCode(user.email, r.code, 'reset'); } catch (e) { console.error('email failed', e.message); return send(res, 502, {error: 'We couldn’t send the email right now. Please try again in a few minutes, or tell the school admin.'}); } if (!process.env.VERCEL) dev = {devCode: r.code}; }
+      try { await sendCode(user.email, r.code, 'reset'); } catch (e) { console.error('email failed', e.message); await dropCode(user.email, 'reset'); return send(res, 502, {error: 'We couldn’t send the email right now. Please try again in a few minutes, or tell the school admin.'}); } if (!process.env.VERCEL) dev = {devCode: r.code}; }
     const hint = user && user.email ? user.email.replace(/^(.)(.*)(@.*)$/, (_, a, m, d) => a + '*'.repeat(Math.min(6, m.length)) + d) : null;
     return send(res, 200, {ok: true, hint, ...dev});
   }
