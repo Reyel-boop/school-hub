@@ -9,7 +9,8 @@ export default wrap(async (req, res) => {
   if (b.step === 'start') {
     if (!mailReady()) return send(res, 503, {error: 'Creating accounts isn’t available yet: the school’s email sender isn’t set up. Please tell the school admin.'});
     const name = String(b.name || '').trim().replace(/\s+/g, ' '), email = String(b.email || '').trim().toLowerCase(), u = String(b.u || '').trim().toLowerCase();
-    const role = String(b.role || ''), pos = String(b.pos || '').trim(), pw = String(b.pw || '');
+    const role = String(b.role || ''), pos = role === 'student' ? String(b.pos || '').trim() : '', pw = String(b.pw || '');
+    if (role === 'student' && !pos) return send(res, 400, {error: 'Please enter your grade & section.'});
     if (!ROLES[role]) return send(res, 400, {error: 'Choose Student, Teacher or Staff.'});
     if (name.length < 3) return send(res, 400, {error: 'Please enter your full name.'});
     if (!EMAIL.test(email)) return send(res, 400, {error: 'Please enter a valid email address.'});

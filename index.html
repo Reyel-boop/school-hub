@@ -227,7 +227,7 @@
             <label><input type="radio" name="role" value="teacher"><span>Teacher</span></label>
             <label><input type="radio" name="role" value="staff"><span>Staff</span></label></div></div>
           <div><label for="upName">Full name</label><input id="upName" name="name" required autocomplete="name" placeholder="e.g. Juan Dela Cruz"></div>
-          <div><label for="upPos" id="upPosLabel">Grade &amp; section</label><input id="upPos" name="pos" required placeholder="e.g. Grade 8 – Rizal"></div>
+          <div id="upPosRow"><label for="upPos">Grade &amp; section</label><input id="upPos" name="pos" required placeholder="e.g. Grade 8 – Rizal"></div>
           <div><label for="upEmail">Email address</label><input id="upEmail" name="email" type="email" required autocomplete="email" autocapitalize="none" placeholder="We’ll send a 6-digit code here"></div>
           <div><label for="upU">Username</label><input id="upU" name="u" required pattern="[A-Za-z0-9._-]{3,30}" title="3 to 30 letters or numbers, no spaces" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
           <div><label for="upP">Password</label><div class="pw"><input id="upP" name="pw" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="pwShow" aria-label="Show password">Show</button></div></div>
@@ -589,13 +589,13 @@ async function api(path, data){
 async function busy(btn, fn){ btn.disabled = true; const t = btn.textContent; btn.textContent = 'Please wait…'; try { await fn(); } finally { btn.disabled = false; btn.textContent = t; } }
 document.querySelectorAll('.pwShow').forEach(b => b.onclick = () => { const i = b.previousElementSibling, show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; });
 // the "position" field changes with the role
-const POS = {student:['Grade & section', 'e.g. Grade 8 – Rizal'], teacher:['Subject or position', 'e.g. Math Teacher, Grade 8 adviser'], staff:['Office or position', 'e.g. Registrar’s Office']};
-document.getElementById('signupForm').addEventListener('change', e => { if (e.target.name !== 'role') return; const [l, ph] = POS[e.target.value];
-  document.getElementById('upPosLabel').textContent = l; document.getElementById('upPos').placeholder = ph; document.getElementById('upNote').hidden = e.target.value === 'student'; });
+// only students fill in their grade & section
+document.getElementById('signupForm').addEventListener('change', e => { if (e.target.name !== 'role') return; const stu = e.target.value === 'student';
+  document.getElementById('upPosRow').hidden = !stu; document.getElementById('upPos').required = stu; document.getElementById('upNote').hidden = stu; });
 document.getElementById('signupForm').onsubmit = async e => {
   e.preventDefault(); const f = e.target, btn = f.querySelector('.lbtn');
   if (f.pw.value !== f.pw2.value) return showErr('upErr', 'The two passwords don’t match.');
-  const data = {step:'start', role: f.role.value, name: f.name.value, pos: f.pos.value, email: f.email.value, u: f.u.value, pw: f.pw.value};
+  const data = {step:'start', role: f.role.value, name: f.name.value, pos: f.role.value === 'student' ? f.pos.value : '', email: f.email.value, u: f.u.value, pw: f.pw.value};
   await busy(btn, async () => { const {status, j} = await api('/api/signup', data);
     if (status !== 200) return showErr('upErr', j.error || 'Something went wrong. Please try again.');
     showErr('upErr', ''); CODE = {purpose:'signup', email: j.email, start: data}; openCode(j.email); });
