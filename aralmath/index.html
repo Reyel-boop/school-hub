@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="../shared/cloud.js" data-mod="aralmath"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aral Math</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -1810,6 +1811,7 @@ function book(el){
    written in chalk and acted out (number-line hops, fraction bars, area grid, decimal
    columns). Then it's the learner's turn; a wrong answer replays the demo with their numbers. */
 let LS = null;
+window.cloudCanRefresh = () => !LS && !STORY && !S; // shared-database sync: don't redraw during a lesson, story or battle
 const FAMILY = {'i-add':'nl-add', 'i-sub':'nl-sub', 'i-mul':'nl-mul', 'f-add-sim':'bar-add', 'f-sub-sim':'bar-sub', 'f-add-dis':'bar-add-dis', 'f-sub-dis':'bar-sub-dis', 'f-mul':'area', 'd-add':'dec-add', 'd-sub':'dec-sub'};
 // animation steps run on timers; skipping ahead runs any pending ones at once so the board is never half-drawn
 const later = (fn, ms) => { if (!LS) return; const job = {fn, done:false}; job.id = setTimeout(() => { if (LS && !job.done) { job.done = true; fn(); } }, ms); LS.timers.push(job); };

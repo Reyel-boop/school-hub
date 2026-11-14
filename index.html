@@ -198,6 +198,7 @@
     <div class="user">
       <div class="who"><b id="whoName"></b><small id="whoPos"></small></div>
       <div class="av" id="whoAv"></div>
+      <button class="out" id="pwBtn" onclick="changePw()" hidden>Change password</button>
       <button class="out" onclick="logout()">Sign out</button>
     </div>
   </header>
@@ -380,8 +381,9 @@ const ACCESS = {
 const BLOCKED_ONLINE = {
   student: ['bless', 'inventory'],
 };
-const hasAccess = s => !me || (!(BLOCKED_ONLINE[me.u] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][me.u]));
-const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent(ACCESS[s.id][me.u]) : s.url;
+const roleOf = () => me.role || me.u;
+const hasAccess = s => !me || (!(BLOCKED_ONLINE[roleOf()] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][roleOf()]));
+const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent(ACCESS[s.id][roleOf()]) : s.url;
 function markAccess(){
   document.querySelectorAll('#grid .sys, #switch button').forEach(b => {
     const s = SYSTEMS.find(x => x.id === b.dataset.id); b.classList.toggle('noaccess', !hasAccess(s));
@@ -457,14 +459,35 @@ document.getElementById('pwToggle').onclick = e => {
   i.type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show';
   e.target.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
 };
-document.getElementById('loginForm').onsubmit = e => {
+// CLOUD = running on the Vercel deployment: accounts and passwords are checked by the server (api/login.js)
+let CLOUD = false;
+document.getElementById('loginForm').onsubmit = async e => {
   e.preventDefault();
-  const f = e.target, u = f.u.value.trim().toLowerCase();
+  const f = e.target, u = f.u.value.trim().toLowerCase(), err = document.getElementById('loginErr');
+  const fail = m => { err.textContent = m; err.hidden = false; f.p.select(); };
+  if(CLOUD){
+    const btn = f.querySelector('button[type=submit], button:not([type])'); if(btn) btn.disabled = true;
+    try {
+      const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({u, p: f.p.value})});
+      const j = await r.json().catch(() => ({}));
+      if(r.status !== 200) return fail(j.error || 'Could not sign in. Please try again.');
+      err.hidden = true; f.reset(); signIn(j.user);
+    } catch(x) { fail('Can’t reach the school server. Check the internet connection.'); }
+    finally { if(btn) btn.disabled = false; }
+    return;
+  }
   const acc = HUB_USERS.find(x => x.u === u && x.p === f.p.value);
-  const err = document.getElementById('loginErr');
-  if(!acc){ err.textContent = 'Wrong username or password.'; err.hidden = false; f.p.select(); return; }
+  if(!acc) return fail('Wrong username or password.');
   err.hidden = true; f.reset(); signIn(acc);
 };
+async function changePw(){
+  const old = prompt('Current password:'); if(old == null) return;
+  const pw = prompt('New password (at least 8 characters):'); if(pw == null) return;
+  if(pw !== prompt('Type the new password again:')) return alert('The two new passwords don’t match. Nothing was changed.');
+  const r = await fetch('/api/password', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({old, pw})});
+  const j = await r.json().catch(() => ({}));
+  alert(r.status === 200 ? 'Your password was changed.' : (j.error || 'Could not change the password.'));
+}
 function signIn(acc){
   me = acc; try { sessionStorage.setItem(SESSION_KEY, acc.u); } catch(e) {}
   document.getElementById('whoName').textContent = acc.name;
@@ -475,6 +498,7 @@ function signIn(acc){
 }
 function logout(){
   me = null; try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+  if(CLOUD) fetch('/api/logout', {method:'POST', credentials:'same-origin'}).catch(() => {});
   // close every open system so the next person starts fresh under their own account
   for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
   hideTip(); goHome();
@@ -490,9 +514,22 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('in-app')) goHome();
   if(!document.body.classList.contains('in-app') && /^[0-9]$/.test(e.key)){ const i = e.key==='0' ? 9 : e.key-1; const vis = SYSTEMS.filter(hasAccess); if(vis[i]) openSys(vis[i].id); }
 });
-let savedUser = null; try { savedUser = sessionStorage.getItem(SESSION_KEY); } catch(e) {}
-const savedAcc = savedUser && HUB_USERS.find(x => x.u === savedUser);
-if(savedAcc) signIn(savedAcc); else { render(); document.getElementById('lu').focus(); }
+(async () => {
+  // On the Vercel deployment the server keeps the sign-in; elsewhere (GitHub Pages, a local file) the demo accounts work in the browser.
+  let r = null; try { if(location.protocol !== 'file:') r = await fetch('/api/me', {credentials:'same-origin'}); } catch(e) {}
+  const j = r && (r.headers.get('content-type') || '').includes('json') ? await r.json().catch(() => null) : null;
+  if(r && j && (r.status === 200 || r.status === 401)){
+    CLOUD = true;
+    document.getElementById('demo').hidden = true;      // real accounts: never show passwords on the page
+    document.getElementById('pwBtn').hidden = false;
+    document.querySelector('#login .foot, .foot') && (document.querySelector('.foot').textContent = 'School Hub · sign in with your school account');
+    if(r.status === 200) return signIn(j.user);
+    render(); document.getElementById('lu').focus(); return;
+  }
+  let savedUser = null; try { savedUser = sessionStorage.getItem(SESSION_KEY); } catch(e) {}
+  const savedAcc = savedUser && HUB_USERS.find(x => x.u === savedUser);
+  if(savedAcc) signIn(savedAcc); else { render(); document.getElementById('lu').focus(); }
+})();
 </script>
 </body>
 </html>
