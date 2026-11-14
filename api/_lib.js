@@ -106,8 +106,8 @@ export async function sendCode(to, code, purpose, name){
   const intro = purpose === 'signup' ? `Hi ${name || 'there'}! Use this code to finish creating your School Hub account:` : 'Use this code to set a new password for your School Hub account:';
   if (!process.env.GMAIL_USER) { console.log(`[email to ${to}] ${title}: ${code}`); globalThis.__lastCode = code; return; } // local tests
   const nodemailer = (await import('nodemailer')).default;
-  const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD}});
-  await t.sendMail({from: `"School Hub" <${process.env.GMAIL_USER}>`, to, subject: `${code} is ${title.toLowerCase().replace('your ', 'your ')}`,
+  const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')}});
+  await t.sendMail({from: `"School Hub" <${process.env.GMAIL_USER.trim()}>`, to, subject: `${code} is ${title.toLowerCase().replace('your ', 'your ')}`,
     text: `${intro}\n\n${code}\n\nThe code works for 15 minutes. If you didn't ask for this, you can ignore this email.`,
     html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a"><h2 style="margin:0 0 12px">School Hub</h2><p>${intro}</p>
       <p style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;margin:18px 0">${code}</p>
