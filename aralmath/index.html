@@ -523,6 +523,30 @@ const mcItem = (q, correct, wrongs, keepOrder) => {
   return {q, kind:'mc', choices:set, ans:set.indexOf(correct), show:correct};
 };
 const W = (q, item) => Object.assign(item, {words:true}); // word problem: smaller question text
+// Every question is answered by picking one of 4 options. Typed questions get wrong options built from
+// common mistakes: wrong sign, off by one or ten, decimal point in the wrong place, flipped fraction.
+function toChoices(it){
+  if (it.kind === 'mc' || it.ans == null) return it;
+  let fmt, wrong = [];
+  if (it.kind === 'frac') {
+    const a = it.ans, neg = /−|-/.test(txt(it.q)) || a.n < 0, cand = [];
+    if (neg && a.n) cand.push(F(-a.n, a.d));
+    if (a.n && Math.abs(a.n) !== a.d) cand.push(F(a.d * Math.sign(a.n), Math.abs(a.n)));
+    cand.push(F(a.n + 1, a.d), F(a.n - 1, a.d), F(a.n, a.d + 1), fadd(a, F(1)), F(a.n * 2, a.d), fsub(a, F(1)), F(a.n + 2, a.d), F(a.n, Math.max(1, a.d - 1)));
+    fmt = fH; wrong = cand.filter(f => !feq(f, a) && (neg || f.n > 0));
+  } else {
+    const a = it.ans, plain = numStr(a), sh = String(it.show), supM = sh.match(/^(.*<sup>)[^<]*(<\/sup>)$/), rest = sh.startsWith(plain) ? sh.slice(plain.length) : '';
+    fmt = supM ? v => supM[1] + numStr(v) + supM[2] : /^ [^<&]{1,12}$/.test(rest) ? v => numStr(v) + rest : v => numStr(v);
+    const p = places(numStr(Math.abs(a))), step = 10 ** -p, neg = a < 0 || /−/.test(txt(it.q)), cand = [];
+    if (neg && a) cand.push(-a);
+    if (p) cand.push(a * 10, a / 10, a + step, a - step, a + 1, a - 1, a + 10 * step);
+    else cand.push(a + 1, a - 1, a + 2, a - 2, a + 10, a - 10, a * 2, Math.round(a / 2));
+    wrong = cand.map(v => +(+v).toFixed(Math.max(p + 1, 0) + 2)).filter(v => Math.abs(v - a) > Math.max(it.tol || 0, 1e-9) && (neg || v >= 0));
+  }
+  const right = fmt(it.ans), opts = []; for (const w of wrong) { const h = fmt(w); if (h !== right && !opts.includes(h)) opts.push(h); if (opts.length === 3) break; }
+  const mc = mcItem(it.q, right, opts), keep = {}; for (const k of ['sol', 'fd', 'fam', 'data', 'words']) if (it[k] !== undefined) keep[k] = it[k];
+  return Object.assign(mc, keep, {typed: it});
+}
 
 /* ================= STEP-BY-STEP SOLUTIONS =================
    Every item carries sol: [[chalk html, what Lolo says (plain text), side note], ...]. "Show me the steps"
@@ -1413,7 +1437,7 @@ function startPractice(id, skipStory, skipLesson){
   const sb = bandOf(P.me.u), ix = unitIndex(sb, id);
   if (isStudent() && !skipStory && ix >= 0 && !seenStory(`${sb}-${ix}-intro`)) return playStory(`${sb}-${ix}-intro`, () => startPractice(id, true));
   if (!skipLesson && !(pref(P.me.u).watched || {})[id] && !myAttempts(P.me.u, id).length) return playLesson(id, () => startPractice(id, true, true));
-  S = {id, items: Array.from({length: ITEMS}, () => SK[id].gen()), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
+  S = {id, items: Array.from({length: ITEMS}, () => toChoices(SK[id].gen())), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
   screen = 'map'; P.tab('learn'); window.scrollTo(0, 0);
 }
 function leavePractice(){ S = null; P.refresh(); }
@@ -2090,7 +2114,7 @@ function lessonReplay(){ if (!LS) return; stopLesson(); const sv = LS.mode === '
   if (!sv && LS.fam) LS.fd = famGen(LS.fam); LS.steps = sv ? solutionScript(LS.id, LS.item0) : LS.fam ? famScript(LS.fam, LS.fd, LS.id) : genericScript(LS.id); $('tryBox').innerHTML = ''; runStep(); }
 function startTry(){
   if (!LS) return;
-  LS.phase = 'try'; LS.item = LS.fam ? famItem(LS.fam, famGen(LS.fam)) : SK[LS.id].gen();
+  LS.phase = 'try'; LS.item = toChoices(LS.fam ? famItem(LS.fam, famGen(LS.fam)) : SK[LS.id].gen());
   LS.steps = [{clear:true, wait:true, say:`Your turn, {name}! Solve this one. Type your answer and press Check.`, write: LS.item.q, act: () => { renderTry(); $('viz').innerHTML = ''; return 0; }}];
   LS.k = 0; runStep();
 }
