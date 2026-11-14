@@ -169,6 +169,17 @@
   .ext:hover{color:var(--text)}
   .view{flex:1;position:relative;background:#fff}
   .view iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  /* systems on free servers that sleep: show a wake-up screen instead of a blank page */
+  .wake{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;text-align:center;padding:2rem;background:var(--bg);color:var(--text);z-index:2}
+  .wake[hidden]{display:none}
+  .wake .tile{width:5rem;height:5rem;border-radius:1.2rem;overflow:hidden;animation:wakepulse 1.6s ease-in-out infinite}
+  .wake h2{font-size:1.15rem}
+  .wake p{color:var(--muted);font-size:.88rem;max-width:26rem}
+  .wake .bar{width:14rem;height:.35rem;border-radius:1rem;background:var(--line);overflow:hidden}
+  .wake .bar i{display:block;height:100%;width:40%;background:var(--accent);border-radius:1rem;animation:wakebar 1.2s ease-in-out infinite}
+  .wake a{color:var(--accent);font-size:.85rem}
+  @keyframes wakepulse{50%{transform:scale(.94);opacity:.8}}
+  @keyframes wakebar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
   .soon{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:2rem}
   .soon .tile{width:7rem;height:7rem;border-radius:.5rem;display:grid;place-items:center}
   .soon .tile svg{width:46%;height:46%;color:#fff}
@@ -345,7 +356,7 @@ const ICONS = {
 const SYSTEMS = [
   {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', still:true, bg:'#12285e', url:'https://momo-smart.vercel.app'},
   {id:'bless',     name:'Bless Praise',      logo:'logos/bless.png', mode:'badge', crop:'background-size:150%;background-position:50% 62%', bg:'linear-gradient(135deg,#1c3a7a,#0e1f4d)', url:'https://reyel-boop.github.io/bless-praise-portal/'},
-  {id:'campus',    name:'CampusShield Pro',  logo:'logos/campusshield.png', mode:'full', bg:'#f5a00f', url:'https://campusshieldpro.onrender.com'},
+  {id:'campus',    name:'CampusShield Pro',  logo:'logos/campusshield.png', mode:'full', bg:'#f5a00f', url:'https://campusshieldpro.onrender.com', sleeps:true},
   {id:'inventory', name:'Inventory System',  icon:'box',    bg:'linear-gradient(135deg,#f59e0b,#d9480f)', url:'https://svnhs-property.vercel.app', embed:false},
   {id:'complab',   name:'JHS Lab Kiosk',     logo:'logos/complab.png', mode:'full', bg:'#1d4ed8', url:'https://jhs-complab.vercel.app'},
   {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', still:true, bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
@@ -502,9 +513,22 @@ function render(){
   if(!frames[id]){
     let el;
     if(s.url && s.embed!==false){
-      el = document.createElement('iframe');
-      el.src = sysUrl(s); el.title = s.name;
-      el.allow = 'camera; microphone; clipboard-write';
+      const fr = document.createElement('iframe');
+      fr.title = s.name;
+      fr.allow = 'camera; microphone; clipboard-write';
+      if(s.sleeps){
+        // free servers sleep when nobody uses them; the first visit can take up to a minute
+        el = document.createElement('div'); el.style.cssText = 'position:absolute;inset:0';
+        const w = document.createElement('div'); w.className = 'wake';
+        w.innerHTML = `<div class="tile" style="${tileBg(s)}">${art(s)}</div><h2>Opening ${s.name}…</h2>
+          <p id="wakeMsg-${s.id}">Waking up the server. If nobody used it for a while, this can take up to a minute.</p><div class="bar"><i></i></div>
+          <a href="${sysUrl(s)}" target="_blank" rel="noopener">Open it in a new tab instead ↗</a>`;
+        const t0 = Date.now(), tick = setInterval(() => { const m = document.getElementById('wakeMsg-' + s.id); if(!m || w.hidden) return clearInterval(tick);
+          const sec = Math.round((Date.now() - t0) / 1000); if(sec >= 8) m.textContent = `Waking up the server… ${sec} seconds. Almost there — free servers take up to a minute after a quiet time.`; }, 1000);
+        fr.onload = () => { w.hidden = true; clearInterval(tick); };
+        el.append(fr, w);
+      } else el = fr;
+      fr.src = sysUrl(s);
     } else if(s.url){
       el = document.createElement('div');
       el.className = 'soon';
@@ -686,6 +710,8 @@ function signIn(acc){
   document.getElementById('whoAv').textContent = acc.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
   document.body.classList.add('authed');
   document.getElementById('adminBtn').hidden = !(CLOUD && me.role === 'admin');
+  // start waking the systems that sleep on free servers, so they're ready when opened
+  SYSTEMS.filter(x => x.sleeps && hasAccess(x)).forEach(x => { try { fetch(x.url, {mode:'no-cors', cache:'no-store'}).catch(() => {}); } catch(e) {} });
   markAccess(); render();
 }
 function logout(){
