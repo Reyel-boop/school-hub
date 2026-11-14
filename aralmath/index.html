@@ -321,6 +321,16 @@
   .brow.dim{opacity:.55}
   @keyframes write{to{clip-path:inset(0 0 0 0)}}
   .viz{position:relative;margin-top:.4rem;min-height:6rem}
+  .board.solve{display:flex;flex-direction:column}.board.solve .viz{display:none}
+  .board.solve .blines{flex:1;min-height:0;overflow-y:auto;font-size:1.3rem;line-height:1.3;scroll-behavior:smooth;scrollbar-width:thin}
+  .srow{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .55rem;padding:.2rem .45rem;margin:.15rem 0;border-radius:.5rem;transition:background .3s,opacity .3s}
+  .srow:not(.cur){opacity:.72}.srow.cur{background:rgba(255,255,255,.08)}
+  .board.solve .srow{font-size:.85em;margin:.05rem 0;padding:.05rem .45rem}.board.solve .srow.cur,.board.solve .srow.ans{font-size:1em;margin:.15rem 0;padding:.2rem .45rem}
+  .srow .chalk{margin-right:0}
+  .snum{flex:none;width:1.45rem;height:1.45rem;border-radius:50%;background:#fde047;color:#1c3a31;font:700 .8rem Poppins,system-ui,sans-serif;display:grid;place-items:center;animation:pop .35s ease-out}
+  .snote{font-style:normal;font-size:.9rem;line-height:1.2;color:#fde68a;border:2px dashed rgba(253,230,138,.65);border-radius:.4rem;padding:.05rem .4rem;animation:pop .35s ease-out}
+  .srow.ans.done{opacity:1;background:rgba(250,204,21,.16);box-shadow:inset 0 0 0 3px #facc15}
+  .srow .sstar{color:#facc15;font-size:1.2rem;animation:pop .45s ease-out}
   /* number line */
   .nl{position:relative;height:6.2rem;margin:0 .2rem}
   .nl .ln{position:absolute;left:2%;right:2%;top:4rem;height:3px;background:#f8fafc;border-radius:2px}
@@ -404,6 +414,38 @@
   .lprog{height:.45rem;border-radius:1rem;background:var(--line);overflow:hidden}
   .lprog i{display:block;height:100%;background:var(--brand);transition:width .4s}
   .icb{border:1px solid var(--line);border-radius:2rem;padding:.3rem .7rem;font-size:.8rem;background:#fff}
+  /* Momo-style lecture player: chapter timeline, timestamped notes, resume point */
+  .lwrap{display:grid;gap:1rem;grid-template-columns:minmax(0,1fr)}
+  @media(min-width:1000px){.lwrap{grid-template-columns:minmax(0,1fr) 17.5rem}.lnotes{max-height:41rem}}
+  .ltl{display:flex;align-items:center;gap:.55rem;min-width:10rem}
+  .tsegs{flex:1;display:flex;gap:3px;height:.55rem}
+  .tseg{flex:1;min-width:6px;padding:0;border:0;border-radius:3px;background:var(--line);position:relative;overflow:hidden;cursor:pointer;transition:transform .15s}
+  .tseg:hover{transform:scaleY(1.7)}
+  .tseg i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--brand)}
+  .tseg.done i{width:100%}
+  .tseg.cur i{animation:tfill var(--d,3s) linear forwards}
+  .tsegs.paused .tseg.cur i{animation-play-state:paused}
+  @keyframes tfill{to{width:100%}}
+  .ttime{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.75rem;white-space:nowrap}
+  .lnotes{display:flex;flex-direction:column;max-height:24rem;padding:0;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:1rem}
+  .ntabs{display:flex;border-bottom:1px solid var(--line)}
+  .ntabs button{flex:1;padding:.7rem .4rem;font-weight:600;font-size:.84rem;color:var(--muted);border:0;border-bottom:2px solid transparent;background:none;cursor:pointer}
+  .ntabs button.on{color:var(--brand-d);border-bottom-color:var(--brand)}
+  .nbody{overflow-y:auto;padding:.45rem;flex:1}
+  .nrow{display:flex;align-items:flex-start;gap:.6rem;text-align:left;width:100%;padding:.5rem .55rem;border-radius:.6rem;font-size:.82rem;line-height:1.35;background:none;border:0;cursor:pointer;color:inherit}
+  .nrow:hover{background:var(--brand-soft)}
+  .nrow.cur{background:var(--brand-soft);box-shadow:inset 3px 0 0 var(--brand)}
+  .nrow.done{opacity:.68}
+  .nt{flex:none;font-variant-numeric:tabular-nums;font-weight:700;color:var(--brand-d);font-size:.72rem;background:#fff;border:1px solid var(--line);border-radius:.4rem;padding:0 .35rem;line-height:1.25rem}
+  .nrow b{display:block;font-weight:600}
+  .nadd{padding:.3rem .2rem .6rem}
+  .nadd textarea{width:100%;min-height:4.2rem;border:1px solid var(--line);border-radius:.6rem;padding:.5rem;font:inherit;font-size:.85rem;resize:vertical;box-sizing:border-box}
+  .nadd .btn{margin-top:.4rem;width:100%}
+  .nempty{color:var(--muted);font-size:.8rem;padding:.8rem .6rem;text-align:center}
+  .ndel{margin-left:auto;color:var(--muted);background:none;border:0;cursor:pointer;font-size:.9rem}
+  .lres{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.5rem .5rem 0;padding:.45rem .65rem;border-radius:.6rem;background:#fef9c3;color:#713f12;font-size:.8rem}
+  .lres button{margin-left:auto;background:none;border:0;color:var(--brand-d);font-weight:600;cursor:pointer;font-size:.8rem}
+  .chalk.instant,.instant .chalk{animation:none;clip-path:none}
   .icb:hover{border-color:var(--brand);color:var(--brand)}
   @media (max-width:760px){
     .cls{height:30rem}
@@ -481,6 +523,147 @@ const mcItem = (q, correct, wrongs, keepOrder) => {
 };
 const W = (q, item) => Object.assign(item, {words:true}); // word problem: smaller question text
 
+/* ================= STEP-BY-STEP SOLUTIONS =================
+   Every item carries sol: [[chalk html, what Lolo says (plain text), side note], ...]. "Show me the steps"
+   plays them on the chalkboard, one row at a time. Items with fd (family data) also get the picture
+   lesson (number line, fraction bars, area grid, decimal columns) with their own numbers. */
+const st = (w, s, n) => [w, s, n || ''];
+const withSol = (it, sol, fd) => Object.assign(it, {sol}, fd ? {fd} : {});
+const txt = h => String(h).replace(/<span class="fr"><span>(.*?)<\/span><span>(.*?)<\/span><\/span>/g, ' $1/$2').replace(/<sup>(.*?)<\/sup>/g, '^$1')
+  .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+const places = s => (String(s).split('.')[1] || '').length;
+const OPW = {'+': 'plus', '−': 'minus', '×': 'times', '÷': 'divided by'};
+const ps = n => n === 1 ? '' : 's';
+// fractions: {n, d} as shown (not reduced); mix = shown as a mixed number; fr = already shown as a fraction
+const fI = f => f.d === 1 ? m(f.n) : (f.n < 0 ? MINUS : '') + frH(Math.abs(f.n), f.d);
+const fP = f => f.n < 0 ? `(${fI(f)})` : fI(f);
+const tI = f => f.d === 1 ? m(f.n) : `${m(f.n)}/${f.d}`;
+const isMix = f => f.d > 1 && Math.abs(f.n) > f.d;
+const MX = (w, n, d) => ({n: w * d + n, d, mix: true});
+const asShown = f => Object.assign({}, f, {mix: isMix(f)});
+const fq = f => f.d === 1 ? (f.n < 0 ? `(${MINUS}${frH(-f.n, 1)})` : frH(f.n, 1)) : fP(f);
+function simpSteps(n, d){
+  const r = F(n, d), g = gcd(n, d), out = [];
+  if (d === 1) return out;
+  if (r.d === 1) return [st(`= ${m(r.n)}`, `${m(n)} divided by ${d} is ${m(r.n)}.`, 'divide')];
+  if (g > 1) out.push(st(`= ${fI(r)}`, `Simplify: divide the top and the bottom by ${g}. We get ${tI(r)}.`, `÷ ${g}`));
+  if (isMix(r)) { const a = Math.abs(r.n); out.push(st(`= ${fH(r)}`, `Change it to a mixed number: ${a} divided by ${r.d} is ${Math.floor(a / r.d)}, remainder ${a % r.d}. So it's ${fT(r)}.`, 'mixed number')); }
+  return out;
+}
+function improperStep(x, y, op){
+  const mul = op === '×' || op === '÷', conv = [x, y].filter(f => f.mix || (mul && f.d === 1 && !f.fr));
+  if (!conv.length) return [];
+  const say = conv.map(f => { if (f.d === 1) return `${m(f.n)} is the same as ${m(f.n)}/1`;
+    const a = Math.abs(f.n), w = Math.floor(a / f.d); return `${w} ${a % f.d}/${f.d} becomes ${w} times ${f.d} plus ${a % f.d}, over ${f.d}. That's ${a}/${f.d}`; }).join('. And ');
+  return [st(`= ${mul ? fq(x) : fP(x)} ${op} ${mul ? fq(y) : fP(y)}`, `First, write everything as a fraction. ${say}.`, conv.some(f => f.mix) ? 'whole × bottom + top' : 'k = k/1')];
+}
+function fracASSteps(x, y, op){
+  const out = improperStep(x, y, op), add = op === '+', same = x.d === y.d;
+  let a = x.n, b = y.n, d = x.d;
+  if (!same) { const L = lcm(x.d, y.d); a = x.n * L / x.d; b = y.n * L / y.d; d = L;
+    const how = [[x, a], [y, b]].filter(([f]) => f.d !== L).map(([f, nn]) => `${tI(f)} becomes ${m(nn)}/${L} when we multiply the top and bottom by ${L / f.d}`).join(', and ');
+    out.push(st(`= ${fP({n: a, d: L})} ${op} ${fP({n: b, d: L})}`, `The denominators are different, so find the least common denominator of ${x.d} and ${y.d}. It's ${L}. ${how}.`, `LCD = ${L}`)); }
+  const r = add ? a + b : a - b;
+  out.push(st(`= ${fI({n: r, d})}`, `${same ? 'The denominators are the same' : 'Now the denominators match'}, so ${add ? 'add' : 'subtract'} the numerators: ${m(a)} ${add ? 'plus' : 'minus'} ${m(b)} is ${m(r)}. Keep the denominator, ${d}.${!add && b < 0 ? ' Remember, subtracting a negative is the same as adding.' : ''}`, 'keep the bottom'));
+  return out.concat(simpSteps(r, d));
+}
+function fracMulCore(x, y){
+  const sg = Math.sign(x.n) * Math.sign(y.n), p = Math.abs(x.n * y.n), q = x.d * y.d, negs = [x, y].filter(f => f.n < 0).length;
+  return [st(`= ${sg < 0 ? MINUS : ''}${frH(`${Math.abs(x.n)} × ${Math.abs(y.n)}`, `${x.d} × ${y.d}`)}`, `Multiply the numerators: ${Math.abs(x.n)} times ${Math.abs(y.n)}. Multiply the denominators: ${x.d} times ${y.d}.${negs === 1 ? ' One of them is negative, so the answer is negative.' : negs === 2 ? ' Negative times negative is positive.' : ''}`, 'top × top, bottom × bottom'),
+    st(`= ${fI({n: sg * p, d: q})}`, `That gives ${tI({n: sg * p, d: q})}.`)].concat(simpSteps(sg * p, q));
+}
+const fracMulSteps = (x, y) => improperStep(x, y, '×').concat(fracMulCore(x, y));
+function fracDivSteps(x, y){
+  const rec = {n: Math.sign(y.n) * y.d, d: Math.abs(y.n)};
+  return improperStep(x, y, '÷').concat([st(`= ${fq(x)} × ${fq(rec)}`, `Keep the first fraction, change divide to times, and flip the second one: ${y.d === 1 ? m(y.n) + '/1' : tI(y)} flips to ${rec.d === 1 ? m(rec.n) + '/1' : tI(rec)}.`, 'keep · change · flip')], fracMulCore(x, rec));
+}
+// decimals inside fraction problems
+function decSay(s){ const f = decF(s), k = 10 ** places(s); return `${s} is ${Math.round(+s * k)}/${k}${f.d !== k ? `, which simplifies to ${tI(f)}` : ''}`; }
+function decConvStep(vals, ops){
+  const ds = vals.filter(v => typeof v === 'string'); if (!ds.length) return [];
+  const h = vals.map(v => typeof v === 'string' ? fI(decF(v)) : fdH(v));
+  return [st(`= ${h[0]} ${ops[0]} ${h[1]}${h.length > 2 ? ` ${ops[1]} ${h[2]}` : ''}`, `Change ${ds.length > 1 ? 'the decimals to fractions' : 'the decimal to a fraction'}: ${ds.map(decSay).join('; and ')}.`, 'decimal → fraction')];
+}
+const fdOp = v => typeof v === 'string' ? decF(v) : asShown(v);
+function fdSteps(vals, ops){ const xs = vals.map(fdOp), o = ops[0];
+  return decConvStep(vals, ops).concat(o === '+' || o === '−' ? fracASSteps(xs[0], xs[1], o) : o === '×' ? fracMulSteps(xs[0], xs[1]) : fracDivSteps(xs[0], xs[1])); }
+function fdOrderSteps(vals, ops, [a, b, c], v){
+  const ap = (x, o, y) => o === '+' ? fadd(x, y) : o === '−' ? fsub(x, y) : o === '×' ? fmul(x, y) : fdiv(x, y), hi = o => o === '×' || o === '÷';
+  const nm = o => ({'+': 'addition', '−': 'subtraction', '×': 'multiplication', '÷': 'division'})[o], out = decConvStep(vals, ops);
+  if (hi(ops[1]) && !hi(ops[0])) { const p = ap(b, ops[1], c);
+    out.push(st(`= ${fP(a)} ${ops[0]} ${fP(p)}`, `${nm(ops[1])[0].toUpperCase() + nm(ops[1]).slice(1)} comes before ${nm(ops[0])}. ${tI(b)} ${OPW[ops[1]]} ${tI(c)} is ${tI(p)}.`, `${ops[1]} first`));
+    out.push(st(`= ${fI(v)}`, `Then ${tI(a)} ${OPW[ops[0]]} ${tI(p)} is ${tI(v)}.`, `then ${ops[0]}`));
+  } else { const p = ap(a, ops[0], b);
+    out.push(st(`= ${fP(p)} ${ops[1]} ${fP(c)}`, `${hi(ops[0]) && !hi(ops[1]) ? `${nm(ops[0])[0].toUpperCase() + nm(ops[0]).slice(1)} comes first.` : 'Go from left to right.'} ${tI(a)} ${OPW[ops[0]]} ${tI(b)} is ${tI(p)}.`, `${ops[0]} first`));
+    out.push(st(`= ${fI(v)}`, `Then ${tI(p)} ${OPW[ops[1]]} ${tI(c)} is ${tI(v)}.`, `then ${ops[1]}`)); }
+  if (isMix(v)) out.push(st(`= ${fH(v)}`, `As a mixed number, that's ${fT(v)}.`, 'mixed number'));
+  return out;
+}
+// integers
+function intAddSay(a, b){ const r = a + b;
+  if (!a || !b) return `Adding zero changes nothing, so the answer is ${m(r)}.`;
+  if (Math.sign(a) === Math.sign(b)) return `Same signs: add ${Math.abs(a)} and ${Math.abs(b)} to get ${Math.abs(r)}, and keep the ${a < 0 ? 'negative' : 'positive'} sign. The answer is ${m(r)}.`;
+  const [L, S] = Math.abs(a) >= Math.abs(b) ? [a, b] : [b, a];
+  return `Different signs: subtract ${Math.abs(S)} from ${Math.abs(L)} to get ${Math.abs(r)}. ${r === 0 ? 'They cancel out, so the answer is 0.' : `${m(L)} is farther from zero, so the answer is ${L < 0 ? 'negative' : 'positive'}: ${m(r)}.`}`; }
+const intAddSteps = (a, b) => [st(`= ${m(a + b)}`, intAddSay(a, b), !a || !b ? '' : Math.sign(a) === Math.sign(b) ? 'same signs: add' : 'different signs: subtract')];
+const intSubSteps = (a, b) => [st(`= ${sn(a)} + ${sn(-b)}`, `Subtracting is adding the opposite. Change minus ${m(b)} into plus ${m(-b)}.`, 'add the opposite')].concat(intAddSteps(a, -b));
+const sgnSay = (a, b) => (a < 0) === (b < 0) ? 'The signs are the same, so the answer is positive.' : 'The signs are different, so the answer is negative.';
+const intMulSteps = (a, b, op = '×') => { const r = op === '×' ? a * b : a / b;
+  return [st(`${Math.abs(a)} ${op} ${Math.abs(b)} = ${Math.abs(r)}`, `First ${op === '×' ? 'multiply' : 'divide'} without the signs: ${Math.abs(a)} ${OPW[op]} ${Math.abs(b)} is ${Math.abs(r)}.`, 'ignore the signs'),
+    st(`= ${m(r)}`, `${sgnSay(a, b)} The answer is ${m(r)}.`, (a < 0) === (b < 0) ? 'same signs → +' : 'different signs → −')]; };
+// decimals
+const padDec = (s, dp) => dp ? (s.includes('.') ? s : s + '.') + '0'.repeat(dp - places(s)) : s;
+function decColSteps(xs, op){
+  const dp = Math.max(...xs.map(places)), v = xs.slice(1).reduce((s, x) => op === '+' ? fadd(s, decF(x)) : fsub(s, decF(x)), decF(xs[0]));
+  const fixed = (v.n / v.d).toFixed(dp), fin = numStr(v.n / v.d), whole = xs.find(x => !x.includes('.')), changed = xs.some(x => places(x) !== dp);
+  const out = [st(`= ${xs.map(x => padDec(x, dp)).join(` ${op} `)}`, changed ? `Line up the decimal points. Fill the empty places with zeros so every number has ${dp} decimal place${ps(dp)}.${whole ? ` A whole number has its point at the end: ${whole} is ${padDec(whole, dp)}.` : ''}` : `Line up the decimal points. Every number already has ${dp} decimal place${ps(dp)}.`, 'line up the points'),
+    st(`= ${fixed}`, `Now ${op === '+' ? 'add' : 'subtract'} like whole numbers, from right to left${op === '+' ? ', carrying when a column makes 10 or more' : ', borrowing when you need to'}. Bring the point straight down: ${fixed}.`, 'right to left')];
+  if (fixed !== fin) out.push(st(`= ${fin}`, 'Zeros at the end of a decimal can be dropped.', 'drop end zeros'));
+  return out;
+}
+function decMulSteps(a, b){ const pa = places(a), pb = places(b), A = +a.replace('.', ''), B = +b.replace('.', ''), P = A * B, k = pa + pb;
+  const pz = String(P).padStart(k + 1, '0'), placed = k ? pz.slice(0, -k) + '.' + pz.slice(-k) : pz, fin = numStr(P / 10 ** k);
+  const out = [st(`${A} × ${B} = ${P}`, `Forget the decimal points for now and multiply whole numbers: ${A} times ${B} is ${P}.`, 'no points yet'),
+    st(`${pa} + ${pb} = ${k} decimal place${ps(k)}`, `Count the decimal places: ${a} has ${pa} and ${b} has ${pb}. So the answer needs ${k}.`, 'count the places'),
+    st(`= ${placed}`, `Start at the right end of ${P} and move the point ${k} place${ps(k)} to the left: ${placed}.`, `← ${k}`)];
+  if (placed !== fin) out.push(st(`= ${fin}`, 'Zeros at the end of a decimal can be dropped.', 'drop end zeros'));
+  return out; }
+function decDivSteps(x, y, q){ const k = places(y), out = [];
+  if (k) { const X = numStr(+x * 10 ** k), Y = numStr(+y * 10 ** k);
+    out.push(st(`= ${X} ÷ ${Y}`, `The divisor ${y} is a decimal. Move its point ${k} place${ps(k)} to the right to make it ${Y}. Move the point in ${x} the same ${k} place${ps(k)}: it becomes ${X}.`, `× ${10 ** k} both`)); x = X; y = Y; }
+  out.push(st(`= ${numStr(q.n / q.d)}`, `Now divide by the whole number ${y}, and put the point straight up into the answer: ${x} divided by ${y} is ${numStr(q.n / q.d)}.`, 'point straight up'));
+  return out; }
+function decRoundSteps(a, ys, b){ const k = places(ys), X = numStr(a * 10 ** k), Y = numStr(+ys * 10 ** k), exact = a * b.d / b.n;
+  const s3 = (Math.floor(exact * 1000 + 1e-7) / 1000).toFixed(3), dig = +s3.slice(-1), ans = r2(exact).toFixed(2), out = [];
+  if (k) out.push(st(`= ${X} ÷ ${Y}`, `Make the divisor a whole number: move both decimal points ${k} place${ps(k)} to the right. ${ys} becomes ${Y}, and ${a} becomes ${X}.`, `× ${10 ** k} both`));
+  out.push(st(`= ${s3}…`, `Divide to three decimal places: ${X} divided by ${Y} is about ${s3}.`, '3 decimal places'));
+  out.push(st(`≈ ${ans}`, `To round to the nearest hundredth, look at the thousandths digit. It's ${dig}. ${dig >= 5 ? `That's 5 or more, so round the hundredths up.` : `That's less than 5, so the hundredths digit stays.`} The answer is ${ans}.`, dig >= 5 ? 'round up' : 'stays the same'));
+  return out; }
+// speed, distance, time
+const sdtSteps = (want, D, T, S, du, tu, su) => want === 'S'
+  ? [st('Speed = Distance ÷ Time', 'We want the speed, so divide the distance by the time.', 'S = D ÷ T'), st(`= ${D} ÷ ${T}`, `The distance is ${D} ${du} and the time is ${T} ${tu}.`), st(`= ${S} ${su}`, `${D} divided by ${T} is ${S}. The speed is ${S} ${su}.`)]
+  : want === 'D' ? [st('Distance = Speed × Time', 'We want the distance, so multiply the speed by the time.', 'D = S × T'), st(`= ${S} × ${T}`, `The speed is ${S} ${su} and the time is ${T} ${tu}.`), st(`= ${numStr(D)} ${du}`, `${S} times ${T} is ${numStr(D)}. It travels ${numStr(D)} ${du}.`)]
+  : [st('Time = Distance ÷ Speed', 'We want the time, so divide the distance by the speed.', 'T = D ÷ S'), st(`= ${D} ÷ ${S}`, `The distance is ${D} ${du} and the speed is ${S} ${su}.`), st(`= ${T} ${tu}`, `${D} divided by ${S} is ${T}. The trip takes ${T} ${tu}.`)];
+// polynomials
+const pm1 = (c, e) => c < 0 ? `(${mono(c, 'x', e)})` : mono(c, 'x', e);
+function likeTermSteps(A, B){
+  const out = [];
+  for (let e = Math.max(A.length, B.length) - 1; e >= 0; e--) { const a = A[e] || 0, b = B[e] || 0; if (!a || !b) continue;
+    out.push(st(`${mono(a, 'x', e)} ${b < 0 ? MINUS : '+'} ${mono(Math.abs(b), 'x', e)} = ${a + b ? mono(a + b, 'x', e) : '0'}`,
+      `Combine the like terms${e ? ` with ${e === 1 ? 'x' : `x to the ${e}`}` : ', the plain numbers'}: ${m(a)} ${b < 0 ? 'minus' : 'plus'} ${Math.abs(b)} is ${m(a + b)}.`, e ? `${e === 1 ? 'x' : sup('x', e)} terms` : 'numbers')); }
+  return out.length ? out : [st('no like terms', 'There are no like terms to combine, so we just write all the terms together.')];
+}
+const polyEnd = R0 => st(`= ${polyH(R0)}`, 'Copy any term that has no partner, and write the answer from the highest power down.', 'final answer');
+// linear equations: a x + b = c
+function linSteps(a, b, c, x){
+  const out = [];
+  if (b) out.push(st(`${mono(a, 'x', 1)} = ${m(c)} ${b > 0 ? MINUS : '+'} ${Math.abs(b)}`, b > 0 ? `Subtract ${b} from both sides to get the x term alone.` : `Add ${-b} to both sides to get the x term alone.`, b > 0 ? `− ${b} both sides` : `+ ${-b} both sides`),
+    st(`${mono(a, 'x', 1)} = ${m(c - b)}`, `${m(c)} ${b > 0 ? 'minus' : 'plus'} ${Math.abs(b)} is ${m(c - b)}.`));
+  if (a !== 1) out.push(st(`x = ${frH(m(c - b), m(a))}`, `Divide both sides by ${m(a)}.`, `÷ ${m(a)} both sides`));
+  out.push(st(`x = ${m(x)}`, `${a !== 1 ? `${m(c - b)} divided by ${m(a)} is ${m(x)}. ` : ''}So x = ${m(x)}. You can check it: put ${m(x)} back in, and both sides match!`, '✓ check'));
+  return out; }
+const INW = {'<': 'less than', '>': 'greater than', '≤': 'less than or equal to', '≥': 'greater than or equal to'};
+
 /* ================= SKILLS =================
    Each skill: title, learn (short lesson in our own words), gen() -> one practice item.
    The order and worksheet numbers follow the DepEd ARAL Math Learner's Worksheets. */
@@ -491,65 +674,66 @@ const skill = (id, title, learn, gen) => SK[id] = {id, title, learn, gen};
 skill('f-add-sim', 'Adding similar fractions',
   `When fractions have the <b>same denominator</b>, add the numerators and keep the denominator. Then write the answer in lowest terms.
    <div class="ex">${frH(5,12)} + ${frH(3,12)} = ${frH(8,12)} = ${frH(2,3)}</div>`,
-  () => { const d = R(3, 20), a = R(1, d - 1), b = R(1, d - 1); return fracItem(`${frH(a,d)} + ${frH(b,d)}`, F(a + b, d)); });
+  () => { const d = R(3, 20), a = R(1, d - 1), b = R(1, d - 1); return withSol(fracItem(`${frH(a,d)} + ${frH(b,d)}`, F(a + b, d)), fracASSteps({n:a, d}, {n:b, d}, '+'), d <= 10 && a + b <= d ? {a, b, d} : null); });
 skill('f-sub-sim', 'Subtracting similar fractions',
   `Same denominator? Subtract the numerators and keep the denominator, then simplify.
    <div class="ex">${frH(7,9)} − ${frH(4,9)} = ${frH(3,9)} = ${frH(1,3)}</div>`,
-  () => { const d = R(3, 30), a = R(2, d), b = R(1, a - 1); return fracItem(`${frH(a,d)} − ${frH(b,d)}`, F(a - b, d)); });
+  () => { const d = R(3, 30), a = R(2, d), b = R(1, a - 1); return withSol(fracItem(`${frH(a,d)} − ${frH(b,d)}`, F(a - b, d)), fracASSteps({n:a, d}, {n:b, d}, '−'), d <= 12 ? {a, b, d} : null); });
 skill('f-mixed-sim', 'Adding & subtracting mixed numbers',
   `Work on the whole numbers and the fractions separately. When subtracting and the fraction you take away is bigger, <b>borrow 1</b> from the whole number first.
    <div class="ex">5${frH(1,4)} − 2${frH(3,4)} = 4${frH(5,4)} − 2${frH(3,4)} = 2${frH(2,4)} = 2${frH(1,2)}</div>`,
   () => { const d = R(3, 12), n1 = R(1, d - 1), n2 = R(1, d - 1), w2 = R(1, 9), add = Math.random() < .5, w1 = add ? R(1, 12) : w2 + R(1, 8);
     const a = mixF(w1, n1, d), b = mixF(w2, n2, d);
-    return fracItem(`${mixH(w1,n1,d)} ${add ? '+' : '−'} ${mixH(w2,n2,d)}`, add ? fadd(a, b) : fsub(a, b)); });
+    return withSol(fracItem(`${mixH(w1,n1,d)} ${add ? '+' : '−'} ${mixH(w2,n2,d)}`, add ? fadd(a, b) : fsub(a, b)), fracASSteps(MX(w1, n1, d), MX(w2, n2, d), add ? '+' : '−')); });
 skill('f-add-dis', 'Adding dissimilar fractions',
   `Make the fractions similar first: rewrite them with the <b>least common denominator (LCD)</b>, then add.
    <div class="ex">${frH(2,3)} + ${frH(1,4)} = ${frH(8,12)} + ${frH(3,12)} = ${frH(11,12)}</div>`,
   () => { let d1 = R(2, 12), d2 = R(2, 12); while (d2 === d1) d2 = R(2, 12); const a = R(1, d1 - 1), b = R(1, d2 - 1);
-    return fracItem(`${frH(a,d1)} + ${frH(b,d2)}`, fadd(F(a,d1), F(b,d2))); });
+    const L = lcm(d1, d2);
+    return withSol(fracItem(`${frH(a,d1)} + ${frH(b,d2)}`, fadd(F(a,d1), F(b,d2))), fracASSteps({n:a, d:d1}, {n:b, d:d2}, '+'), L <= 24 && a * L / d1 + b * L / d2 <= L ? {a, b, d1, d2} : null); });
 skill('f-sub-dis', 'Subtracting dissimilar fractions',
   `Rewrite both fractions with the LCD, then subtract the numerators.
    <div class="ex">${frH(5,6)} − ${frH(1,4)} = ${frH(10,12)} − ${frH(3,12)} = ${frH(7,12)}</div>`,
   () => { let d1 = R(2, 12), d2 = R(2, 12); while (d2 === d1) d2 = R(2, 12); let x = F(R(1, d1 - 1), d1), y = F(R(1, d2 - 1), d2);
     if (feq(x, y)) x = fadd(x, F(1, 1)); if (x.n * y.d < y.n * x.d) [x, y] = [y, x];
-    return fracItem(`${fH(x)} − ${fH(y)}`, fsub(x, y)); });
+    return withSol(fracItem(`${fH(x)} − ${fH(y)}`, fsub(x, y)), fracASSteps(asShown(x), asShown(y), '−'), x.n < x.d && x.d !== y.d && lcm(x.d, y.d) <= 24 ? {a: x.n, b: y.n, d1: x.d, d2: y.d} : null); });
 skill('f-word', 'Word problems: adding & subtracting fractions',
   `Read the question carefully. Words like <b>in all, altogether, total</b> mean add. Words like <b>left, remain, how much more</b> mean subtract. Then solve and simplify.
    <div class="ex">Mia studied ${frH(2,3)} hour on Friday and ${frH(5,6)} hour on Saturday. In all: ${frH(4,6)} + ${frH(5,6)} = ${frH(9,6)} = 1${frH(1,2)} hours.</div>`,
   () => { const n1 = pick(NAMES); let n2 = pick(NAMES); while (n2 === n1) n2 = pick(NAMES);
     let d1 = R(2, 10), d2 = R(2, 10); let x = F(R(1, d1 - 1), d1), y = F(R(1, d2 - 1), d2); if (feq(x, y)) y = F(1, d2 === 2 ? 3 : 2);
     const big = x.n * y.d >= y.n * x.d ? x : y, small = big === x ? y : x;
-    const t = R(0, 3);
-    if (t === 0) return W(0, fracItem(`${n1} walked ${frH(x.n,x.d)} km in the morning and ${frH(y.n,y.d)} km in the afternoon. How many kilometers did ${n1} walk in all?`, fadd(x, y), {words:true}));
-    if (t === 1) return W(0, fracItem(`A pitcher had ${frH(big.n,big.d)} liter of juice. ${n1} drank ${frH(small.n,small.d)} liter. How much juice is left?`, fsub(big, small), {words:true}));
-    if (t === 2) return W(0, fracItem(`${n1} painted ${frH(x.n,x.d)} of a fence and ${n2} painted ${frH(y.n,y.d)} of it. What part of the fence did they paint altogether?`, fadd(x, y), {words:true}));
-    return W(0, fracItem(`${n1} bought ${frH(big.n,big.d)} kg of rice and ${n2} bought ${frH(small.n,small.d)} kg. How much more rice did ${n1} buy?`, fsub(big, small), {words:true})); });
+    const t = R(0, 3), sw = (it, add, p, q) => withSol(it, [st(`${fI(p)} ${add ? '+' : '−'} ${fI(q)}`, add ? 'The question asks for the total, so we add.' : 'The question asks how much is left, or how much more, so we subtract.', add ? '"in all" → add' : '"left / more" → subtract')].concat(fracASSteps(p, q, add ? '+' : '−')));
+    if (t === 0) return sw(W(0, fracItem(`${n1} walked ${frH(x.n,x.d)} km in the morning and ${frH(y.n,y.d)} km in the afternoon. How many kilometers did ${n1} walk in all?`, fadd(x, y), {words:true})), true, x, y);
+    if (t === 1) return sw(W(0, fracItem(`A pitcher had ${frH(big.n,big.d)} liter of juice. ${n1} drank ${frH(small.n,small.d)} liter. How much juice is left?`, fsub(big, small), {words:true})), false, big, small);
+    if (t === 2) return sw(W(0, fracItem(`${n1} painted ${frH(x.n,x.d)} of a fence and ${n2} painted ${frH(y.n,y.d)} of it. What part of the fence did they paint altogether?`, fadd(x, y), {words:true})), true, x, y);
+    return sw(W(0, fracItem(`${n1} bought ${frH(big.n,big.d)} kg of rice and ${n2} bought ${frH(small.n,small.d)} kg. How much more rice did ${n1} buy?`, fsub(big, small), {words:true})), false, big, small); });
 skill('f-mul', 'Multiplying fractions',
   `Multiply the numerators, then multiply the denominators. To keep numbers small, <b>cancel</b> first: divide a numerator and a denominator by their common factor.
    <div class="ex">${frH(4,9)} × ${frH(3,8)} → cancel 4 with 8 and 3 with 9 → ${frH(1,3)} × ${frH(1,2)} = ${frH(1,6)}</div>`,
-  () => { const b = R(2, 12), d = R(2, 12), a = R(1, b + 2), c = R(1, d + 2); return fracItem(`${frH(a,b)} × ${frH(c,d)}`, fmul(F(a,b), F(c,d))); });
+  () => { const b = R(2, 12), d = R(2, 12), a = R(1, b + 2), c = R(1, d + 2); return withSol(fracItem(`${frH(a,b)} × ${frH(c,d)}`, fmul(F(a,b), F(c,d))), fracMulSteps({n:a, d:b}, {n:c, d}), a < b && c < d && b <= 8 && d <= 8 ? {a, b, c, d} : null); });
 skill('f-mul-mixed', 'Multiplying mixed numbers',
   `Change every mixed number to an <b>improper fraction</b> first, multiply, then change the answer back to a mixed number.
    <div class="ex">2${frH(1,2)} × 1${frH(1,3)} = ${frH(5,2)} × ${frH(4,3)} = ${frH(20,6)} = 3${frH(1,3)}</div>`,
   () => { const d1 = R(2, 9), d2 = R(2, 9), w1 = R(1, 9), n1 = R(1, d1 - 1), t = R(0, 2);
     const a = mixF(w1, n1, d1), aH = mixH(w1, n1, d1);
-    if (t === 0) { const w2 = R(1, 9), n2 = R(1, d2 - 1); return fracItem(`${aH} × ${mixH(w2,n2,d2)}`, fmul(a, mixF(w2, n2, d2))); }
-    if (t === 1) { const k = R(2, 15); return fracItem(`${k} × ${aH}`, fmul(F(k), a)); }
-    const n2 = R(1, d2 - 1); return fracItem(`${frH(n2,d2)} × ${aH}`, fmul(F(n2, d2), a)); });
+    if (t === 0) { const w2 = R(1, 9), n2 = R(1, d2 - 1); return withSol(fracItem(`${aH} × ${mixH(w2,n2,d2)}`, fmul(a, mixF(w2, n2, d2))), fracMulSteps(MX(w1, n1, d1), MX(w2, n2, d2))); }
+    if (t === 1) { const k = R(2, 15); return withSol(fracItem(`${k} × ${aH}`, fmul(F(k), a)), fracMulSteps({n:k, d:1}, MX(w1, n1, d1))); }
+    const n2 = R(1, d2 - 1); return withSol(fracItem(`${frH(n2,d2)} × ${aH}`, fmul(F(n2, d2), a)), fracMulSteps({n:n2, d:d2}, MX(w1, n1, d1))); });
 skill('f-div', 'Dividing fractions',
   `To divide, <b>keep</b> the first fraction, <b>change</b> ÷ to ×, and <b>flip</b> the second fraction (use its reciprocal).
    <div class="ex">${frH(3,4)} ÷ ${frH(1,2)} = ${frH(3,4)} × ${frH(2,1)} = ${frH(6,4)} = 1${frH(1,2)}</div>`,
   () => { const t = R(0, 3), b = R(2, 12), d = R(2, 12), a = R(1, b), c = R(1, d);
-    if (t === 0) { const k = R(1, 9); return fracItem(`${k} ÷ ${frH(c,d)}`, fdiv(F(k), F(c, d))); }
-    if (t === 1) { const k = R(2, 9); return fracItem(`${frH(a,b)} ÷ ${k}`, fdiv(F(a, b), F(k))); }
-    return fracItem(`${frH(a,b)} ÷ ${frH(c,d)}`, fdiv(F(a, b), F(c, d))); });
+    if (t === 0) { const k = R(1, 9); return withSol(fracItem(`${k} ÷ ${frH(c,d)}`, fdiv(F(k), F(c, d))), fracDivSteps({n:k, d:1}, {n:c, d})); }
+    if (t === 1) { const k = R(2, 9); return withSol(fracItem(`${frH(a,b)} ÷ ${k}`, fdiv(F(a, b), F(k))), fracDivSteps({n:a, d:b}, {n:k, d:1})); }
+    return withSol(fracItem(`${frH(a,b)} ÷ ${frH(c,d)}`, fdiv(F(a, b), F(c, d))), fracDivSteps({n:a, d:b}, {n:c, d})); });
 skill('f-div-mixed', 'Dividing mixed numbers',
   `Change mixed numbers to improper fractions, then multiply by the reciprocal of the divisor.
    <div class="ex">3${frH(1,4)} ÷ 2${frH(2,3)} = ${frH(13,4)} ÷ ${frH(8,3)} = ${frH(13,4)} × ${frH(3,8)} = ${frH(39,32)} = 1${frH(7,32)}</div>`,
   () => { const d1 = R(2, 9), w1 = R(1, 9), n1 = R(1, d1 - 1), t = R(0, 2), a = mixF(w1, n1, d1), aH = mixH(w1, n1, d1);
-    if (t === 0) { const d2 = R(2, 9), w2 = R(1, 9), n2 = R(1, d2 - 1); return fracItem(`${aH} ÷ ${mixH(w2,n2,d2)}`, fdiv(a, mixF(w2, n2, d2))); }
-    if (t === 1) { const k = R(2, 9); return fracItem(`${aH} ÷ ${k}`, fdiv(a, F(k))); }
-    const k = R(2, 9); return fracItem(`${k} ÷ ${aH}`, fdiv(F(k), a)); });
+    if (t === 0) { const d2 = R(2, 9), w2 = R(1, 9), n2 = R(1, d2 - 1); return withSol(fracItem(`${aH} ÷ ${mixH(w2,n2,d2)}`, fdiv(a, mixF(w2, n2, d2))), fracDivSteps(MX(w1, n1, d1), MX(w2, n2, d2))); }
+    if (t === 1) { const k = R(2, 9); return withSol(fracItem(`${aH} ÷ ${k}`, fdiv(a, F(k))), fracDivSteps(MX(w1, n1, d1), {n:k, d:1})); }
+    const k = R(2, 9); return withSol(fracItem(`${k} ÷ ${aH}`, fdiv(F(k), a)), fracDivSteps({n:k, d:1}, MX(w1, n1, d1))); });
 
 // ---------- Decimals ----------
 const dec = (maxInt, places) => { const k = 10 ** places; return (R(1, maxInt * k) / k).toFixed(places); };
@@ -557,137 +741,165 @@ skill('d-add', 'Adding decimals',
   `Write the numbers in a column with the <b>decimal points lined up</b>. Fill empty places with zeros, then add like whole numbers.
    <div class="ex">12.5 + 3.75 → 12.50 + 3.75 = 16.25</div>`,
   () => { const n = R(2, 3), xs = Array.from({length: n}, () => dec(pick([9, 99, 999]), R(1, 4)));
-    const sum = xs.reduce((s, x) => fadd(s, decF(x)), F(0)); return numItem(xs.join(' + '), sum.n / sum.d); });
+    const sum = xs.reduce((s, x) => fadd(s, decF(x)), F(0)); return withSol(numItem(xs.join(' + '), sum.n / sum.d), decColSteps(xs, '+'), n === 2 ? {x: xs[0], y: xs[1]} : null); });
 skill('d-sub', 'Subtracting decimals',
   `Line up the decimal points, add zeros so both numbers have the same number of decimal places, then subtract (regroup when needed).
    <div class="ex">20 − 4.35 → 20.00 − 4.35 = 15.65</div>`,
   () => { let a = Math.random() < .3 ? String(R(20, 999)) : dec(999, R(1, 4)), b = dec(pick([9, 99]), R(1, 4));
-    if (+b > +a) [a, b] = [b, a]; const f = fsub(decF(a), decF(b)); return numItem(`${a} − ${b}`, f.n / f.d); });
+    if (+b > +a) [a, b] = [b, a]; const f = fsub(decF(a), decF(b)); return withSol(numItem(`${a} − ${b}`, f.n / f.d), decColSteps([a, b], '−'), a.includes('.') ? {x: a, y: b} : null); });
 skill('d-mul', 'Multiplying decimals',
   `Multiply as if there were no decimal points. Then count the decimal places in both factors and put that many places in the answer.
    <div class="ex">2.15 × 0.16 → 215 × 16 = 3440 → 4 places → 0.3440 = 0.344</div>`,
   () => { const a = dec(pick([9, 99]), R(1, 2)), b = pick([String(R(2, 9)), '0.' + R(1, 9), '0.0' + R(1, 9), dec(9, 1)]);
-    const f = fmul(decF(a), decF(b)); return numItem(`${a} × ${b}`, f.n / f.d); });
+    const f = fmul(decF(a), decF(b)); return withSol(numItem(`${a} × ${b}`, f.n / f.d), decMulSteps(a, b)); });
 skill('d-div', 'Dividing decimals',
   `If the divisor is a whole number, divide and place the decimal point straight up. If the divisor is a decimal, move its decimal point to the right until it is a whole number, and move the dividend's point the same number of places.
    <div class="ex">4.3 ÷ 0.2 → 43 ÷ 2 = 21.5</div>`,
   () => { const q = decF(dec(pick([9, 99]), R(1, 2))), t = Math.random() < .5;
     const dv = t ? F(R(2, 9)) : decF(pick(['0.' + R(1, 9), '0.0' + R(1, 9)])); const dd = fmul(q, dv);
-    return numItem(`${numStr(dd.n / dd.d)} ÷ ${numStr(dv.n / dv.d)}`, q.n / q.d); });
+    return withSol(numItem(`${numStr(dd.n / dd.d)} ÷ ${numStr(dv.n / dv.d)}`, q.n / q.d), decDivSteps(numStr(dd.n / dd.d), numStr(dv.n / dv.d), q)); });
 skill('d-div-round', 'Dividing by a decimal & rounding',
   `Make the divisor a whole number by moving both decimal points, divide to three decimal places, then <b>round to the nearest hundredth</b>.
    <div class="ex">863 ÷ 3.9 → 8630 ÷ 39 = 221.282… ≈ 221.28</div>`,
   () => { const a = R(100, 9999), b = decF(pick([dec(9, 1), dec(9, 2)])); if (!b.n) return SK['d-div-round'].gen();
-    return numItem(`${a} ÷ ${numStr(b.n / b.d)} <small style="font-size:.6em;color:var(--muted)">(nearest hundredth)</small>`, r2(a * b.d / b.n), '', 1e-6); });
+    return withSol(numItem(`${a} ÷ ${numStr(b.n / b.d)} <small style="font-size:.6em;color:var(--muted)">(nearest hundredth)</small>`, r2(a * b.d / b.n), '', 1e-6), decRoundSteps(a, numStr(b.n / b.d), b)); });
 skill('d-div-pow', 'Dividing by 10, 100, 1000 and by 0.1, 0.01, 0.001',
   `Dividing by <b>10, 100, 1000</b> moves the decimal point 1, 2 or 3 places to the <b>left</b>. Dividing by <b>0.1, 0.01, 0.001</b> moves it 1, 2 or 3 places to the <b>right</b>.
    <div class="ex">4.65 ÷ 100 = 0.0465 &nbsp;·&nbsp; 0.039 ÷ 0.01 = 3.9</div>`,
   () => { const d = pick(['10', '100', '1000', '0.1', '0.01', '0.001']), x = pick([dec(1, R(2, 4)), dec(99, 2), dec(999, 2)]);
-    const f = fdiv(decF(x), decF(d)); return numItem(`${x} ÷ ${d}`, f.n / f.d); });
+    const f = fdiv(decF(x), decF(d)), big = +d >= 10, k = big ? d.length - 1 : d.length - 2, res = numStr(f.n / f.d);
+    return withSol(numItem(`${x} ÷ ${d}`, f.n / f.d), [st(big ? `÷ ${d} → move the point ${k} place${ps(k)} left` : `÷ ${d} is the same as × ${10 ** k}`, big ? `Dividing by ${d} moves the decimal point ${k} place${ps(k)} to the left, one place for each zero. Add zeros in front if you run out of digits.` : `Dividing by ${d} is the same as multiplying by ${10 ** k}, so the decimal point moves ${k} place${ps(k)} to the right.`, big ? `← ${k}` : `→ ${k}`),
+      st(`${x} ÷ ${d} = ${res}`, `So ${x} becomes ${res}.`)]); });
 
 // ---------- Geometry & measurement ----------
 const SOLIDS = [
-  ['A prism whose two bases are triangles is called a…', 'triangular prism', ['triangular pyramid', 'cone', 'cube']],
-  ['How many faces does a cube have?', '6', ['4', '8', '12']],
-  ['How many edges does a cube have?', '12', ['6', '8', '10']],
-  ['How many vertices (corners) does a cube have?', '8', ['6', '12', '4']],
-  ['The lateral faces of a pyramid are always…', 'triangles', ['rectangles', 'circles', 'squares']],
-  ['A solid with two parallel circular bases is a…', 'cylinder', ['cone', 'sphere', 'prism']],
-  ['A solid with one circular base and one pointed top (apex) is a…', 'cone', ['cylinder', 'pyramid', 'sphere']],
-  ['Every point on a sphere is the same distance from its…', 'center', ['base', 'edge', 'apex']],
-  ['A pyramid whose base has 5 sides is called a…', 'pentagonal pyramid', ['hexagonal pyramid', 'pentagonal prism', 'square pyramid']],
-  ['How many edges does a triangular prism have?', '9', ['6', '12', '5']],
-  ['How many faces does a triangular prism have?', '5', ['4', '6', '3']],
-  ['How many faces does a square pyramid have?', '5', ['4', '6', '8']],
-  ['Which of these is a plane (flat) figure, not a solid?', 'circle', ['sphere', 'cylinder', 'cube']],
-  ['Which object is shaped like a cylinder?', 'a can of sardines', ['a die', 'a party hat', 'a basketball']],
-  ['Which object is shaped like a cone?', 'an ice cream cone', ['a ball', 'a shoebox', 'a coin']],
-  ['Which object is shaped like a sphere?', 'a basketball', ['a drum', 'a book', 'a tent']],
-  ['Which object is shaped like a rectangular prism?', 'a shoebox', ['a ball', 'a party hat', 'a drinking glass']],
-  ['A prism or pyramid is named after the shape of its…', 'base', ['lateral faces', 'edges', 'height']],
-  ['Half of a sphere is called a…', 'hemisphere', ['semicircle', 'cone', 'radius']],
-  ['The distance from the center of a sphere to its surface is the…', 'radius', ['diameter', 'apex', 'edge']],
+  ['A prism whose two bases are triangles is called a…', 'triangular prism', ['triangular pyramid', 'cone', 'cube'], 'A prism is named after its base. Two triangle bases make a triangular prism.'],
+  ['How many faces does a cube have?', '6', ['4', '8', '12'], 'A cube is like a box: top, bottom, front, back, left and right. That\'s 6 faces.'],
+  ['How many edges does a cube have?', '12', ['6', '8', '10'], '4 edges around the top, 4 around the bottom, and 4 standing up. That\'s 12 edges.'],
+  ['How many vertices (corners) does a cube have?', '8', ['6', '12', '4'], '4 corners on top and 4 corners on the bottom. That\'s 8 vertices.'],
+  ['The lateral faces of a pyramid are always…', 'triangles', ['rectangles', 'circles', 'squares'], 'The side faces of a pyramid all meet at one point, the apex, so each one is a triangle.'],
+  ['A solid with two parallel circular bases is a…', 'cylinder', ['cone', 'sphere', 'prism'], 'Two flat, matching circles joined by a curved side make a cylinder.'],
+  ['A solid with one circular base and one pointed top (apex) is a…', 'cone', ['cylinder', 'pyramid', 'sphere'], 'One circle base that narrows to a single point makes a cone.'],
+  ['Every point on a sphere is the same distance from its…', 'center', ['base', 'edge', 'apex'], 'A sphere is perfectly round. Every point on it is the same distance from its center.'],
+  ['A pyramid whose base has 5 sides is called a…', 'pentagonal pyramid', ['hexagonal pyramid', 'pentagonal prism', 'square pyramid'], 'Pyramids are named after their base. A 5-sided base is a pentagon, so it\'s a pentagonal pyramid.'],
+  ['How many edges does a triangular prism have?', '9', ['6', '12', '5'], 'Each triangle has 3 edges, so 3 + 3 = 6, plus 3 edges joining them. That\'s 9 edges.'],
+  ['How many faces does a triangular prism have?', '5', ['4', '6', '3'], '2 triangle bases plus 3 rectangle sides. That\'s 5 faces.'],
+  ['How many faces does a square pyramid have?', '5', ['4', '6', '8'], '1 square base plus 4 triangle sides. That\'s 5 faces.'],
+  ['Which of these is a plane (flat) figure, not a solid?', 'circle', ['sphere', 'cylinder', 'cube'], 'A circle is flat, like a drawing on paper. Spheres, cylinders and cubes are solid shapes you can hold.'],
+  ['Which object is shaped like a cylinder?', 'a can of sardines', ['a die', 'a party hat', 'a basketball'], 'A can has two circle ends and a curved side, just like a cylinder.'],
+  ['Which object is shaped like a cone?', 'an ice cream cone', ['a ball', 'a shoebox', 'a coin'], 'An ice cream cone has a circle on top and comes to a point at the bottom.'],
+  ['Which object is shaped like a sphere?', 'a basketball', ['a drum', 'a book', 'a tent'], 'A basketball is round in every direction, like a sphere.'],
+  ['Which object is shaped like a rectangular prism?', 'a shoebox', ['a ball', 'a party hat', 'a drinking glass'], 'A shoebox has 6 rectangle faces, like a rectangular prism.'],
+  ['A prism or pyramid is named after the shape of its…', 'base', ['lateral faces', 'edges', 'height'], 'Prisms and pyramids are always named after the shape of their base.'],
+  ['Half of a sphere is called a…', 'hemisphere', ['semicircle', 'cone', 'radius'], 'Hemi means half. Half of a sphere is a hemisphere.'],
+  ['The distance from the center of a sphere to its surface is the…', 'radius', ['diameter', 'apex', 'edge'], 'The radius goes from the center out to the surface. The diameter goes all the way across.'],
 ];
 skill('g-solids', 'Solid figures',
   `<b>Prisms</b> have two parallel, matching bases and rectangular side faces; they are named by the shape of the base. <b>Pyramids</b> have one base and triangular faces that meet at the apex. A <b>cube</b> has 6 square faces, 12 edges and 8 vertices. A <b>cylinder</b> has two circular bases, a <b>cone</b> has one circular base and an apex, and every point of a <b>sphere</b> is the same distance from its center.`,
-  () => { const [q, a, w] = pick(SOLIDS); return Object.assign(mcItem(q, a, w), {words:true}); });
+  () => { const [q, a, w, why] = pick(SOLIDS); return withSol(Object.assign(mcItem(q, a, w), {words:true}), [st(`<span class="small">${why}</span>`, why, 'think about the shape'), st(`= ${a}`, `So the answer is ${a}.`)]); });
 skill('g-sdt', 'Speed, distance & time',
   `<b>Distance = Speed × Time</b>, <b>Speed = Distance ÷ Time</b>, <b>Time = Distance ÷ Speed</b>. Keep the units matching (km with hours, m with seconds).
    <div class="ex">A car travels 120 km in 2 hours → speed = 120 ÷ 2 = 60 km/h</div>`,
   () => { const t = R(0, 3);
-    if (t === 0) { const s = R(4, 12) * 5, h = R(2, 6); return numItem(`A jeepney travels ${s * h} km in ${h} hours. What is its average speed in km/h?`, s, 'km/h', 1e-9, {words:true}); }
-    if (t === 1) { const s = R(3, 8) * 5, h = pick([0.5, 1.5, 2, 2.5, 3]); return numItem(`A tricycle runs at a steady ${s} km/h for ${h} hours. How many kilometers does it travel?`, s * h, 'km', 1e-9, {words:true}); }
-    if (t === 2) { const s = R(4, 12) * 10, h = R(2, 6); return numItem(`A bus must cover ${s * h} km at an average speed of ${s} km/h. How many hours will the trip take?`, h, 'hours', 1e-9, {words:true}); }
-    const s = R(4, 9), sec = R(10, 40); return numItem(`${pick(NAMES)} ran ${s * sec} meters in ${sec} seconds. What was the average speed in m/s?`, s, 'm/s', 1e-9, {words:true}); });
+    if (t === 0) { const s = R(4, 12) * 5, h = R(2, 6); return withSol(numItem(`A jeepney travels ${s * h} km in ${h} hours. What is its average speed in km/h?`, s, 'km/h', 1e-9, {words:true}), sdtSteps('S', s * h, h, s, 'km', 'hours', 'km/h')); }
+    if (t === 1) { const s = R(3, 8) * 5, h = pick([0.5, 1.5, 2, 2.5, 3]); return withSol(numItem(`A tricycle runs at a steady ${s} km/h for ${h} hours. How many kilometers does it travel?`, s * h, 'km', 1e-9, {words:true}), sdtSteps('D', s * h, h, s, 'km', 'hours', 'km/h')); }
+    if (t === 2) { const s = R(4, 12) * 10, h = R(2, 6); return withSol(numItem(`A bus must cover ${s * h} km at an average speed of ${s} km/h. How many hours will the trip take?`, h, 'hours', 1e-9, {words:true}), sdtSteps('T', s * h, h, s, 'km', 'hours', 'km/h')); }
+    const s = R(4, 9), sec = R(10, 40); return withSol(numItem(`${pick(NAMES)} ran ${s * sec} meters in ${sec} seconds. What was the average speed in m/s?`, s, 'm/s', 1e-9, {words:true}), sdtSteps('S', s * sec, sec, s, 'meters', 'seconds', 'm/s')); });
 const PI = 3.14, piNote = ' <small style="color:var(--muted)">(π = 3.14, round to the nearest hundredth)</small>';
 skill('g-composite', 'Area of composite figures',
   `Split the figure into shapes you know, find each area, then add (or subtract a hole). Rectangle = l × w, Triangle = ½ × b × h, Circle = πr², Semicircle = ½πr².
    <div class="ex">Rectangle 10 cm × 6 cm with a triangle (base 10 cm, height 5 cm) on top → 60 + 25 = 85 cm²</div>`,
-  () => { const u = pick(['cm', 'm']), t = R(0, 4);
-    if (t === 0) { const l = R(4, 14), w = R(3, 10), h = R(2, 9); return numItem(`A figure is a rectangle ${l} ${u} long and ${w} ${u} wide with a triangle on top. The triangle's base is the ${l} ${u} side and its height is ${h} ${u}. What is the total area?`, r2(l * w + l * h / 2), u + '²', .011, {words:true}); }
-    if (t === 1) { const l = R(5, 14), d = 2 * R(1, 5); return numItem(`A figure is a rectangle ${l} ${u} by ${d} ${u} with a semicircle attached to its ${d} ${u} side. What is the total area?${piNote}`, r2(l * d + PI * (d / 2) ** 2 / 2), u + '²', .011, {words:true}); }
-    if (t === 2) { const l = R(6, 14), d = 2 * R(1, 4); return numItem(`A running track is a rectangle ${l} ${u} by ${d} ${u} with a semicircle on each ${d} ${u} end. What is the total area?${piNote}`, r2(l * d + PI * (d / 2) ** 2), u + '²', .011, {words:true}); }
-    if (t === 3) { const s = R(4, 12), r = R(1, 3); return numItem(`A square garden is ${s} ${u} on each side. A circular fountain with radius ${r} ${u} sits in the middle. What is the grass area around the fountain?${piNote}`, r2(s * s - PI * r * r), u + '²', .011, {words:true}); }
-    const s = R(3, 10), h = R(2, 8); return numItem(`A figure is a square with ${s} ${u} sides and a triangle on one side (base ${s} ${u}, height ${h} ${u}). What is the total area?`, r2(s * s + s * h / 2), u + '²', .011, {words:true}); });
+  () => { const u = pick(['cm', 'm']), t = R(0, 4), U = u === 'cm' ? 'square centimeters' : 'square meters', N = x => numStr(r2(x));
+    const tot = (a, b, v, sub) => st(`${sub ? 'Grass' : 'Total'} = ${N(a)} ${sub ? MINUS : '+'} ${N(b)} = ${N(v)} ${u}²`, `${sub ? 'Subtract the fountain from the square' : 'Add the parts'}: the area is ${N(v)} ${U}.`, sub ? 'subtract the hole' : 'add the parts');
+    const rect = (l, w) => st(`Rectangle: ${l} × ${w} = ${l * w}`, `Rectangle area is length times width: ${l} times ${w} is ${l * w}.`, 'l × w');
+    const rad = d => st(`radius = ${d} ÷ 2 = ${d / 2}`, `The curved part sits on the ${d} ${u} side, so that side is the diameter. The radius is half of it: ${d / 2}.`, 'r = d ÷ 2');
+    if (t === 0) { const l = R(4, 14), w = R(3, 10), h = R(2, 9), v = r2(l * w + l * h / 2); return withSol(numItem(`A figure is a rectangle ${l} ${u} long and ${w} ${u} wide with a triangle on top. The triangle's base is the ${l} ${u} side and its height is ${h} ${u}. What is the total area?`, v, u + '²', .011, {words:true}),
+      [rect(l, w), st(`Triangle: ½ × ${l} × ${h} = ${N(l * h / 2)}`, `Triangle area is one half times base times height: half of ${l} times ${h} is ${N(l * h / 2)}.`, '½ × b × h'), tot(l * w, l * h / 2, v)]); }
+    if (t === 1) { const l = R(5, 14), d = 2 * R(1, 5), r = d / 2, v = r2(l * d + PI * r * r / 2); return withSol(numItem(`A figure is a rectangle ${l} ${u} by ${d} ${u} with a semicircle attached to its ${d} ${u} side. What is the total area?${piNote}`, v, u + '²', .011, {words:true}),
+      [rect(l, d), rad(d), st(`Semicircle: ½ × 3.14 × ${r}² = ${N(PI * r * r / 2)}`, `A semicircle is half a circle: one half times 3.14 times ${r} squared is ${N(PI * r * r / 2)}.`, '½ × π × r²'), tot(l * d, PI * r * r / 2, v)]); }
+    if (t === 2) { const l = R(6, 14), d = 2 * R(1, 4), r = d / 2, v = r2(l * d + PI * r * r); return withSol(numItem(`A running track is a rectangle ${l} ${u} by ${d} ${u} with a semicircle on each ${d} ${u} end. What is the total area?${piNote}`, v, u + '²', .011, {words:true}),
+      [rect(l, d), rad(d), st(`2 semicircles = 1 circle: 3.14 × ${r}² = ${N(PI * r * r)}`, `Two semicircles make one whole circle: 3.14 times ${r} squared is ${N(PI * r * r)}.`, 'π × r²'), tot(l * d, PI * r * r, v)]); }
+    if (t === 3) { const s = R(4, 12), r = R(1, 3), v = r2(s * s - PI * r * r); return withSol(numItem(`A square garden is ${s} ${u} on each side. A circular fountain with radius ${r} ${u} sits in the middle. What is the grass area around the fountain?${piNote}`, v, u + '²', .011, {words:true}),
+      [st(`Square: ${s} × ${s} = ${s * s}`, `The whole garden is a square: side times side is ${s * s}.`, 's × s'), st(`Fountain: 3.14 × ${r}² = ${N(PI * r * r)}`, `The fountain is a circle: 3.14 times ${r} squared is ${N(PI * r * r)}.`, 'π × r²'), tot(s * s, PI * r * r, v, true)]); }
+    const s = R(3, 10), h = R(2, 8), v = r2(s * s + s * h / 2); return withSol(numItem(`A figure is a square with ${s} ${u} sides and a triangle on one side (base ${s} ${u}, height ${h} ${u}). What is the total area?`, v, u + '²', .011, {words:true}),
+      [st(`Square: ${s} × ${s} = ${s * s}`, `Square area is side times side: ${s * s}.`, 's × s'), st(`Triangle: ½ × ${s} × ${h} = ${N(s * h / 2)}`, `Triangle area is one half times base times height: ${N(s * h / 2)}.`, '½ × b × h'), tot(s * s, s * h / 2, v)]); });
 skill('g-sa-prism', 'Surface area: rectangular prism & cube',
   `Surface area is the total area of all faces. Rectangular prism: <b>SA = 2(lw + lh + wh)</b>. Cube: <b>SA = 6s²</b>.
    <div class="ex">l = 6, w = 9, h = 8 → 2(54 + 48 + 72) = 2(174) = 348 mm²</div>`,
   () => { const u = pick(['cm', 'm', 'mm']);
-    if (Math.random() < .35) { const s = R(2, 25); return numItem(`Find the surface area of a cube with edges ${s} ${u} long.`, 6 * s * s, u + '²', 1e-9, {words:true}); }
-    const l = R(3, 30), w = R(2, 20), h = R(2, 20); return numItem(`Find the surface area of a rectangular prism: length ${l} ${u}, width ${w} ${u}, height ${h} ${u}.`, 2 * (l * w + l * h + w * h), u + '²', 1e-9, {words:true}); });
+    if (Math.random() < .35) { const s = R(2, 25); return withSol(numItem(`Find the surface area of a cube with edges ${s} ${u} long.`, 6 * s * s, u + '²', 1e-9, {words:true}),
+      [st('SA = 6 × s²', 'A cube has 6 faces, and each face is a square with area s squared.', '6 square faces'), st(`= 6 × ${s}²`, `Put in s = ${s}.`), st(`= 6 × ${s * s}`, `${s} squared is ${s * s}.`), st(`= ${6 * s * s} ${u}²`, `6 times ${s * s} is ${6 * s * s}.`)]); }
+    const l = R(3, 30), w = R(2, 20), h = R(2, 20); const sm = l * w + l * h + w * h; return withSol(numItem(`Find the surface area of a rectangular prism: length ${l} ${u}, width ${w} ${u}, height ${h} ${u}.`, 2 * sm, u + '²', 1e-9, {words:true}),
+      [st('SA = 2(lw + lh + wh)', 'A box has 3 pairs of matching faces: top and bottom, front and back, left and right.', '3 pairs of faces'), st(`= 2(${l}×${w} + ${l}×${h} + ${w}×${h})`, `Put in l = ${l}, w = ${w} and h = ${h}.`),
+       st(`= 2(${l * w} + ${l * h} + ${w * h})`, 'Multiply inside the parentheses.'), st(`= 2(${sm})`, `Add them: ${sm}.`), st(`= ${2 * sm} ${u}²`, `Double it, because each face has a partner: ${2 * sm}.`, '× 2')]); });
 skill('g-sa-tri', 'Surface area: triangular prism',
   `For a triangular prism with an isosceles triangle base: <b>SA = bh + 2ls + lb</b>, where b and h are the triangle's base and height, s is its slanted side, and l is the length of the prism.
    <div class="ex">h = 5, b = 9, l = 15, s = 7 → 45 + 210 + 135 = 390 cm²</div>`,
   () => { const b = R(4, 16), h = R(3, 12), s = Math.max(h + 1, R(5, 18)), l = R(8, 40);
-    return numItem(`A triangular prism has a triangle with base b = ${b} cm and height h = ${h} cm, slanted sides s = ${s} cm, and length l = ${l} cm. Find its surface area.`, b * h + 2 * l * s + l * b, 'cm²', 1e-9, {words:true}); });
+    return withSol(numItem(`A triangular prism has a triangle with base b = ${b} cm and height h = ${h} cm, slanted sides s = ${s} cm, and length l = ${l} cm. Find its surface area.`, b * h + 2 * l * s + l * b, 'cm²', 1e-9, {words:true}),
+      [st('SA = bh + 2ls + lb', 'The two triangles together make b times h. The two slanted rectangles make 2 times l times s. The bottom rectangle is l times b.', 'all 5 faces'), st(`= ${b}×${h} + 2×${l}×${s} + ${l}×${b}`, 'Put in the numbers.'),
+       st(`= ${b * h} + ${2 * l * s} + ${l * b}`, 'Multiply each part.'), st(`= ${b * h + 2 * l * s + l * b} cm²`, `Add them up: ${b * h + 2 * l * s + l * b} square centimeters.`)]); });
 skill('g-sa-pyr', 'Surface area: square pyramid',
   `A square pyramid has a square base and 4 triangular faces: <b>SA = b² + 2bl</b>, where b is the base edge and l is the slant height.
    <div class="ex">b = 6 cm, l = 8 cm → 36 + 96 = 132 cm²</div>`,
-  () => { const b = R(4, 20), l = R(4, 20); return numItem(`A square pyramid has base edge ${b} cm and slant height ${l} cm. Find its surface area.`, b * b + 2 * b * l, 'cm²', 1e-9, {words:true}); });
+  () => { const b = R(4, 20), l = R(4, 20); return withSol(numItem(`A square pyramid has base edge ${b} cm and slant height ${l} cm. Find its surface area.`, b * b + 2 * b * l, 'cm²', 1e-9, {words:true}),
+      [st('SA = b² + 2bl', 'The square base is b squared. The 4 triangles together make 2 times b times l.', 'base + 4 triangles'), st(`= ${b}² + 2×${b}×${l}`, `Put in b = ${b} and l = ${l}.`),
+       st(`= ${b * b} + ${2 * b * l}`, 'Work out each part.'), st(`= ${b * b + 2 * b * l} cm²`, `Add them: ${b * b + 2 * b * l} square centimeters.`)]); });
 skill('g-sa-round', 'Surface area: cylinder, cone & sphere',
   `Cylinder: <b>SA = 2πr² + 2πrh</b>. Cone: <b>SA = πrs + πr²</b> (s = slant height). Sphere: <b>SA = 4πr²</b>. Use π = 3.14.
    <div class="ex">Sphere with r = 3 cm → 4 × 3.14 × 9 = 113.04 cm²</div>`,
-  () => { const t = R(0, 2), r = R(2, 15);
-    if (t === 0) { const h = R(3, 30); return numItem(`Find the surface area of a cylinder with radius ${r} cm and height ${h} cm.${piNote}`, r2(2 * PI * r * r + 2 * PI * r * h), 'cm²', .011, {words:true}); }
-    if (t === 1) { const s = r + R(2, 15); return numItem(`Find the surface area of a cone with radius ${r} cm and slant height ${s} cm.${piNote}`, r2(PI * r * s + PI * r * r), 'cm²', .011, {words:true}); }
-    return numItem(`Find the surface area of a sphere with radius ${r} m.${piNote}`, r2(4 * PI * r * r), 'm²', .011, {words:true}); });
+  () => { const t = R(0, 2), r = R(2, 15), N = x => numStr(r2(x));
+    if (t === 0) { const h = R(3, 30), A = 2 * PI * r * r, B = 2 * PI * r * h; return withSol(numItem(`Find the surface area of a cylinder with radius ${r} cm and height ${h} cm.${piNote}`, r2(A + B), 'cm²', .011, {words:true}),
+      [st('SA = 2πr² + 2πrh', 'A cylinder has two circle ends, plus a curved side that unrolls into a rectangle.', '2 circles + side'), st(`= 2×3.14×${r}² + 2×3.14×${r}×${h}`, `Put in r = ${r} and h = ${h}, with pi = 3.14.`),
+       st(`= ${N(A)} + ${N(B)}`, 'Work out each part.'), st(`= ${N(A + B)} cm²`, `Add them: ${N(A + B)} square centimeters.`)]); }
+    if (t === 1) { const s = r + R(2, 15), A = PI * r * s, B = PI * r * r; return withSol(numItem(`Find the surface area of a cone with radius ${r} cm and slant height ${s} cm.${piNote}`, r2(A + B), 'cm²', .011, {words:true}),
+      [st('SA = πrs + πr²', 'The curved side is pi times r times s, and the circle base is pi times r squared.', 'side + base'), st(`= 3.14×${r}×${s} + 3.14×${r}²`, `Put in r = ${r} and s = ${s}.`),
+       st(`= ${N(A)} + ${N(B)}`, 'Work out each part.'), st(`= ${N(A + B)} cm²`, `Add them: ${N(A + B)} square centimeters.`)]); }
+    return withSol(numItem(`Find the surface area of a sphere with radius ${r} m.${piNote}`, r2(4 * PI * r * r), 'm²', .011, {words:true}),
+      [st('SA = 4πr²', 'The surface of a sphere is exactly 4 circles with the same radius.', '4 circles'), st(`= 4 × 3.14 × ${r}²`, `Put in r = ${r}.`), st(`= 4 × 3.14 × ${r * r}`, `${r} squared is ${r * r}.`), st(`= ${N(4 * PI * r * r)} m²`, `Multiply: ${N(4 * PI * r * r)} square meters.`)]); });
 skill('c-outcomes', 'Counting possible outcomes',
   `If one choice can be made in <b>m</b> ways and a second choice in <b>n</b> ways, together there are <b>m × n</b> outcomes. You can check by listing them or drawing a tree diagram.
    <div class="ex">3 kinds of burgers × 5 drinks = 15 possible orders</div>`,
-  () => { const t = R(0, 5), nm = pick(NAMES);
-    if (t === 0) { const a = R(2, 6), b = R(2, 6); return numItem(`A carinderia offers ${a} kinds of ulam and ${b} kinds of drinks. If ${nm} picks 1 ulam and 1 drink, how many different meals are possible?`, a * b, '', 1e-9, {words:true}); }
-    if (t === 1) { const a = R(2, 5), b = R(2, 4), c = R(2, 3); return numItem(`${nm} has ${a} shirts, ${b} pairs of pants and ${c} pairs of shoes. How many different outfits of 1 shirt, 1 pair of pants and 1 pair of shoes can ${nm} wear?`, a * b * c, '', 1e-9, {words:true}); }
-    if (t === 2) { const n = R(2, 4); return numItem(`A coin is tossed ${n} times in a row. How many possible outcomes (like HT${n > 2 ? 'H' : ''}) are there?`, 2 ** n, '', 1e-9, {words:true}); }
-    if (t === 3) { const k = R(3, 6); return numItem(`${nm} flips a coin and spins a spinner with ${k} colors. How many combined outcomes are possible?`, 2 * k, '', 1e-9, {words:true}); }
-    if (t === 4) { const L = R(2, 5), D = R(3, 9); return numItem(`A locker code is 1 letter (from ${'ABCDE'.slice(0, L).split('').join(', ')}) followed by 1 digit (from 1 to ${D}). How many different codes can be made?`, L * D, '', 1e-9, {words:true}); }
-    return numItem(`Two ordinary dice are rolled. In how many outcomes are <b>both</b> numbers even?`, 9, '', 1e-9, {words:true}); });
+  () => { const t = R(0, 5), nm = pick(NAMES), cnt = (w, say) => st(w, say, 'count each choice'), mul = (w, say) => st(w, say, 'multiply');
+    if (t === 0) { const a = R(2, 6), b = R(2, 6); return withSol(numItem(`A carinderia offers ${a} kinds of ulam and ${b} kinds of drinks. If ${nm} picks 1 ulam and 1 drink, how many different meals are possible?`, a * b, '', 1e-9, {words:true}),
+      [cnt(`ulam: ${a} ways, drinks: ${b} ways`, `There are ${a} ways to pick the ulam and ${b} ways to pick the drink.`), mul(`${a} × ${b} = ${a * b}`, `Each ulam can go with every drink, so multiply: ${a} times ${b} is ${a * b} meals.`)]); }
+    if (t === 1) { const a = R(2, 5), b = R(2, 4), c = R(2, 3); return withSol(numItem(`${nm} has ${a} shirts, ${b} pairs of pants and ${c} pairs of shoes. How many different outfits of 1 shirt, 1 pair of pants and 1 pair of shoes can ${nm} wear?`, a * b * c, '', 1e-9, {words:true}),
+      [cnt(`shirts: ${a}, pants: ${b}, shoes: ${c}`, 'Count the choices for each part of the outfit.'), mul(`${a} × ${b} × ${c} = ${a * b * c}`, `Multiply all the choices: ${a} times ${b} times ${c} is ${a * b * c} outfits.`)]); }
+    if (t === 2) { const n = R(2, 4); return withSol(numItem(`A coin is tossed ${n} times in a row. How many possible outcomes (like HT${n > 2 ? 'H' : ''}) are there?`, 2 ** n, '', 1e-9, {words:true}),
+      [cnt('each toss: 2 ways (H or T)', 'Each toss can land 2 ways: heads or tails.'), mul(`${Array(n).fill(2).join(' × ')} = ${2 ** n}`, `There are ${n} tosses, so multiply ${n} twos: ${2 ** n} outcomes.`)]); }
+    if (t === 3) { const k = R(3, 6); return withSol(numItem(`${nm} flips a coin and spins a spinner with ${k} colors. How many combined outcomes are possible?`, 2 * k, '', 1e-9, {words:true}),
+      [cnt(`coin: 2 ways, spinner: ${k} ways`, `The coin has 2 outcomes and the spinner has ${k}.`), mul(`2 × ${k} = ${2 * k}`, `Multiply: 2 times ${k} is ${2 * k}.`)]); }
+    if (t === 4) { const L = R(2, 5), D = R(3, 9); return withSol(numItem(`A locker code is 1 letter (from ${'ABCDE'.slice(0, L).split('').join(', ')}) followed by 1 digit (from 1 to ${D}). How many different codes can be made?`, L * D, '', 1e-9, {words:true}),
+      [cnt(`letters: ${L} ways, digits: ${D} ways`, `There are ${L} letters to choose from and ${D} digits.`), mul(`${L} × ${D} = ${L * D}`, `Multiply: ${L} times ${D} is ${L * D} codes.`)]); }
+    return withSol(numItem(`Two ordinary dice are rolled. In how many outcomes are <b>both</b> numbers even?`, 9, '', 1e-9, {words:true}),
+      [cnt('even numbers: 2, 4, 6 → 3 ways', 'Each die has 3 even numbers: 2, 4 and 6.'), mul('3 × 3 = 9', 'Both dice must be even, so multiply: 3 times 3 is 9.')]); });
 
 // ---------- Integers ----------
 const iv = () => Math.random() < .6 ? nz(-20, 20) : sgn(R(21, 999));
 skill('i-add', 'Adding integers',
   `<b>Same signs:</b> add the numbers and keep the sign. <b>Different signs:</b> subtract the smaller from the larger (ignoring signs) and use the sign of the larger.
    <div class="ex">(−6) + (−3) = −9 &nbsp;·&nbsp; 20 + (−54) = −34 &nbsp;·&nbsp; (−9) + 8 = −1</div>`,
-  () => { const a = iv(), b = iv(); return numItem(`${sn(a)} + ${sn(b)}`, a + b); });
+  () => { const a = iv(), b = iv(); return withSol(numItem(`${sn(a)} + ${sn(b)}`, a + b), intAddSteps(a, b), Math.abs(a) <= 9 && Math.abs(b) <= 6 && Math.abs(a + b) <= 9 ? {a, b} : null); });
 skill('i-sub', 'Subtracting integers',
   `Change subtraction into addition: <b>add the opposite</b> of the number being subtracted, then follow the rules for adding integers.
    <div class="ex">4 − 11 = 4 + (−11) = −7 &nbsp;·&nbsp; (−8) − (−20) = −8 + 20 = 12</div>`,
-  () => { const a = iv(), b = iv(); return numItem(`${sn(a)} − ${sn(b)}`, a - b); });
+  () => { const a = iv(), b = iv(); return withSol(numItem(`${sn(a)} − ${sn(b)}`, a - b), intSubSteps(a, b), Math.abs(a) <= 9 && Math.abs(b) <= 6 && Math.abs(a - b) <= 9 ? {a, b} : null); });
 skill('i-mul', 'Multiplying integers',
   `Multiply the numbers. <b>Same signs → positive</b> answer. <b>Different signs → negative</b> answer. With three factors, count the negative signs: an even count gives a positive answer.
    <div class="ex">(−11) × (−7) = 77 &nbsp;·&nbsp; 12 × (−4) = −48</div>`,
-  () => { if (Math.random() < .2) { const a = nz(-12, 12), b = nz(-9, 9), c = nz(-9, 9); return numItem(`${sn(a)} × ${sn(b)} × ${sn(c)}`, a * b * c); }
-    const a = Math.random() < .7 ? nz(-15, 15) : sgn(R(16, 250)), b = nz(-12, 12); return numItem(`${sn(a)} × ${sn(b)}`, a * b); });
+  () => { if (Math.random() < .2) { const a = nz(-12, 12), b = nz(-9, 9), c = nz(-9, 9); return withSol(numItem(`${sn(a)} × ${sn(b)} × ${sn(c)}`, a * b * c), [st(`= ${sn(a * b)} × ${sn(c)}`, `Multiply from left to right. ${m(a)} times ${m(b)} is ${m(a * b)}. ${sgnSay(a, b)}`, 'left to right'), st(`= ${m(a * b * c)}`, `Now ${m(a * b)} times ${m(c)} is ${m(a * b * c)}. ${sgnSay(a * b, c)}`, 'count the negatives')]); }
+    const a = Math.random() < .7 ? nz(-15, 15) : sgn(R(16, 250)), b = nz(-12, 12); return withSol(numItem(`${sn(a)} × ${sn(b)}`, a * b), intMulSteps(a, b), a >= 2 && a <= 3 && Math.abs(b) <= 3 ? {n: a, b} : null); });
 skill('i-div', 'Dividing integers',
   `Divide the numbers and use the same sign rule as multiplication: <b>same signs → positive</b>, <b>different signs → negative</b>.
    <div class="ex">(−20) ÷ (−2) = 10 &nbsp;·&nbsp; (−56) ÷ 8 = −7</div>`,
-  () => { const q = nz(-30, 30), b = nz(-25, 25); return numItem(`${sn(q * b)} ÷ ${sn(b)}`, q); });
+  () => { const q = nz(-30, 30), b = nz(-25, 25); return withSol(numItem(`${sn(q * b)} ÷ ${sn(b)}`, q), intMulSteps(q * b, b, '÷')); });
 skill('i-frac', 'Signed fractions',
   `Use the integer rules on fractions. Adding or subtracting with the same denominator: work on the numerators and keep the denominator. Multiplying: multiply numerators and denominators, then fix the sign. Simplify at the end.
    <div class="ex">${frH(1,6)} + (−${frH(5,6)}) = −${frH(4,6)} = −${frH(2,3)} &nbsp;·&nbsp; (−${frH(2,3)}) × (−${frH(5,2)}) = ${frH(5,3)} = 1${frH(2,3)}</div>`,
   () => { const t = R(0, 2), d = R(2, 12);
-    if (t === 2) { const x = F(sgn(R(1, 12)), R(2, 12)), y = F(sgn(R(1, 12)), R(2, 12)); return fracItem(`${sfr(x)} × ${sfr(y)}`, fmul(x, y)); }
+    if (t === 2) { const x = F(sgn(R(1, 12)), R(2, 12)), y = F(sgn(R(1, 12)), R(2, 12)); return withSol(fracItem(`${sfr(x)} × ${sfr(y)}`, fmul(x, y)), fracMulSteps(Object.assign({fr: 1}, x), Object.assign({fr: 1}, y))); }
     const a = sgn(R(1, 25)), b = sgn(R(1, 25)); const x = {n:a, d}, y = {n:b, d};
-    return t === 0 ? fracItem(`${sfr(x)} + ${sfr(y)}`, F(a + b, d)) : fracItem(`${sfr(x)} − ${sfr(y)}`, F(a - b, d)); });
+    return withSol(t === 0 ? fracItem(`${sfr(x)} + ${sfr(y)}`, F(a + b, d)) : fracItem(`${sfr(x)} − ${sfr(y)}`, F(a - b, d)), fracASSteps(x, y, t === 0 ? '+' : '−')); });
 
 // ---------- Fractions & decimals together (G9–10) ----------
 const fracOrMixed = () => { const d = R(2, 9), n = R(1, d - 1); return Math.random() < .5 ? F(n, d) : mixF(R(1, 9), n, d); };
@@ -700,13 +912,13 @@ skill('fd-addsub', 'Adding & subtracting decimals and fractions',
   () => { let a = Math.random() < .5 ? dec(20, R(1, 2)) : fracOrMixed(), b = typeof a === 'string' ? fracOrMixed() : dec(9, R(1, 2));
     let add = Math.random() < .5; let v = add ? fadd(fdV(a), fdV(b)) : fsub(fdV(a), fdV(b));
     if (v.n <= 0) { [a, b] = [b, a]; v = fsub(fdV(a), fdV(b)); if (v.n <= 0) { add = true; v = fadd(fdV(a), fdV(b)); } }
-    return fracItem(`${fdH(a)} ${add ? '+' : '−'} ${fdH(b)}`, v); });
+    return withSol(fracItem(`${fdH(a)} ${add ? '+' : '−'} ${fdH(b)}`, v), fdSteps([a, b], [add ? '+' : '−'])); });
 skill('fd-muldiv', 'Multiplying & dividing decimals and fractions',
   `Change decimals to fractions and mixed numbers to improper fractions. Then multiply (or multiply by the reciprocal to divide) and simplify.
    <div class="ex">2${frH(1,4)} ÷ 0.4 = ${frH(9,4)} ÷ ${frH(2,5)} = ${frH(9,4)} × ${frH(5,2)} = ${frH(45,8)} = 5${frH(5,8)}</div>`,
   () => { const a = fracOrMixed(), b = shortDec(), mul = Math.random() < .5, first = Math.random() < .5;
     const [x, y] = first ? [a, b] : [b, a];
-    return fracItem(`${fdH(x)} ${mul ? '×' : '÷'} ${fdH(y)}`, mul ? fmul(fdV(x), fdV(y)) : fdiv(fdV(x), fdV(y))); });
+    return withSol(fracItem(`${fdH(x)} ${mul ? '×' : '÷'} ${fdH(y)}`, mul ? fmul(fdV(x), fdV(y)) : fdiv(fdV(x), fdV(y))), fdSteps([x, y], [mul ? '×' : '÷'])); });
 skill('fd-order', 'Order of operations with fractions & decimals',
   `Do <b>× and ÷ first</b> (left to right), then <b>+ and −</b> (left to right). Change decimals to fractions as you go.
    <div class="ex">1${frH(1,4)} + 3.5 × 2.1 = 1${frH(1,4)} + ${frH(7,2)} × ${frH(21,10)} = 1${frH(1,4)} + 7${frH(7,20)} = 8${frH(3,5)}</div>`,
@@ -715,17 +927,17 @@ skill('fd-order', 'Order of operations with fractions & decimals',
       const [a, b, c] = vals.map(fdV), ap = (x, o, y) => o === '+' ? fadd(x, y) : o === '−' ? fsub(x, y) : o === '×' ? fmul(x, y) : fdiv(x, y);
       const hi = o => o === '×' || o === '÷'; let v;
       if (hi(ops[1]) && !hi(ops[0])) v = ap(a, ops[0], ap(b, ops[1], c)); else v = ap(ap(a, ops[0], b), ops[1], c);
-      if (v.n > 0 && v.d <= 400) return fracItem(`${fdH(vals[0])} ${ops[0]} ${fdH(vals[1])} ${ops[1]} ${fdH(vals[2])}`, v);
+      if (v.n > 0 && v.d <= 400) return withSol(fracItem(`${fdH(vals[0])} ${ops[0]} ${fdH(vals[1])} ${ops[1]} ${fdH(vals[2])}`, v), fdOrderSteps(vals, ops, [a, b, c], v));
     } return SK['fd-addsub'].gen(); });
 skill('i-order', 'Order of operations with integers',
   `Follow <b>GEMDAS</b>: Grouping symbols first, then Exponents, then Multiplication and Division (left to right), then Addition and Subtraction (left to right).
    <div class="ex">7 − 4[2 + 3] = 7 − 4(5) = 7 − 20 = −13</div>`,
   () => { const t = R(0, 4), a = nz(-20, 20), b = nz(-9, 9), c = nz(-9, 9), d = nz(-12, 12);
-    if (t === 0) return numItem(`${m(a)} + ${sn(b)} × ${sn(c)}`, a + b * c);
-    if (t === 1) return numItem(`${m(a)} × ${sn(b)} − ${sn(c)} × ${sn(d)}`, a * b - c * d);
-    if (t === 2) return numItem(`${m(a)} − ${sn(b * c)} ÷ ${sn(c)}`, a - b);
-    if (t === 3) return numItem(`(${m(a)} + ${sn(b)}) × ${sn(c)}`, (a + b) * c);
-    return numItem(`${m(d)} × (${m(b)} − ${sn(c)}) + ${sn(a)}`, d * (b - c) + a); });
+    if (t === 0) return withSol(numItem(`${m(a)} + ${sn(b)} × ${sn(c)}`, a + b * c), [st(`= ${m(a)} + ${sn(b * c)}`, `Multiplication comes before addition. ${m(b)} times ${m(c)} is ${m(b * c)}.`, '× first'), st(`= ${m(a + b * c)}`, `Now add. ${intAddSay(a, b * c)}`, 'then +')]);
+    if (t === 1) return withSol(numItem(`${m(a)} × ${sn(b)} − ${sn(c)} × ${sn(d)}`, a * b - c * d), [st(`= ${sn(a * b)} − ${sn(c * d)}`, `Do both multiplications first: ${m(a)} times ${m(b)} is ${m(a * b)}, and ${m(c)} times ${m(d)} is ${m(c * d)}.`, '× first')].concat(intSubSteps(a * b, c * d)));
+    if (t === 2) return withSol(numItem(`${m(a)} − ${sn(b * c)} ÷ ${sn(c)}`, a - b), [st(`= ${m(a)} − ${sn(b)}`, `Division comes before subtraction. ${m(b * c)} divided by ${m(c)} is ${m(b)}.`, '÷ first')].concat(intSubSteps(a, b)));
+    if (t === 3) return withSol(numItem(`(${m(a)} + ${sn(b)}) × ${sn(c)}`, (a + b) * c), [st(`= ${sn(a + b)} × ${sn(c)}`, `Parentheses first. ${intAddSay(a, b)}`, '( ) first'), st(`= ${m((a + b) * c)}`, `Now multiply: ${m(a + b)} times ${m(c)} is ${m((a + b) * c)}.${a + b ? ' ' + sgnSay(a + b, c) : ''}`, 'then ×')]);
+    return withSol(numItem(`${m(d)} × (${m(b)} − ${sn(c)}) + ${sn(a)}`, d * (b - c) + a), [st(`= ${m(d)} × ${sn(b - c)} + ${sn(a)}`, `Parentheses first: ${m(b)} minus ${m(c)} is ${m(b - c)}.`, '( ) first'), st(`= ${sn(d * (b - c))} + ${sn(a)}`, `Multiply next: ${m(d)} times ${m(b - c)} is ${m(d * (b - c))}.`, 'then ×')].concat(intAddSteps(d * (b - c), a))); });
 
 // ---------- Exponents ----------
 skill('e-eval', 'Evaluating exponents',
@@ -733,79 +945,99 @@ skill('e-eval', 'Evaluating exponents',
    <div class="ex">5⁴ = 5 × 5 × 5 × 5 = 625</div>`,
   () => { let b, e; do { b = R(2, 12); e = R(2, 6); } while (b ** e > 2e6);
     if (Math.random() < .3) { let b2, e2; do { b2 = R(2, 9); e2 = R(2, 4); } while (b2 ** e2 > 1e4); const plus = Math.random() < .6;
-      return numItem(`${sup(b, e)} ${plus ? '+' : '−'} ${sup(b2, e2)}`, plus ? b ** e + b2 ** e2 : b ** e - b2 ** e2); }
-    return numItem(sup(b, e), b ** e); });
+      const rr = plus ? b ** e + b2 ** e2 : b ** e - b2 ** e2;
+      return withSol(numItem(`${sup(b, e)} ${plus ? '+' : '−'} ${sup(b2, e2)}`, rr), [st(`${sup(b, e)} = ${Array(e).fill(b).join(' × ')} = ${b ** e}`, `Work out each power first. ${b} to the power ${e} means ${e} ${b}s multiplied together: ${b ** e}.`, 'powers first'),
+        st(`${sup(b2, e2)} = ${Array(e2).fill(b2).join(' × ')} = ${b2 ** e2}`, `And ${b2} to the power ${e2} is ${b2 ** e2}.`), st(`= ${b ** e} ${plus ? '+' : MINUS} ${b2 ** e2} = ${m(rr)}`, `Now ${plus ? 'add' : 'subtract'}: the answer is ${m(rr)}.`, plus ? 'then add' : 'then subtract')]); }
+    return withSol(numItem(sup(b, e), b ** e), [st(`= ${Array(e).fill(b).join(' × ')}`, `The exponent ${e} tells us to multiply ${b} by itself ${e} times.`, `${e} times`),
+      st(`= ${b ** e}`, `Multiply one at a time: ${Array.from({length: e}, (_, k) => b ** (k + 1)).join(', ')}. The answer is ${b ** e}.`)]); });
 skill('e-notation', 'Writing numbers in exponential form',
   `Find how many times the base must be multiplied by itself to make the number.
    <div class="ex">81 = 3 × 3 × 3 × 3 = 3⁴ → the exponent is 4</div>`,
   () => { let b, e; do { b = R(2, 10); e = R(2, 7); } while (b ** e > 1e6);
-    return numItem(`Write ${(b ** e).toLocaleString()} as a power of ${b}. What is the exponent? &nbsp; ${b ** e} = ${sup(b, '?')}`, e, '', 1e-9, {words:true, show: `${e} &nbsp;(${(b ** e).toLocaleString()} = ${sup(b, e)})`}); });
+    return withSol(numItem(`Write ${(b ** e).toLocaleString()} as a power of ${b}. What is the exponent? &nbsp; ${b ** e} = ${sup(b, '?')}`, e, '', 1e-9, {words:true, show: `${e} &nbsp;(${(b ** e).toLocaleString()} = ${sup(b, e)})`}),
+      [st(`${Array.from({length: e + 1}, (_, k) => b ** (e - k)).join(' → ')}`, `Keep dividing by ${b} until you reach 1: ${Array.from({length: e + 1}, (_, k) => b ** (e - k)).join(', ')}. We divided ${e} times.`, `÷ ${b} each time`),
+       st(`${b ** e} = ${Array(e).fill(b).join(' × ')}`, `So ${b ** e} is ${e} ${b}s multiplied together.`), st(`= ${sup(b, e)}`, `The exponent is ${e}.`)]); });
 skill('e-laws', 'Laws of exponents',
   `Same base: <b>multiply → add</b> the exponents (aᵐ × aⁿ = aᵐ⁺ⁿ), <b>divide → subtract</b> them (aᵐ ÷ aⁿ = aᵐ⁻ⁿ), <b>power of a power → multiply</b> them ((aᵐ)ⁿ = aᵐⁿ).
    <div class="ex">5⁴ × 5⁶ = 5¹⁰ &nbsp;·&nbsp; 10⁸ ÷ 10⁶ = 10² &nbsp;·&nbsp; (8⁵)² = 8¹⁰</div>`,
   () => { const a = R(2, 25), x = R(2, 12), y = R(2, 12), t = R(0, 2);
-    if (t === 0) return numItem(`${sup(a, x)} × ${sup(a, y)} = ${sup(a, '?')}`, x + y, '', 1e-9, {show: sup(a, x + y)});
-    if (t === 1) { const [p, q] = x > y ? [x, y] : [y + x, y]; return numItem(`${sup(a, p)} ÷ ${sup(a, q)} = ${sup(a, '?')}`, p - q, '', 1e-9, {show: sup(a, p - q)}); }
-    return numItem(`(${sup(a, x)})<sup>${y}</sup> = ${sup(a, '?')}`, x * y, '', 1e-9, {show: sup(a, x * y)}); });
+    if (t === 0) return withSol(numItem(`${sup(a, x)} × ${sup(a, y)} = ${sup(a, '?')}`, x + y, '', 1e-9, {show: sup(a, x + y)}), [st(`= ${sup(a, `${x} + ${y}`)}`, `Same base, ${a}, and we are multiplying, so add the exponents.`, 'multiply → add'), st(`= ${sup(a, x + y)}`, `${x} plus ${y} is ${x + y}. The missing exponent is ${x + y}.`)]);
+    if (t === 1) { const [p, q] = x > y ? [x, y] : [y + x, y]; return withSol(numItem(`${sup(a, p)} ÷ ${sup(a, q)} = ${sup(a, '?')}`, p - q, '', 1e-9, {show: sup(a, p - q)}), [st(`= ${sup(a, `${p} − ${q}`)}`, 'Same base, and we are dividing, so subtract the exponents.', 'divide → subtract'), st(`= ${sup(a, p - q)}`, `${p} minus ${q} is ${p - q}. The missing exponent is ${p - q}.`)]); }
+    return withSol(numItem(`(${sup(a, x)})<sup>${y}</sup> = ${sup(a, '?')}`, x * y, '', 1e-9, {show: sup(a, x * y)}), [st(`= ${sup(a, `${x} × ${y}`)}`, 'A power raised to another power: multiply the exponents.', 'power of a power → ×'), st(`= ${sup(a, x * y)}`, `${x} times ${y} is ${x * y}. The missing exponent is ${x * y}.`)]); });
 skill('e-zero-neg', 'Zero and negative exponents',
   `Any non-zero number to the power 0 is <b>1</b>. A negative exponent means a <b>reciprocal</b>: a⁻ⁿ = 1/aⁿ.
    <div class="ex">8⁰ = 1 &nbsp;·&nbsp; 5⁻² + 2⁴ = ${frH(1,25)} + 16 = 16${frH(1,25)}</div>`,
   () => { const t = R(0, 4), a = R(2, 12), b = R(2, 9);
-    if (t === 0) { const k = R(2, 3); return fracItem(`${sup(a, 0)} + ${sup(b, k)}`, F(1 + b ** k)); }
-    if (t === 1) { const k = a > 6 ? 2 : R(1, 3); return fracItem(sup(a, MINUS + k), F(1, a ** k)); }
-    if (t === 2) return fracItem(`${sup(a, MINUS + 1)} + ${sup(b, MINUS + 1)}`, fadd(F(1, a), F(1, b)));
-    if (t === 3) { const p = R(1, 4), q = p + R(1, 2); return fracItem(`${sup(b, p)} ÷ ${sup(b, q)}`, F(1, b ** (q - p))); }
-    const k = R(2, 3); return fracItem(`${sup(b, k)} − ${sup(a, 0)} + ${sup(a, MINUS + 1)}`, fadd(F(b ** k - 1), F(1, a))); });
+    if (t === 0) { const k = R(2, 3); return withSol(fracItem(`${sup(a, 0)} + ${sup(b, k)}`, F(1 + b ** k)), [st(`= 1 + ${b ** k}`, `Any number except 0 to the power 0 is 1. And ${b} to the power ${k} is ${b ** k}.`, 'a⁰ = 1'), st(`= ${1 + b ** k}`, `1 plus ${b ** k} is ${1 + b ** k}.`)]); }
+    if (t === 1) { const k = a > 6 ? 2 : R(1, 3); return withSol(fracItem(sup(a, MINUS + k), F(1, a ** k)), [st(`= ${frH(1, sup(a, k))}`, 'A negative exponent means flip it: take the reciprocal and make the exponent positive.', 'a⁻ⁿ = 1/aⁿ'), st(`= ${frH(1, a ** k)}`, `${a} to the power ${k} is ${a ** k}, so the answer is 1/${a ** k}.`)]); }
+    if (t === 2) return withSol(fracItem(`${sup(a, MINUS + 1)} + ${sup(b, MINUS + 1)}`, fadd(F(1, a), F(1, b))), [st(`= ${frH(1, a)} + ${frH(1, b)}`, `A power of negative 1 is just the reciprocal: 1/${a} and 1/${b}.`, 'a⁻¹ = 1/a')].concat(fracASSteps({n:1, d:a}, {n:1, d:b}, '+')));
+    if (t === 3) { const p = R(1, 4), q = p + R(1, 2); return withSol(fracItem(`${sup(b, p)} ÷ ${sup(b, q)}`, F(1, b ** (q - p))), [st(`= ${sup(b, `${p} − ${q}`)} = ${sup(b, MINUS + (q - p))}`, `Same base, and we are dividing, so subtract the exponents: ${p} minus ${q} is negative ${q - p}.`, 'divide → subtract'),
+      st(`= ${frH(1, sup(b, q - p))}`, 'A negative exponent means the reciprocal.', 'a⁻ⁿ = 1/aⁿ'), st(`= ${frH(1, b ** (q - p))}`, `${b} to the power ${q - p} is ${b ** (q - p)}.`)]); }
+    const k = R(2, 3); return withSol(fracItem(`${sup(b, k)} − ${sup(a, 0)} + ${sup(a, MINUS + 1)}`, fadd(F(b ** k - 1), F(1, a))), [st(`= ${b ** k} − 1 + ${frH(1, a)}`, `One power at a time: ${b} to the power ${k} is ${b ** k}, ${a} to the power 0 is 1, and ${a} to the power negative 1 is 1/${a}.`, 'one power at a time'),
+      st(`= ${b ** k - 1} + ${frH(1, a)}`, `${b ** k} minus 1 is ${b ** k - 1}.`), st(`= ${fH(fadd(F(b ** k - 1), F(1, a)))}`, `A whole number plus a fraction makes a mixed number: ${b ** k - 1} and 1/${a}.`, 'mixed number')]); });
 skill('e-vars', 'Exponents with variables',
   `Combine the numbers first, then apply the laws of exponents to each variable. A simplified answer has no negative exponents.
    <div class="ex">2x³ · 3x² = 6x⁵ &nbsp;·&nbsp; 12y⁷ ÷ 4y³ = 3y⁴ &nbsp;·&nbsp; (2a³)² = 4a⁶</div>`,
   () => { const v = pick(['x', 'y', 'a', 'm', 'k']), t = R(0, 2);
     if (t === 0) { const c1 = nz(-6, 9), c2 = R(2, 7), e1 = R(1, 7), e2 = R(2, 6);
-      return mcItem(`(${mono(c1, v, e1)})(${mono(c2, v, e2)})`, mono(c1 * c2, v, e1 + e2), [mono(c1 * c2, v, e1 * e2), mono(c1 + c2, v, e1 + e2), mono(c1 * c2, v, e1 + e2 + 1), mono(-c1 * c2, v, e1 + e2)]); }
+      return withSol(mcItem(`(${mono(c1, v, e1)})(${mono(c2, v, e2)})`, mono(c1 * c2, v, e1 + e2), [mono(c1 * c2, v, e1 * e2), mono(c1 + c2, v, e1 + e2), mono(c1 * c2, v, e1 + e2 + 1), mono(-c1 * c2, v, e1 + e2)]),
+        [st(`= (${m(c1)} × ${c2})${sup(v, `${e1} + ${e2}`)}`, `Multiply the numbers. The base ${v} is the same, so add the exponents.`, 'numbers ×, exponents +'), st(`= ${mono(c1 * c2, v, e1 + e2)}`, `${m(c1)} times ${c2} is ${m(c1 * c2)}, and ${e1} plus ${e2} is ${e1 + e2}.`)]); }
     if (t === 1) { const k = R(2, 9), c2 = R(2, 8), e2 = R(1, 5), e1 = e2 + R(1, 6);
-      return mcItem(`${mono(k * c2, v, e1)} ÷ ${mono(c2, v, e2)}`, mono(k, v, e1 - e2), [mono(k, v, e1 + e2), mono(k * c2 - c2, v, e1 - e2), mono(k, v, e1 - e2 + 1), mono(k + 1, v, e1 - e2)]); }
+      return withSol(mcItem(`${mono(k * c2, v, e1)} ÷ ${mono(c2, v, e2)}`, mono(k, v, e1 - e2), [mono(k, v, e1 + e2), mono(k * c2 - c2, v, e1 - e2), mono(k, v, e1 - e2 + 1), mono(k + 1, v, e1 - e2)]),
+        [st(`= (${k * c2} ÷ ${c2})${sup(v, `${e1} − ${e2}`)}`, `Divide the numbers, and subtract the exponents of ${v}.`, 'numbers ÷, exponents −'), st(`= ${mono(k, v, e1 - e2)}`, `${k * c2} divided by ${c2} is ${k}, and ${e1} minus ${e2} is ${e1 - e2}.`)]); }
     const c = R(2, 5), e = R(2, 5), n = R(2, 3);
-    return mcItem(`(${mono(c, v, e)})<sup>${n}</sup>`, mono(c ** n, v, e * n), [mono(c, v, e * n), mono(c ** n, v, e + n), mono(c * n, v, e * n), mono(c * n, v, e + n)]); });
+    return withSol(mcItem(`(${mono(c, v, e)})<sup>${n}</sup>`, mono(c ** n, v, e * n), [mono(c, v, e * n), mono(c ** n, v, e + n), mono(c * n, v, e * n), mono(c * n, v, e + n)]),
+      [st(`= ${sup(c, n)}${sup(v, `${e} × ${n}`)}`, `Raise each part to the power ${n}: the number ${c} gets the power ${n}, and the exponents multiply.`, 'power of a power → ×'), st(`= ${mono(c ** n, v, e * n)}`, `${c} to the power ${n} is ${c ** n}, and ${e} times ${n} is ${e * n}.`)]); });
 
 // ---------- Square roots ----------
 const rt = x => `√<span class="rad">${x}</span>`;
 skill('r-perfect', 'Square roots of perfect squares',
   `The square root of a number is the number that, multiplied by itself, gives it. For big numbers, list the prime factors and take one from each pair.
    <div class="ex">√49 = 7 because 7 × 7 = 49 &nbsp;·&nbsp; 900 = (2×2)(3×3)(5×5) → √900 = 2 × 3 × 5 = 30</div>`,
-  () => { const k = Math.random() < .5 ? R(2, 15) : R(16, 50); return numItem(rt(k * k), k); });
+  () => { const k = Math.random() < .5 ? R(2, 15) : R(16, 50); return withSol(numItem(rt(k * k), k), [st(`? × ? = ${k * k}`, `We need a number that, multiplied by itself, gives ${k * k}.`, 'same number twice'), st(`${k} × ${k} = ${k * k} ✓`, `Try ${k}: ${k} times ${k} is ${k * k}. It works!`), st(`${rt(k * k)} = ${k}`, `So the square root of ${k * k} is ${k}.`)]); });
 skill('r-simplify', 'Simplifying square roots',
   `If the number is not a perfect square, find its biggest perfect-square factor and take its root out of the radical.
    <div class="ex">√56 = √(4 × 14) = 2√14</div>`,
   () => { const b = pick([2, 3, 5, 6, 7, 10, 11, 13]), a = R(2, 7);
-    return mcItem(rt(a * a * b), `${a}${rt(b)}`, [`${b}${rt(a)}`, `${a * a}${rt(b)}`, `${a + 1}${rt(b)}`, `${a}${rt(a * b)}`, `${2 * a}${rt(b)}`]); });
+    return withSol(mcItem(rt(a * a * b), `${a}${rt(b)}`, [`${b}${rt(a)}`, `${a * a}${rt(b)}`, `${a + 1}${rt(b)}`, `${a}${rt(a * b)}`, `${2 * a}${rt(b)}`]),
+      [st(`= ${rt(`${a * a} × ${b}`)}`, `Find the biggest perfect square that divides ${a * a * b}. It's ${a * a}, because ${a} times ${a} is ${a * a}.`, `${a * a} = ${a} × ${a}`), st(`= ${rt(a * a)} × ${rt(b)}`, 'Split it into two square roots.'), st(`= ${a}${rt(b)}`, `The square root of ${a * a} is ${a}, so ${a} comes out in front.`, 'take out the root')]); });
 
 // ---------- Algebraic expressions ----------
 skill('a-translate', 'Translating words into expressions',
   `Key words: <b>plus, more than, increased by</b> → +; <b>minus, less than, decreased by</b> → −; <b>times, product, twice</b> → ×; <b>divided by, quotient</b> → ÷. Careful: "4 less than x" is <b>x − 4</b>, and "subtract x from 7" is <b>7 − x</b>. Write the number before the variable: 3 × y → 3y.`,
   () => { const v = pick(['x', 'y', 'n', 'a', 'm', 'p']), n = R(2, 20), t = R(0, 8);
     const T = [
-      [`${n} more than ${v}`, `${v} + ${n}`, [`${n} − ${v}`, `${n}${v}`, `${v} − ${n}`]],
-      [`${n} less than ${v}`, `${v} − ${n}`, [`${n} − ${v}`, `${v} + ${n}`, `${n}${v}`]],
-      [`the product of ${n} and ${v}`, `${n}${v}`, [`${n} + ${v}`, sup(v, n), `${v} ÷ ${n}`]],
-      [`${v} divided by ${n}`, `${v} ÷ ${n}`, [`${n} ÷ ${v}`, `${v} − ${n}`, `${n}${v}`]],
-      [`twice ${v} decreased by ${n}`, `2${v} − ${n}`, [`2(${v} − ${n})`, `${n} − 2${v}`, `2${v} + ${n}`]],
-      [`${n} times the sum of ${v} and 3`, `${n}(${v} + 3)`, [`${n}${v} + 3`, `${n} + ${v} + 3`, `3(${v} + ${n})`]],
-      [`subtract ${v} from ${n}`, `${n} − ${v}`, [`${v} − ${n}`, `${n} + ${v}`, `${MINUS}${n}${v}`]],
-      [`the square of ${v} increased by ${n}`, `${sup(v, 2)} + ${n}`, [`2${v} + ${n}`, `(${v} + ${n})<sup>2</sup>`, `${sup(v, 2)} − ${n}`]],
-      [`${n} decreased by three times ${v}`, `${n} − 3${v}`, [`3${v} − ${n}`, `3(${n} − ${v})`, `${n} + 3${v}`]],
+      [`${n} more than ${v}`, `${v} + ${n}`, [`${n} − ${v}`, `${n}${v}`, `${v} − ${n}`], `"More than" means add: ${n} is added to ${v}.`],
+      [`${n} less than ${v}`, `${v} − ${n}`, [`${n} − ${v}`, `${v} + ${n}`, `${n}${v}`], `"${n} less than ${v}" means start with ${v} and take away ${n}. Careful, the order flips!`],
+      [`the product of ${n} and ${v}`, `${n}${v}`, [`${n} + ${v}`, sup(v, n), `${v} ÷ ${n}`], `"Product" means multiply. ${n} times ${v} is written ${n}${v}.`],
+      [`${v} divided by ${n}`, `${v} ÷ ${n}`, [`${n} ÷ ${v}`, `${v} − ${n}`, `${n}${v}`], `"Divided by" means divide, in the same order: ${v} divided by ${n}.`],
+      [`twice ${v} decreased by ${n}`, `2${v} − ${n}`, [`2(${v} − ${n})`, `${n} − 2${v}`, `2${v} + ${n}`], `"Twice ${v}" is 2${v}, and "decreased by ${n}" means subtract ${n}.`],
+      [`${n} times the sum of ${v} and 3`, `${n}(${v} + 3)`, [`${n}${v} + 3`, `${n} + ${v} + 3`, `3(${v} + ${n})`], `"The sum of ${v} and 3" is (${v} + 3). ${n} times the whole sum needs parentheses.`],
+      [`subtract ${v} from ${n}`, `${n} − ${v}`, [`${v} − ${n}`, `${n} + ${v}`, `${MINUS}${n}${v}`], `"Subtract ${v} from ${n}" means start with ${n} and take away ${v}.`],
+      [`the square of ${v} increased by ${n}`, `${sup(v, 2)} + ${n}`, [`2${v} + ${n}`, `(${v} + ${n})<sup>2</sup>`, `${sup(v, 2)} − ${n}`], `"The square of ${v}" is ${v}², and "increased by ${n}" means add ${n}.`],
+      [`${n} decreased by three times ${v}`, `${n} − 3${v}`, [`3${v} − ${n}`, `3(${n} − ${v})`, `${n} + 3${v}`], `"Three times ${v}" is 3${v}. "${n} decreased by" it means ${n} minus 3${v}.`],
     ][t];
-    return Object.assign(mcItem(`Write as an expression: <b>${T[0]}</b>`, T[1], T[2]), {words:true}); });
+    return withSol(Object.assign(mcItem(`Write as an expression: <b>${T[0]}</b>`, T[1], T[2]), {words:true}), [st(`<span class="small">${T[3]}</span>`, T[3], 'key words'), st(`= ${T[1]}`, `So the expression is ${txt(T[1])}.`)]); });
 skill('a-evaluate', 'Evaluating expressions',
   `Replace each variable with its value <b>inside parentheses</b>, then compute using the order of operations.
    <div class="ex">If a = −2 and b = 3: a² − 2b = (−2)² − 2(3) = 4 − 6 = −2</div>`,
   () => { for (let i = 0; i < 30; i++) {
       const a = nz(-6, 6), b = nz(-6, 6), c = nz(-6, 6), t = R(0, 8);
       const T = [
-        [`a − b`, F(a - b)], [`2(b − c)`, F(2 * (b - c))], [`${sup('a', 2)} + b`, F(a * a + b)], [`ab − c`, F(a * b - c)],
-        [`${sup('a', 2)} − 2b`, F(a * a - 2 * b)], [`3a + 2b − c`, F(3 * a + 2 * b - c)], [`(a + b)<sup>2</sup>`, F((a + b) ** 2)],
-        [`${sup('a', 3)} − bc`, F(a ** 3 - b * c)], [`<span class="fr"><span>a − b</span><span>c</span></span>`, F(a - b, c)],
+        [`a − b`, F(a - b), `${sn(a)} − ${sn(b)}`],
+        [`2(b − c)`, F(2 * (b - c)), `2(${sn(b)} − ${sn(c)})`, `2(${m(b - c)})`, `Parentheses first: ${m(b)} minus ${m(c)} is ${m(b - c)}.`],
+        [`${sup('a', 2)} + b`, F(a * a + b), `${sn(a)}<sup>2</sup> + ${sn(b)}`, `${a * a} + ${sn(b)}`, `Exponent first: ${m(a)} squared is ${a * a}.`],
+        [`ab − c`, F(a * b - c), `${sn(a)} × ${sn(b)} − ${sn(c)}`, `${m(a * b)} − ${sn(c)}`, `Multiply first: ${m(a)} times ${m(b)} is ${m(a * b)}.`],
+        [`${sup('a', 2)} − 2b`, F(a * a - 2 * b), `${sn(a)}<sup>2</sup> − 2 × ${sn(b)}`, `${a * a} − ${sn(2 * b)}`, `Exponent and multiplication first: ${m(a)} squared is ${a * a}, and 2 times ${m(b)} is ${m(2 * b)}.`],
+        [`3a + 2b − c`, F(3 * a + 2 * b - c), `3 × ${sn(a)} + 2 × ${sn(b)} − ${sn(c)}`, `${m(3 * a)} + ${sn(2 * b)} − ${sn(c)}`, `Multiply first: 3 times ${m(a)} is ${m(3 * a)}, and 2 times ${m(b)} is ${m(2 * b)}.`],
+        [`(a + b)<sup>2</sup>`, F((a + b) ** 2), `(${sn(a)} + ${sn(b)})<sup>2</sup>`, `${sn(a + b)}<sup>2</sup>`, `Parentheses first: ${m(a)} plus ${m(b)} is ${m(a + b)}.`],
+        [`${sup('a', 3)} − bc`, F(a ** 3 - b * c), `${sn(a)}<sup>3</sup> − ${sn(b)} × ${sn(c)}`, `${m(a ** 3)} − ${sn(b * c)}`, `${m(a)} cubed is ${m(a ** 3)}, and ${m(b)} times ${m(c)} is ${m(b * c)}.`],
+        [`<span class="fr"><span>a − b</span><span>c</span></span>`, F(a - b, c), frH(`${sn(a)} − ${sn(b)}`, sn(c)), frH(m(a - b), sn(c)), `Work out the top first: ${m(a)} minus ${m(b)} is ${m(a - b)}.`],
       ][t];
-      if (T[1].d <= 12) return Object.assign(fracItem(`If a = ${m(a)}, b = ${m(b)} and c = ${m(c)}, find &nbsp;${T[0]}`, T[1]), {words:true});
+      const sol = [st(`= ${T[2]}`, `Replace a with ${m(a)}, b with ${m(b)} and c with ${m(c)}. Put negative numbers in parentheses.`, 'substitute')];
+      if (T[3]) sol.push(st(`= ${T[3]}`, T[4], 'order of operations'));
+      sol.push(st(`= ${fH(T[1])}`, `Finish the arithmetic. The answer is ${fT(T[1])}.`));
+      if (T[1].d <= 12) return withSol(Object.assign(fracItem(`If a = ${m(a)}, b = ${m(b)} and c = ${m(c)}, find &nbsp;${T[0]}`, T[1]), {words:true}), sol);
     } return SK['i-add'].gen(); });
 
 // ---------- Polynomials ----------
@@ -815,53 +1047,73 @@ skill('p-add', 'Adding polynomials',
   `Combine <b>like terms</b> only: add the numbers in front of terms with the same variable and exponent. Terms with no partner are copied.
    <div class="ex">(7x² + 2) + (−x² + 3x − 6) = 6x² + 3x − 4</div>`,
   () => { const A = randPoly(R(1, 3)), B = randPoly(R(1, 3)), S = padd(A, B);
-    return mcItem(`(${polyH(A)}) + (${polyH(B)})`, polyH(S), [polyH(padd(A, pscale(B, -1))), polyH(flipOne(S)), polyH(nudge(S)), polyH(flipOne(flipOne(S)))]); });
+    return withSol(mcItem(`(${polyH(A)}) + (${polyH(B)})`, polyH(S), [polyH(padd(A, pscale(B, -1))), polyH(flipOne(S)), polyH(nudge(S)), polyH(flipOne(flipOne(S)))]), likeTermSteps(A, B).concat([polyEnd(S)])); });
 skill('p-sub', 'Subtracting polynomials',
   `Change the sign of <b>every</b> term in the polynomial being subtracted, then add like terms.
    <div class="ex">(2x − 19) − (−x + 13) = 2x − 19 + x − 13 = 3x − 32</div>`,
   () => { const A = randPoly(R(1, 3)), B = randPoly(R(1, 3)), D = padd(A, pscale(B, -1));
     const onlyFirst = B.slice(); onlyFirst[onlyFirst.length - 1] *= -1; // forgot to change all signs
-    return mcItem(`(${polyH(A)}) − (${polyH(B)})`, polyH(D), [polyH(padd(A, B)), polyH(padd(A, onlyFirst)), polyH(flipOne(D)), polyH(nudge(D))]); });
+    return withSol(mcItem(`(${polyH(A)}) − (${polyH(B)})`, polyH(D), [polyH(padd(A, B)), polyH(padd(A, onlyFirst)), polyH(flipOne(D)), polyH(nudge(D))]),
+      [st(`= (${polyH(A)}) + (${polyH(pscale(B, -1))})`, 'Subtracting a polynomial means changing the sign of every term inside it. Then we add.', 'change every sign')].concat(likeTermSteps(A, pscale(B, -1)), [polyEnd(D)])); });
 skill('p-mul-mono', 'Multiplying by a monomial',
   `Use the <b>distributive property</b>: multiply the outside term by every term inside. When multiplying powers of x, add the exponents.
    <div class="ex">−2(4x² − 3x + 1) = −8x² + 6x − 2 &nbsp;·&nbsp; 3x(2x − 5) = 6x² − 15x</div>`,
   () => { const k = nz(-9, 9), e = R(0, 2), P = randPoly(R(1, 2)), Mn = Array(e).fill(0).concat([k]), Pr = pmul(Mn, P);
     const firstOnly = pshift(P.map((c, i) => i === P.length - 1 ? c * k : c), e);
-    return mcItem(`${mono(k, 'x', e)}(${polyH(P)})`, polyH(Pr), [polyH(firstOnly), polyH(flipOne(Pr)), polyH(pscale(P, k)), polyH(nudge(Pr))]); });
+    const rows = []; for (let i = P.length - 1; i >= 0; i--) if (P[i]) rows.push(st(`${mono(k, 'x', e)} × ${pm1(P[i], i)} = ${mono(k * P[i], 'x', e + i)}`, `${rows.length ? '' : 'Multiply the outside term by every term inside. '}${m(k)} times ${m(P[i])} is ${m(k * P[i])}${e && i ? `, and add the exponents: ${e} plus ${i} is ${e + i}` : ''}.`, rows.length ? '' : 'multiply each term'));
+    return withSol(mcItem(`${mono(k, 'x', e)}(${polyH(P)})`, polyH(Pr), [polyH(firstOnly), polyH(flipOne(Pr)), polyH(pscale(P, k)), polyH(nudge(Pr))]), rows.concat([st(`= ${polyH(Pr)}`, 'Put all the terms together.', 'final answer')])); });
 skill('p-foil', 'Multiplying binomials (FOIL)',
   `Multiply <b>F</b>irst, <b>O</b>uter, <b>I</b>nner, <b>L</b>ast terms, then combine the middle terms.
    <div class="ex">(2x + 3)(x − 5) = 2x² − 10x + 3x − 15 = 2x² − 7x − 15</div>`,
   () => { const a = R(1, 5), b = nz(-9, 9), c = R(1, 5), d = nz(-9, 9), P = pmul([b, a], [d, c]);
-    return mcItem(`${bin(a, b)}${bin(c, d)}`, polyH(P), [polyH(pclean([b * d, 0, a * c])), polyH([b * d, a * d - b * c, a * c]), polyH([-b * d, a * d + b * c, a * c]), polyH([b * d, a * d + b * c + 1, a * c])]); });
+    const ax = mono(a, 'x', 1), cx = mono(c, 'x', 1), mid = a * d + b * c;
+    return withSol(mcItem(`${bin(a, b)}${bin(c, d)}`, polyH(P), [polyH(pclean([b * d, 0, a * c])), polyH([b * d, a * d - b * c, a * c]), polyH([-b * d, a * d + b * c, a * c]), polyH([b * d, a * d + b * c + 1, a * c])]),
+      [st(`F: ${ax} × ${cx} = ${mono(a * c, 'x', 2)}`, `First terms: ${txt(ax)} times ${txt(cx)} is ${txt(mono(a * c, 'x', 2))}.`, 'First'), st(`O: ${ax} × ${sn(d)} = ${mono(a * d, 'x', 1)}`, `Outer terms: ${txt(ax)} times ${m(d)} is ${txt(mono(a * d, 'x', 1))}.`, 'Outer'),
+       st(`I: ${sn(b)} × ${cx} = ${mono(b * c, 'x', 1)}`, `Inner terms: ${m(b)} times ${txt(cx)} is ${txt(mono(b * c, 'x', 1))}.`, 'Inner'), st(`L: ${sn(b)} × ${sn(d)} = ${m(b * d)}`, `Last terms: ${m(b)} times ${m(d)} is ${m(b * d)}.`, 'Last'),
+       st(`${mono(a * d, 'x', 1)} ${b * c < 0 ? MINUS : '+'} ${mono(Math.abs(b * c), 'x', 1)} = ${mid ? mono(mid, 'x', 1) : '0'}`, `Combine the two middle terms: ${m(a * d)} ${b * c < 0 ? 'minus' : 'plus'} ${Math.abs(b * c)} is ${m(mid)}.`, 'O + I'), st(`= ${polyH(P)}`, 'Write it all together.', 'final answer')]); });
 skill('p-div-mono', 'Dividing by a monomial',
   `Divide <b>each term</b> by the monomial: divide the numbers and subtract the exponents.
    <div class="ex">(18x⁴ − 10x² + 6x⁷) ÷ 2x² = 9x² − 5 + 3x⁵</div>`,
   () => { const k = nz(-6, 6) || 2, j = R(1, 3), Q = randPoly(R(1, 3), 8), Dd = pmul(pshift([k], j), Q);
-    return mcItem(`(${polyH(Dd)}) ÷ ${mono(k, 'x', j)}`, polyH(Q), [polyH(pshift(Q, 1)), polyH(flipOne(Q)), polyH(nudge(Q)), polyH(pscale(Q, -1))]); });
+    const rows = []; for (let i = Dd.length - 1; i >= 0; i--) if (Dd[i]) rows.push(st(`${pm1(Dd[i], i)} ÷ ${mono(k, 'x', j)} = ${mono(Dd[i] / k, 'x', i - j)}`, `${rows.length ? '' : 'Divide each term by the monomial. '}${m(Dd[i])} divided by ${m(k)} is ${m(Dd[i] / k)}, and ${i} minus ${j} is ${i - j}.`, rows.length ? '' : 'divide each term'));
+    return withSol(mcItem(`(${polyH(Dd)}) ÷ ${mono(k, 'x', j)}`, polyH(Q), [polyH(pshift(Q, 1)), polyH(flipOne(Q)), polyH(nudge(Q)), polyH(pscale(Q, -1))]), rows.concat([st(`= ${polyH(Q)}`, 'Put all the answers together.', 'final answer')])); });
 
 // ---------- Equations & inequalities ----------
 skill('eq-linear', 'Solving linear equations',
   `Do the same thing to <b>both sides</b> to get x alone: remove parentheses, collect the x terms on one side and the numbers on the other, then divide.
    <div class="ex">5x − 2 = 13 → 5x = 15 → x = 3 &nbsp;·&nbsp; 2(x − 4) = 6 → 2x − 8 = 6 → 2x = 14 → x = 7</div>`,
   () => { const x = nz(-10, 10), t = R(0, 3), a = nz(-9, 9), b = nz(-15, 15);
-    if (t === 0) return fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${m(a * x + b)}`, F(x));
-    if (t === 1) return fracItem(`Solve for x: &nbsp;${m(a)}(x ${b < 0 ? MINUS : '+'} ${Math.abs(b)}) = ${m(a * (x + b))}`, F(x));
-    if (t === 2) { let c = nz(-9, 9); while (c === a) c = nz(-9, 9); const d = a * x + b - c * x; return fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${polyH([d, c])}`, F(x)); }
-    const k = R(2, 6), xx = k * R(-5, 5); return fracItem(`Solve for x: &nbsp;${frH('x', k)} + ${sn(b)} = ${m(xx / k + b)}`, F(xx)); });
+    if (t === 0) return withSol(fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${m(a * x + b)}`, F(x)), linSteps(a, b, a * x + b, x));
+    if (t === 1) return withSol(fracItem(`Solve for x: &nbsp;${m(a)}(x ${b < 0 ? MINUS : '+'} ${Math.abs(b)}) = ${m(a * (x + b))}`, F(x)),
+      [st(`${polyH([a * b, a])} = ${m(a * (x + b))}`, `Remove the parentheses: multiply ${m(a)} by x and by ${m(b)}.`, 'distribute')].concat(linSteps(a, a * b, a * (x + b), x)));
+    if (t === 2) { let c = nz(-9, 9); while (c === a) c = nz(-9, 9); const d = a * x + b - c * x;
+      return withSol(fracItem(`Solve for x: &nbsp;${polyH([b, a])} = ${polyH([d, c])}`, F(x)),
+        [st(`${polyH([b, a - c])} = ${m(d)}`, `Get the x terms on one side: ${c > 0 ? 'subtract' : 'add'} ${txt(mono(Math.abs(c), 'x', 1))} ${c > 0 ? 'from' : 'to'} both sides. ${m(a)} minus ${m(c)} is ${m(a - c)}.`, `${c > 0 ? MINUS : '+'} ${mono(Math.abs(c), 'x', 1)} both sides`)].concat(linSteps(a - c, b, d, x))); }
+    const k = R(2, 6), xx = k * R(-5, 5), c = xx / k + b;
+    return withSol(fracItem(`Solve for x: &nbsp;${frH('x', k)} + ${sn(b)} = ${m(c)}`, F(xx)),
+      [st(`${frH('x', k)} = ${m(c - b)}`, b > 0 ? `Subtract ${b} from both sides.` : `Add ${-b} to both sides.`, b > 0 ? `− ${b} both sides` : `+ ${-b} both sides`), st(`x = ${m(c - b)} × ${k}`, `Multiply both sides by ${k} to undo the division.`, `× ${k} both sides`), st(`x = ${m(xx)}`, `${m(c - b)} times ${k} is ${m(xx)}. So x = ${m(xx)}.`)]); });
+
 const INEQ = {'<': (a, b) => a < b, '>': (a, b) => a > b, '≤': (a, b) => a <= b, '≥': (a, b) => a >= b};
 const FLIP = {'<': '>', '>': '<', '≤': '≥', '≥': '≤'};
 skill('ineq-check', 'Is it a solution of the inequality?',
   `Put the given number in place of the variable. If the statement is <b>true</b>, the number is a solution.
    <div class="ex">x + 3 < 8 with x = 4 → 7 < 8 is true → 4 is a solution</div>`,
   () => { const a = nz(-9, 9), b = R(-15, 15), x = R(-10, 15), s = pick(Object.keys(INEQ)), c = a * x + b + R(-6, 6);
-    return mcItem(`${polyH([b, a])} ${s} ${m(c)} &nbsp; when x = ${m(x)}`, INEQ[s](a * x + b, c) ? 'Solution' : 'Not a solution',
-      [INEQ[s](a * x + b, c) ? 'Not a solution' : 'Solution'], true); });
+    const val = a * x + b, ok = INEQ[s](val, c);
+    return withSol(mcItem(`${polyH([b, a])} ${s} ${m(c)} &nbsp; when x = ${m(x)}`, ok ? 'Solution' : 'Not a solution', [ok ? 'Not a solution' : 'Solution'], true),
+      [st(`${m(a)}(${m(x)})${b ? ` ${b < 0 ? MINUS : '+'} ${Math.abs(b)}` : ''} = ${m(val)}`, `Put ${m(x)} in place of x and work out the left side: it's ${m(val)}.`, 'substitute'),
+       st(`${m(val)} ${s} ${m(c)} ?`, `Now check: is ${m(val)} ${INW[s]} ${m(c)}? ${ok ? 'Yes, that is true.' : 'No, that is false.'}`, ok ? 'true ✓' : 'false ✗'),
+       st(`= ${ok ? 'Solution' : 'Not a solution'}`, ok ? `The statement is true, so ${m(x)} is a solution.` : `The statement is false, so ${m(x)} is not a solution.`)]); });
 skill('ineq-solve', 'Solving linear inequalities',
   `Solve like an equation, but <b>flip the inequality sign</b> whenever you multiply or divide both sides by a negative number.
    <div class="ex">−9x < 81 → x > −9 (divided by −9, so &lt; became &gt;)</div>`,
   () => { const a = nz(-9, 9), k = R(-9, 9), b = R(-12, 12), s = pick(Object.keys(INEQ)), c = a * k + b, sol = a < 0 ? FLIP[s] : s;
     const alt = {'<': '≤', '>': '≥', '≤': '<', '≥': '>'};
-    return mcItem(`${polyH([b, a])} ${s} ${m(c)}`, `x ${sol} ${m(k)}`, [`x ${FLIP[sol]} ${m(k)}`, `x ${sol} ${m(-k || 1)}`, `x ${alt[sol]} ${m(k)}`, `x ${FLIP[sol]} ${m(-k || 1)}`]); });
+    const rows = [];
+    if (b) rows.push(st(`${mono(a, 'x', 1)} ${s} ${m(c - b)}`, `${b > 0 ? `Subtract ${b} from` : `Add ${-b} to`} both sides. Adding or subtracting never flips the sign.`, b > 0 ? `− ${b} both sides` : `+ ${-b} both sides`));
+    if (a !== 1) rows.push(st(`x ${sol} ${m(k)}`, `Divide both sides by ${m(a)}. ${a < 0 ? `We divided by a negative number, so flip the sign: ${INW[s]} becomes ${INW[sol]}.` : `${a} is positive, so the sign stays the same.`}`, a < 0 ? 'negative → flip!' : 'sign stays'));
+    else if (!b) rows.push(st(`x ${sol} ${m(k)}`, `x is already alone: x is ${INW[sol]} ${m(k)}.`));
+    return withSol(mcItem(`${polyH([b, a])} ${s} ${m(c)}`, `x ${sol} ${m(k)}`, [`x ${FLIP[sol]} ${m(k)}`, `x ${sol} ${m(-k || 1)}`, `x ${alt[sol]} ${m(k)}`, `x ${FLIP[sol]} ${m(-k || 1)}`]), rows); });
 
 // ---------- Factoring ----------
 const facPair = (p, q) => { const [x, y] = p >= q ? [p, q] : [q, p]; return `${bin(1, x)}${bin(1, y)}`; };
@@ -870,18 +1122,27 @@ skill('fac-gcf', 'Factoring out the greatest common factor',
    <div class="ex">6x² + 9x = 3x(2x + 3)</div>`,
   () => { const g = R(2, 9), e = R(0, 2), inner = [nz(-9, 9), R(1, 9)]; if (gcd(inner[0], inner[1]) !== 1) inner[0] = inner[0] > 0 ? 1 : -1;
     const P = pmul(pshift([g], e), inner), G = mono(g, 'x', e), inH = polyH(inner);
-    return mcItem(polyH(P), `${G}(${inH})`, [`${mono(g, 'x', Math.max(0, e - 1))}(${polyH(pshift(inner, e ? 1 : 0))})`, `${G}(${polyH(flipOne(inner))})`, `${mono(g * 2, 'x', e)}(${polyH(inner)})`, `${G}(${polyH(nudge(inner))})`]); });
+    const fsol = [st(`GCF = ${G}`, `Look for what divides both terms. The biggest number is ${g}${e ? `, and both terms have at least ${e === 1 ? 'one x' : `x to the ${e}`}` : ''}. So the GCF is ${txt(G)}.`, 'greatest common factor'),
+      st(`${pm1(g * inner[1], e + 1)} ÷ ${G} = ${mono(inner[1], 'x', 1)}`, 'Divide each term by the GCF.', 'divide each term'), st(`${pm1(g * inner[0], e)} ÷ ${G} = ${m(inner[0])}`, `And the other term gives ${m(inner[0])}.`),
+      st(`= ${G}(${inH})`, 'Write the GCF outside, and what is left inside the parentheses.')];
+    return withSol(mcItem(polyH(P), `${G}(${inH})`, [`${mono(g, 'x', Math.max(0, e - 1))}(${polyH(pshift(inner, e ? 1 : 0))})`, `${G}(${polyH(flipOne(inner))})`, `${mono(g * 2, 'x', e)}(${polyH(inner)})`, `${G}(${polyH(nudge(inner))})`]), fsol); });
 skill('fac-tri', 'Factoring x² + bx + c',
   `Find two numbers that <b>multiply to c</b> and <b>add to b</b>. Those numbers go in the two binomials.
    <div class="ex">x² + 7x + 10 → 2 × 5 = 10 and 2 + 5 = 7 → (x + 2)(x + 5)</div>`,
   () => { let p = nz(-9, 9), q = nz(-9, 9); if (p === -q) q = q + 1 || 2; const P = [p * q, p + q, 1];
-    return mcItem(polyH(P), facPair(p, q), [facPair(-p, -q), facPair(p, -q), facPair(-p, q), facPair(p + 1, q - 1), facPair(p - 1, q + 1)]); });
+    return withSol(mcItem(polyH(P), facPair(p, q), [facPair(-p, -q), facPair(p, -q), facPair(-p, q), facPair(p + 1, q - 1), facPair(p - 1, q + 1)]),
+      [st(`? × ? = ${m(p * q)} &nbsp; ? + ? = ${m(p + q)}`, `We need two numbers that multiply to ${m(p * q)} and add to ${m(p + q)}.`, 'multiply to c, add to b'),
+       st(`${m(p)} × ${sn(q)} = ${m(p * q)} ✓ &nbsp; ${m(p)} + ${sn(q)} = ${m(p + q)} ✓`, `Try ${m(p)} and ${m(q)}: they multiply to ${m(p * q)} and add to ${m(p + q)}. Both work!`, 'found them'), st(`= ${facPair(p, q)}`, 'Put each number in a binomial with x.')]); });
 skill('fac-sq', 'Special products: squares',
   `<b>Difference of two squares:</b> a² − b² = (a + b)(a − b). <b>Perfect square trinomial:</b> a² + 2ab + b² = (a + b)² and a² − 2ab + b² = (a − b)².
    <div class="ex">4x² − 25 = (2x + 5)(2x − 5) &nbsp;·&nbsp; x² − 6x + 9 = (x − 3)²</div>`,
   () => { const a = R(1, 6), b = R(1, 12);
-    if (Math.random() < .5) return mcItem(polyH([-b * b, 0, a * a]), `${bin(a, b)}${bin(a, -b)}`, [`${bin(a, -b)}<sup>2</sup>`, `${bin(a, b)}<sup>2</sup>`, `${bin(a, b + 1)}${bin(a, -(b + 1))}`]);
-    const s = pick([1, -1]); return mcItem(polyH([b * b, 2 * a * b * s, a * a]), `${bin(a, s * b)}<sup>2</sup>`, [`${bin(a, -s * b)}<sup>2</sup>`, `${bin(a, b)}${bin(a, -b)}`, `${bin(a, s * 2 * b)}<sup>2</sup>`]); });
+    const ax = mono(a, 'x', 1);
+    if (Math.random() < .5) return withSol(mcItem(polyH([-b * b, 0, a * a]), `${bin(a, b)}${bin(a, -b)}`, [`${bin(a, -b)}<sup>2</sup>`, `${bin(a, b)}<sup>2</sup>`, `${bin(a, b + 1)}${bin(a, -(b + 1))}`]),
+      [st(`= (${ax})<sup>2</sup> − ${b}<sup>2</sup>`, `Both terms are perfect squares: ${txt(mono(a * a, 'x', 2))} is ${txt(ax)} squared, and ${b * b} is ${b} squared. It's a difference of two squares.`, 'a² − b²'), st(`= ${bin(a, b)}${bin(a, -b)}`, 'Use the pattern: a squared minus b squared is (a plus b) times (a minus b).', '(a + b)(a − b)')]);
+    const s = pick([1, -1]); return withSol(mcItem(polyH([b * b, 2 * a * b * s, a * a]), `${bin(a, s * b)}<sup>2</sup>`, [`${bin(a, -s * b)}<sup>2</sup>`, `${bin(a, b)}${bin(a, -b)}`, `${bin(a, s * 2 * b)}<sup>2</sup>`]),
+      [st(`(${ax})<sup>2</sup>, ${b}<sup>2</sup>, 2 × ${ax} × ${b} = ${mono(2 * a * b, 'x', 1)}`, `The first and last terms are perfect squares, and the middle is 2 times ${txt(ax)} times ${b}. It's a perfect square trinomial.`, 'a² ± 2ab + b²'),
+       st(`= ${bin(a, s * b)}<sup>2</sup>`, `The middle sign is ${s > 0 ? 'plus' : 'minus'}, so it's ${txt(bin(a, s * b))} squared.`, s > 0 ? '(a + b)²' : '(a − b)²')]); });
 skill('fac-ax2', 'Factoring ax² + bx + c',
   `When the x² term has a number in front, list factor pairs of a and of c, and try them (trial and error) until the outer + inner products give the middle term.
    <div class="ex">10x² + 23x + 12 → (5x + 4)(2x + 3) because 15x + 8x = 23x</div>`,
@@ -889,14 +1150,21 @@ skill('fac-ax2', 'Factoring ax² + bx + c',
     const P = pmul([b, a], [d, c]), ok = `${bin(a, b)}${bin(c, d)}`, alt = `${bin(a, d)}${bin(c, b)}`;
     const wrongs = [`${bin(a, -b)}${bin(c, -d)}`, `${bin(a, b)}${bin(c, -d)}`, `${bin(a, -b)}${bin(c, d)}`];
     if (polyH(pmul([d, a], [b, c])) !== polyH(P)) wrongs.unshift(alt);
-    return mcItem(polyH(P), ok, wrongs.filter(w => w !== alt || polyH(pmul([d, a], [b, c])) !== polyH(P))); });
+    const mid = a * d + b * c, ax = mono(a, 'x', 1), cx = mono(c, 'x', 1);
+    return withSol(mcItem(polyH(P), ok, wrongs.filter(w => w !== alt || polyH(pmul([d, a], [b, c])) !== polyH(P))),
+      [st(`(${ax} &nbsp;?&nbsp;)(${cx} &nbsp;?&nbsp;)`, `The first terms must multiply to ${txt(mono(a * c, 'x', 2))}. Try ${txt(ax)} and ${txt(cx)}.`, 'first terms'),
+       st(`${m(b)} × ${sn(d)} = ${m(b * d)}`, `The last terms must multiply to ${m(b * d)}. Try ${m(b)} and ${m(d)}.`, 'last terms'),
+       st(`O + I: ${mono(a * d, 'x', 1)} ${b * c < 0 ? MINUS : '+'} ${mono(Math.abs(b * c), 'x', 1)} = ${mid ? mono(mid, 'x', 1) : '0'} ✓`, `Check the middle: outer plus inner gives ${mid ? txt(mono(mid, 'x', 1)) : 'zero'}. It matches!`, 'check the middle'), st(`= ${ok}`, 'So that is the factored form.')]); });
 skill('fac-cubes', 'Sum and difference of two cubes',
   `<b>a³ + b³ = (a + b)(a² − ab + b²)</b> and <b>a³ − b³ = (a − b)(a² + ab + b²)</b>. Tip: the sign in the binomial matches the original; the middle sign of the trinomial is the opposite.
    <div class="ex">8x³ − 27 = (2x − 3)(4x² + 6x + 9)</div>`,
   () => { const a = R(1, 5), b = R(1, 6), s = pick([1, -1]);
     const tri = (mid) => `(${polyH([b * b, mid, a * a])})`;
-    return mcItem(polyH([s * b ** 3, 0, 0, a ** 3]), `${bin(a, s * b)}${tri(-s * a * b)}`,
-      [`${bin(a, s * b)}${tri(s * a * b)}`, `${bin(a, -s * b)}${tri(-s * a * b)}`, `${bin(a, -s * b)}${tri(s * a * b)}`, `${bin(a, s * b)}${tri(-s * 2 * a * b)}`]); });
+    const ax = mono(a, 'x', 1), csol = [st(`= (${ax})<sup>3</sup> ${s > 0 ? '+' : MINUS} ${b}<sup>3</sup>`, `${txt(mono(a ** 3, 'x', 3))} is ${txt(ax)} cubed, and ${b ** 3} is ${b} cubed. It's a ${s > 0 ? 'sum' : 'difference'} of two cubes.`, s > 0 ? 'a³ + b³' : 'a³ − b³'),
+      st(`= ${bin(a, s * b)}( … )`, `The first factor keeps the same sign: ${txt(bin(a, s * b))}.`, 'same sign'),
+      st(`= ${bin(a, s * b)}${tri(-s * a * b)}`, `The second factor is a squared, ${s > 0 ? 'minus' : 'plus'} a times b, plus b squared.`, 'opposite sign, then +')];
+    return withSol(mcItem(polyH([s * b ** 3, 0, 0, a ** 3]), `${bin(a, s * b)}${tri(-s * a * b)}`,
+      [`${bin(a, s * b)}${tri(s * a * b)}`, `${bin(a, -s * b)}${tri(-s * a * b)}`, `${bin(a, -s * b)}${tri(s * a * b)}`, `${bin(a, s * b)}${tri(-s * 2 * a * b)}`]), csol); });
 
 /* ================= COURSE OUTLINE (follows the ARAL worksheet order) ================= */
 const BANDS = {
@@ -1007,8 +1275,9 @@ const SHOP = [['party','Party hat',30],['bowtie','Bow tie',40],['glasses','Cool 
 let AC = null;
 const isMuted = () => { try { return localStorage.getItem('aralmath-mute') === '1'; } catch (e) { return false; } };
 function toggleMute(){ try { localStorage.setItem('aralmath-mute', isMuted() ? '0' : '1'); } catch (e) {} P.refresh(); }
+let QUIET = false; // set while the player fast-forwards to a step
 function sfx(kind){
-  if (isMuted()) return;
+  if (isMuted() || QUIET) return;
   const N = {ok:[[660,.1],[880,.16]], no:[[260,.18,'triangle'],[196,.26,'triangle']], win:[[523,.13],[659,.13],[784,.13],[1047,.4]], buy:[[988,.08],[1319,.18]], lvl:[[392,.1],[523,.1],[659,.1],[784,.1],[1047,.3]]}[kind];
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); let t = AC.currentTime;
     for (const [f, d, type = 'sine'] of N) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f;
@@ -1177,7 +1446,7 @@ function battle(el){
            <small style="color:var(--muted);display:block;margin-top:.4rem">${it.kind === 'frac' ? 'Fractions: 3/4 · mixed numbers: 2 1/3 · negatives: -5/6. Answer in lowest terms.' : 'Numbers only. Use - for negative.'}</small>`}
       <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Hit!</b> +${last.coins} coins${S.combo >= 3 ? ' (combo bonus!)' : ''}` : `<b>Missed!</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
         ${!last.ok && S.wrongRun >= 2 ? `<div class="fb info"><b>Let's review together:</b><div style="margin-top:.3rem">${sk.learn}</div></div>` : ''}
-        <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish battle' : 'Next question →'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
+        <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish battle' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
     </div></div>`;
   const inp = $('ans');
   if (inp && !S.answered) { inp.focus(); inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); answer(); } }; }
@@ -1225,7 +1494,7 @@ function winScreen(el){
       <div class="actions" style="justify-content:center;margin-top:1.2rem"><button class="btn ghost" onclick="leavePractice()">Back to map</button>${nowCaught ? '' : `<button class="btn ghost" onclick="const i='${S.id}';S=null;playLesson(i)">🎬 Watch the lesson</button>`}<button class="btn ghost" onclick="startPractice('${S.id}', true, true)">Battle again</button>
         ${nx && nx !== S.id ? `<button class="btn" onclick="startPractice('${nx}')">Next monster →</button>` : ''}</div></div>
     <details class="card"><summary style="cursor:pointer;font-weight:600">Review my answers</summary><div class="review">${S.items.map((it, k) => `<div><span class="mk ${S.res[k].ok ? 'ok' : 'no'}">${S.res[k].ok ? '✓' : '✗'}</span>
-      <span style="flex:1;min-width:12rem">${it.q}</span><span>You: <b>${S.res[k].given || '—'}</b></span>${S.res[k].ok ? '' : `<span>Answer: <b>${it.show}</b></span>`}</div>`).join('')}</div></details></div>`;
+      <span style="flex:1;min-width:12rem">${it.q}</span><span>You: <b>${S.res[k].given || '—'}</b></span>${S.res[k].ok ? '' : `<span>Answer: <b>${it.show}</b></span><button class="linkbtn" onclick="showSteps(${k})">🪄 Steps</button>`}</div>`).join('')}</div></details></div>`;
 }
 function dex(el){
   const u = P.me.u, b = bandOf(u), all = bandSkills(b), got = all.filter(id => caught(u, id)).length;
@@ -1381,7 +1650,10 @@ function voiceFor(who){
 }
 const ORD = {2:'half', 3:'third', 4:'fourth', 5:'fifth', 6:'sixth', 7:'seventh', 8:'eighth', 9:'ninth', 10:'tenth', 12:'twelfth'};
 function spoken(t){
-  return t.replace(/&amp;/g, '&').replace(/(\d+)\/(\d+)/g, (_, n, d) => ORD[d] ? `${n} ${ORD[d]}${+n === 1 ? '' : 's'}` : `${n} over ${d}`)
+  return t.replace(/&amp;/g, '&').replace(/[✓✗★…]/g, ' ').replace(/½/g, ' one half ').replace(/≈/g, ' about ').replace(/≤/g, ' is less than or equal to ').replace(/≥/g, ' is greater than or equal to ')
+    .replace(/ < /g, ' is less than ').replace(/ > /g, ' is greater than ').replace(/π/g, ' pi ').replace(/([a-z0-9)])²/g, '$1 squared').replace(/([a-z0-9)])³/g, '$1 cubed')
+    .replace(/\^2(?!\d)/g, ' squared').replace(/\^3(?!\d)/g, ' cubed').replace(/\^\(?([−-]?\d+)\)?/g, ' to the power $1')
+    .replace(/(\d+) (\d+\/\d+)/g, '$1 and $2').replace(/(\d+)\/(\d+)/g, (_, n, d) => ORD[d] ? `${n} ${ORD[d]}${+n === 1 ? '' : 's'}` : `${n} over ${d}`)
     .replace(/[−-](?=\d)/g, ' negative ').replace(/×/g, ' times ').replace(/÷/g, ' divided by ').replace(/ = \?/g, ' equals what?').replace(/=/g, ' equals ')
     .replace(/x²/g, 'x squared').replace(/√/g, 'square root of ').replace(/\.\.\./g, ', ').replace(/\s+/g, ' ').trim();
 }
@@ -1400,7 +1672,7 @@ function speakPanel(){
 }
 function stopStoryAudio(){ try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} if (STORY && STORY.timer) { clearInterval(STORY.timer); STORY.timer = null; } }
 function blip(who){
-  if (isMuted() || ttsOn()) return;
+  if (isMuted() || ttsOn() || QUIET) return;
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
     o.type = 'square'; o.frequency.value = (who === 'gulo' ? 140 : who === 'lolo' ? 260 : who === 'nar' ? 420 : 560) + Math.random() * 40;
     g.gain.setValueAtTime(.025, t); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + .05); } catch (e) {}
@@ -1672,30 +1944,105 @@ function genericScript(id){
   }
   return steps;
 }
+/* ---- step-by-step solution of one exact question ---- */
+function solutionScript(id, it){
+  if (it.fam) return famScript(it.fam, it.data, id);
+  if (it.fd && FAMILY[id]) return famScript(FAMILY[id], it.fd, id);
+  const sol = it.sol && it.sol.length ? it.sol : [st(`= ${it.show}`, `The answer is ${txt(it.show)}.`)];
+  return [{clear:true, say: it.words ? "Let's read the question carefully, then solve it one step at a time." : "Let's solve this one step at a time.",
+      write:`<span class="${it.words || txt(it.q).length > 34 ? 'small' : ''}">${it.q}</span>`, act: viz => { viz.innerHTML = ''; return 200; }}]
+    .concat(sol.map(([w, say, note], k) => ({row:true, num:k + 1, last:k === sol.length - 1, write:w, say, note})));
+}
+function playSolution(id, it, after){
+  stopLesson(); LS = {id, mode:'solve', item0:it, fam: FAMILY[id], timers: [], k: 0, playing: true, phase: 'solve', after: after || null, tries: 0};
+  LS.steps = solutionScript(id, it);
+  const rs = resumeOf(id); if (rs && rs.mode === 'solve' && rs.q === it.q && rs.k > 0) LS.resumeK = Math.min(rs.k, LS.steps.length - 1);
+  P.tab('learn'); window.scrollTo(0, 0);
+}
+function endSolve(){
+  if (!LS) return; clearTimeout(LS.adv); LS.phase = 'solved'; setResume(null); updateTL(0); renderNotes();
+  lessonSay(fillText(pick(["That's how we solve it, {name}! Now you know every step.", "And that's the answer! Easy when we go one step at a time, right, {name}?", "Step by step, we got it! You can do this too, {name}."]), null, null));
+  $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? '⚔ Back to the battle' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">✏ Try a similar one</button><button class="icb" style="color:#0f172a" onclick="lessonReplay()">⟲ Watch again</button></div>`;
+  $('lnext').disabled = true; $('lnext').style.opacity = .4;
+}
+function showSteps(k){ if (!S) return; playSolution(S.id, S.items[k === undefined ? S.i : k], () => P.refresh()); }
+/* ---- Momo-style lecture player: chapter timeline, timestamped notes, resume point ---- */
+let NOTETAB = 0;
+const fmtT = t => `${Math.floor((t || 0) / 60)}:${String(Math.floor((t || 0) % 60)).padStart(2, '0')}`;
+const estDur = st => Math.max(st.act ? 2200 : 1800, fillText(st.say || '', null, null).length * 48 + 1100 + (st.act ? 600 : 0));
+const resumeOf = id => P.me && (pref(P.me.u).resume || {})[id];
+function setResume(v){ if (!LS || !P.me) return; const p = pref(P.me.u); p.resume = p.resume || {}; if (v) p.resume[LS.id] = Object.assign(v, {at: Date.now()}); else delete p.resume[LS.id]; P.save(); }
+const stepLabel = (st, k) => st.note ? txt(st.note) : st.num ? 'Step ' + st.num : k === 0 ? 'Introduction' : 'Part ' + (k + 1);
+function updateTL(dur){
+  const box = $('tsegs'); if (!box || !LS) return;
+  if (LS.tlFor !== LS.steps) { LS.tlFor = LS.steps; LS.T = []; let t = 0; LS.steps.forEach(st => { LS.T.push(t); t += estDur(st) / 1000; }); LS.Tend = t;
+    box.innerHTML = LS.steps.map((st, k) => `<button class="tseg" style="flex:${Math.round(estDur(st) / 100)}" onclick="jumpTo(${k})" title="${fmtT(LS.T[k])} · ${esc(stepLabel(st, k))}"><i></i></button>`).join(''); }
+  [...box.children].forEach((b, k) => { b.className = 'tseg' + (k < LS.k || LS.phase === 'solved' ? ' done' : k === LS.k && dur ? ' cur' : ''); if (k === LS.k) b.style.setProperty('--d', (dur || 0) + 'ms'); });
+  const cur = box.children[LS.k]; if (cur && cur.classList.contains('cur')) { const i = cur.firstElementChild; i.style.animation = 'none'; void i.offsetWidth; i.style.animation = ''; }
+  box.classList.toggle('paused', !LS.playing);
+  $('ttime').textContent = `${fmtT(LS.phase === 'solved' ? LS.Tend : LS.T[LS.k])} / ${fmtT(LS.Tend)}`;
+  renderNotes();
+}
+function noteTab(n){ NOTETAB = n; $('ntab0').classList.toggle('on', !n); $('ntab1').classList.toggle('on', !!n); renderNotes(true); }
+function myNotes(){ const p = pref(P.me.u); p.notes = p.notes || {}; return p.notes[LS.id] = p.notes[LS.id] || []; }
+function renderNotes(force){
+  const nb = $('nbody'); if (!nb || !LS || !LS.T) return;
+  if (NOTETAB === 0) {
+    nb.innerHTML = LS.steps.map((st, k) => { const say = fillText(st.say || '', null, null);
+      return `<button class="nrow ${k === LS.k && LS.phase !== 'solved' ? 'cur' : k < LS.k || LS.phase === 'solved' ? 'done' : ''}" onclick="jumpTo(${k})"><span class="nt">${fmtT(LS.T[k])}</span><span><b>${esc(stepLabel(st, k))}</b>${esc(say.length > 90 ? say.slice(0, 88) + '…' : say)}</span></button>`; }).join('');
+    const c = nb.querySelector('.nrow.cur'); if (c && c.scrollIntoView) { const top = c.offsetTop - nb.offsetTop; if (top < nb.scrollTop || top > nb.scrollTop + nb.clientHeight - 60) nb.scrollTop = Math.max(0, top - 40); }
+    return; }
+  const lbl = $('naddBtn'); if (lbl && !force) { lbl.textContent = `+ Add note at ${fmtT(LS.T[LS.k])}`; return; }
+  const ns = myNotes();
+  nb.innerHTML = `<div class="nadd"><textarea id="noteIn" placeholder="Write a note about this part of the lesson…"></textarea><button class="btn sm" id="naddBtn" onclick="addNote()">+ Add note at ${fmtT(LS.T[LS.k])}</button></div>
+    ${ns.length ? ns.slice().sort((a, b) => a.t - b.t).map(n => `<div class="nrow" onclick="jumpTo(${n.k})"><span class="nt">${fmtT(n.t)}</span><span>${esc(n.text)}</span><button class="ndel" title="Delete note" onclick="event.stopPropagation();delNote(${n.at})">✕</button></div>`).join('')
+      : '<div class="nempty">No notes yet. Pause anytime, write what you learned, and tap a note later to jump back to that moment.</div>'}`;
+}
+function addNote(){ const i = $('noteIn'), text = i && i.value.trim(); if (!text) return; myNotes().push({k: LS.k, t: LS.T[LS.k] || 0, text, at: Date.now()}); P.save(); sfx('buy'); renderNotes(true); }
+function delNote(at){ const p = pref(P.me.u); p.notes[LS.id] = myNotes().filter(n => n.at !== at); P.save(); renderNotes(true); }
+// jump to any step like scrubbing a video: rebuild the board quietly up to that step, then play it
+function jumpTo(k){
+  if (!LS || !$('bLines') || LS.phase === 'try') return;
+  if (LS.phase === 'solved') LS.phase = LS.mode === 'solve' ? 'solve' : 'demo';
+  k = Math.max(0, Math.min(k, LS.steps.length - 1)); clearTimeout(LS.adv); flushLater();
+  let c = k; while (c > 0 && !LS.steps[c].clear) c--;
+  QUIET = true; LS.silent = true;
+  try { for (let j = c; j < k; j++) { LS.k = j; runStep(); flushLater(); } } finally { QUIET = false; LS.silent = false; }
+  $('bLines').querySelectorAll('.chalk').forEach(x => x.classList.add('instant'));
+  if (c < k) $('tryBox').innerHTML = '';
+  LS.k = k; runStep();
+}
 /* ---- player ---- */
 function playLesson(id, after){
   stopLesson(); LS = {id, fam: FAMILY[id], timers: [], k: 0, playing: true, phase: 'demo', after: after || null, tries: 0};
-  LS.steps = LS.fam ? famScript(LS.fam, famGen(LS.fam), id) : genericScript(id);
+  const rs = resumeOf(id); LS.fd = rs && rs.mode === 'demo' && rs.fd ? rs.fd : LS.fam ? famGen(LS.fam) : null;
+  LS.steps = LS.fam ? famScript(LS.fam, LS.fd, id) : genericScript(id);
+  if (rs && rs.mode === 'demo' && rs.k > 0) LS.resumeK = Math.min(rs.k, LS.steps.length - 1);
   P.tab('learn'); window.scrollTo(0, 0);
 }
 function stopLesson(){ if (!LS) return; LS.timers.forEach(j => clearTimeout(j.id)); LS.timers = []; clearTimeout(LS.adv); if (LS.typer) clearInterval(LS.typer); try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} }
 function lessonView(el){
   const kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
-  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="closeLesson()">✕ Close</button><div class="grow"><b style="font-weight:600">🎬 Lesson: ${SK[LS.id].title}</b><br><small style="color:var(--muted)">Watch Lolo Pawikan, then try one yourself</small></div></div>
-    <div class="lshow"><div class="cls">
+  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="closeLesson()">✕ Close</button><div class="grow"><b style="font-weight:600">${LS.mode === 'solve' ? '🪄 Step by step' : '🎬 Lesson'}: ${SK[LS.id].title}</b><br><small style="color:var(--muted)">${LS.mode === 'solve' ? 'Lolo Pawikan solves your question one step at a time' : 'Watch Lolo Pawikan, then try one yourself'}</small></div></div>
+    <div class="lwrap"><div class="lshow"><div class="cls">
       <div class="bunting">${['1', '+', '2', '−', '3', '×', '4', '÷', '5', '='].map((s, k) => `<span style="background:${['#f43f5e', '#facc15', '#22c55e', '#a855f7', '#3b82f6'][k % 5]}">${s}</span>`).join('')}</div>
       <div class="clock"><i class="h"></i><i class="m"></i></div>
-      <div class="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
+      <div class="board" id="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
     <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
       <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
       <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
-        <div class="grow"><div class="lprog"><i id="lprog" style="width:0"></i></div></div>
+        <div class="grow ltl"><div class="tsegs" id="tsegs"></div><small class="ttime" id="ttime">0:00 / 0:00</small></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div></div></div></div>`;
-  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
-  const me = LS; setTimeout(() => { if (LS === me && !LS.started) runStep(); }, 400);
+        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div></div></div>
+    <aside class="lnotes"><div class="ntabs"><button id="ntab0" class="on" onclick="noteTab(0)">📑 Lesson notes</button><button id="ntab1" onclick="noteTab(1)">✏ My notes</button></div>
+      <div id="lres"></div><div class="nbody" id="nbody"></div></aside></div></div>`;
+  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect); NOTETAB = 0;
+  const me = LS; setTimeout(() => { if (LS !== me || LS.started) return;
+    if (LS.resumeK) { const k = LS.resumeK; LS.resumeK = 0; jumpTo(k);
+      $('lres').innerHTML = `<div class="lres">▶ Resumed where you left off, at ${fmtT(LS.T[k])}<button onclick="$('lres').innerHTML='';jumpTo(0)">Start over</button></div>`; }
+    else runStep(); }, 400);
 }
 function lessonSay(text){
   const s = $('lsay'), t = $('teacher'); if (!s) return;
@@ -1711,28 +2058,34 @@ function runStep(){
   const st = LS.steps[LS.k], lines = $('bLines');
   if (st.clear) { lines.innerHTML = ''; $('tryBox').innerHTML = ''; }
   if (st.dimPrev) [...lines.children].forEach(c => c.classList.add('dim'));
-  if (st.write) { const cont = /^[=→]/.test(st.write);
+  if (st.clear) $('board').classList.toggle('solve', LS.steps.some(x => x.row));
+  if (st.write) { const cont = !st.row && /^[=→]/.test(st.write);
     if (cont) lines.querySelectorAll('.qm').forEach(x => x.remove());
-    const row = cont && lines.lastElementChild ? lines.lastElementChild : (lines.insertAdjacentHTML('beforeend', '<div class="brow"></div>'), lines.lastElementChild);
-    row.insertAdjacentHTML('beforeend', `<span class="chalk">${st.write}</span>`); const t = $('teacher'); t.classList.remove('point'); void t.offsetWidth; t.classList.add('point'); }
+    const row = cont && lines.lastElementChild ? lines.lastElementChild : (lines.insertAdjacentHTML('beforeend', `<div class="brow${st.row ? ' srow' : ''}${st.last ? ' ans' : ''}"></div>`), lines.lastElementChild);
+    if (st.row) { lines.querySelectorAll('.srow.cur').forEach(x => x.classList.remove('cur')); row.classList.add('cur'); row.insertAdjacentHTML('beforeend', `<b class="snum">${st.num}</b>`); }
+    row.insertAdjacentHTML('beforeend', `<span class="chalk">${st.write}</span>`);
+    if (st.note) later(() => row.insertAdjacentHTML('beforeend', `<em class="snote">${st.note}</em>`), 850);
+    if (st.last) later(() => { row.classList.add('done'); row.insertAdjacentHTML('beforeend', '<span class="sstar">★</span>'); sfx('win'); }, 950);
+    later(() => { lines.scrollTop = lines.scrollHeight; }, 30); const t = $('teacher'); t.classList.remove('point'); void t.offsetWidth; t.classList.add('point'); }
   const actMs = st.act ? (st.act($('viz')) || 0) : 0;
   const say = fillText(st.say, null, null).replace(/&amp;/g, '&');
+  if (LS.silent) return;
   lessonSay(say);
-  $('lprog').style.width = Math.round(100 * (LS.k + 1) / LS.steps.length) + '%';
-  $('lnext').textContent = LS.k === LS.steps.length - 1 && !st.wait ? (LS.phase === 'demo' ? 'Your turn ▶' : 'Try again ▶') : 'Next ▶';
+  $('lnext').textContent = LS.k === LS.steps.length - 1 && !st.wait ? (LS.phase === 'demo' ? 'Your turn ▶' : LS.phase === 'solve' ? 'Got it! ▶' : 'Try again ▶') : 'Next ▶';
   $('lnext').disabled = !!st.wait; $('lnext').style.opacity = st.wait ? .4 : 1;
+  const dur = Math.max(actMs + 700, say.length * 48 + 1100); updateTL(st.wait ? 0 : dur);
   if (st.wait) return;
-  const dur = Math.max(actMs + 700, say.length * 48 + 1100);
   LS.adv = setTimeout(() => { if (LS && LS.playing) lessonNext(); }, dur);
 }
 function lessonNext(){
   if (!LS) return;
   if (!LS.started) return runStep();
-  if (LS.steps[LS.k] && LS.steps[LS.k].wait) return;
-  if (LS.k < LS.steps.length - 1) { LS.k++; runStep(); } else startTry();
+  if (LS.phase === 'solved' || (LS.steps[LS.k] && LS.steps[LS.k].wait)) return;
+  if (LS.k < LS.steps.length - 1) { LS.k++; runStep(); } else if (LS.phase === 'solve') endSolve(); else startTry();
 }
-function lessonPause(){ if (!LS) return; LS.playing = !LS.playing; $('lplay').textContent = LS.playing ? '⏸ Pause' : '▶ Play'; if (LS.playing) lessonNext(); else clearTimeout(LS.adv); }
-function lessonReplay(){ if (!LS) return; stopLesson(); LS.phase = 'demo'; LS.k = 0; LS.playing = true; $('lplay').textContent = '⏸ Pause'; LS.steps = LS.fam ? famScript(LS.fam, famGen(LS.fam), LS.id) : genericScript(LS.id); runStep(); }
+function lessonPause(){ if (!LS) return; LS.playing = !LS.playing; $('lplay').textContent = LS.playing ? '⏸ Pause' : '▶ Play'; $('tsegs').classList.toggle('paused', !LS.playing); if (LS.playing) lessonNext(); else clearTimeout(LS.adv); }
+function lessonReplay(){ if (!LS) return; stopLesson(); const sv = LS.mode === 'solve'; LS.phase = sv ? 'solve' : 'demo'; LS.k = 0; LS.playing = true; $('lplay').textContent = '⏸ Pause';
+  if (!sv && LS.fam) LS.fd = famGen(LS.fam); LS.steps = sv ? solutionScript(LS.id, LS.item0) : LS.fam ? famScript(LS.fam, LS.fd, LS.id) : genericScript(LS.id); $('tryBox').innerHTML = ''; runStep(); }
 function startTry(){
   if (!LS) return;
   LS.phase = 'try'; LS.item = LS.fam ? famItem(LS.fam, famGen(LS.fam)) : SK[LS.id].gen();
@@ -1754,20 +2107,20 @@ function lessonCheck(k){
     sfx('win'); confetti(); const kids = $('kids'); kids.classList.remove('cheer'); void kids.offsetWidth; kids.classList.add('cheer');
     $('teacher').innerHTML = `<span class="stick"></span>${turtleSVG('happy', 't')}`;
     lessonSay(fillText(pick(["Excellent, {name}! You've got it!", "Magaling, {name}! That's right!", "Perfect! You're ready for the battle, {name}!"]), null, null));
-    $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? '⚔ Start the battle!' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">Try another</button></div>`;
+    $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? (LS.mode === 'solve' ? '⚔ Back to the battle' : '⚔ Start the battle!') : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">Try another</button></div>`;
     return;
   }
   sfx('no');
-  lessonSay(`Not quite. ${r.note ? r.note + ' ' : ''}The answer is ${it.show.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}. Let's work it out together!`);
+  lessonSay(`Not quite. ${r.note ? r.note + ' ' : ''}The answer is ${txt(it.show)}. Let's work it out together, step by step!`);
   $('tryBox').innerHTML = `<div class="trybox"><div class="tmsg">Answer: <b>${it.show}</b></div></div>`;
-  later(() => { LS.timers = []; LS.phase = 'redemo'; LS.k = 0; LS.steps = it.fam ? famScript(it.fam, it.data, LS.id) : genericScript(LS.id); runStep(); }, 3400);
+  later(() => { LS.timers = []; LS.phase = 'redemo'; LS.k = 0; LS.steps = solutionScript(LS.id, it); runStep(); }, 3400);
 }
 function finishLesson(){
-  if (!LS) return; const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[LS.id]: true}); P.save();
+  if (!LS) return; setResume(null); const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[LS.id]: true}); P.save();
   const after = LS.after; stopLesson(); LS = null;
   if (after) after(); else P.refresh();
 }
-function closeLesson(){ const id = LS && LS.id, back = LS && LS.after && S; stopLesson(); if (id) { const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); } LS = null; P.refresh(); }
+function closeLesson(){ const id = LS && LS.id; if (LS) setResume(LS.k > 0 && LS.k < LS.steps.length - 1 && (LS.phase === 'demo' || LS.phase === 'solve') ? {mode: LS.mode || 'demo', k: LS.k, fd: LS.fd || null, q: LS.item0 ? LS.item0.q : null} : null); stopLesson(); if (id) { const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); } LS = null; P.refresh(); }
 
 /* ================= MY PROGRESS (learner) ================= */
 function progress(el){
