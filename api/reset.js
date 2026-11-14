@@ -10,7 +10,7 @@ export default wrap(async (req, res) => {
     const user = await find(b.who); let dev = {};
     if (user && user.email) { const r = await newCode(user.email, 'reset');
       if (r.wait) return send(res, 429, {error: `Please wait ${r.wait} seconds before asking for another code.`});
-      await sendCode(user.email, r.code, 'reset'); if (!process.env.VERCEL) dev = {devCode: r.code}; }
+      try { await sendCode(user.email, r.code, 'reset'); } catch (e) { console.error('email failed', e.message); return send(res, 502, {error: 'We couldn’t send the email right now. Please try again in a few minutes, or tell the school admin.'}); } if (!process.env.VERCEL) dev = {devCode: r.code}; }
     const hint = user && user.email ? user.email.replace(/^(.)(.*)(@.*)$/, (_, a, m, d) => a + '*'.repeat(Math.min(6, m.length)) + d) : null;
     return send(res, 200, {ok: true, hint, ...dev});
   }
