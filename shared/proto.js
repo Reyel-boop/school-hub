@@ -111,7 +111,7 @@ const P = {
     let as = null; try { as = new URLSearchParams(location.search).get('as'); } catch(e) {}
     let saved = null; try { saved = sessionStorage.getItem(cfg.key + '-session'); } catch(e) {}
     // When the Hub names an account, use only that one: never fall back to whoever last used this tab.
-    const acc = as ? P.users.find(x => x.u === as) : saved && P.users.find(x => x.u === saved);
+    const acc = as ? P.users.find(x => x.u === as) || (window.hubAccountFor && window.hubAccountFor(P.users, as, () => P.save())) : saved && P.users.find(x => x.u === saved);
     if (acc) P.start(acc); else $('login').hidden = false;
   },
 

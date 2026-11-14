@@ -71,6 +71,14 @@
   const online = first.status === 200 && first.json && Array.isArray(first.json.docs);
 
   // open the system with the account the Hub assigns to this person (no switching accounts through the address bar)
+  if (online && first.json.me) window.HUB_ACCOUNT = Object.assign({u: first.json.account}, first.json.me);
+  // a person who signed up on the Hub gets their own account in this system, made from the demo account for their role
+  window.hubAccountFor = (users, as, save) => {
+    const h = window.HUB_ACCOUNT; if (!h || h.u !== as || !Array.isArray(users)) return null;
+    const t = users.find(x => x.u === h.like); if (!t) return null;
+    const acc = {u: as, p: Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2), name: h.name, pos: h.pos, role: t.role};
+    users.push(acc); try { save && save(); } catch (e) {} return acc;
+  };
   if (online && first.json.account) { const q = new URLSearchParams(location.search);
     if (q.get('as') !== first.json.account) { q.set('as', first.json.account); history.replaceState(null, '', location.pathname + '?' + q + location.hash); } }
 

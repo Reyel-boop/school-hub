@@ -104,6 +104,34 @@
   .lerr{background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.5);color:#fda4af;font-size:.82rem;padding:.55rem .7rem;border-radius:.5rem}
   .demo{margin-top:1.4rem;font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padding-top:1rem}
   .demo b{color:var(--text);font-weight:500}
+  .lrow{display:flex;justify-content:space-between;align-items:baseline}
+  .lnk{color:var(--accent);font-size:.8rem;font-weight:500;padding:0;background:none;border:0;cursor:pointer}
+  .lnk:hover{text-decoration:underline}
+  .lnk:disabled{color:var(--muted);cursor:default;text-decoration:none}
+  .alt{margin-top:1rem;font-size:.82rem;color:var(--muted);text-align:center}
+  .note{font-size:.78rem;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:.5rem;padding:.55rem .7rem}
+  .lcard .sub b{color:var(--text);font-weight:600;word-break:break-all}
+  .seg{display:flex;gap:.4rem}
+  .seg label{flex:1;margin:0}
+  .seg input{position:absolute;opacity:0;width:1px;height:1px}
+  .seg span{display:block;text-align:center;padding:.55rem .3rem;border:1px solid var(--line);border-radius:.5rem;font-size:.85rem;color:var(--muted);cursor:pointer;background:var(--bg)}
+  .seg input:checked + span{border-color:var(--accent);color:var(--text);background:color-mix(in srgb, var(--accent) 16%, var(--bg));font-weight:600}
+  .seg input:focus-visible + span{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent)}
+  .codebox{display:flex;gap:.45rem;justify-content:center}
+  .lcard .codebox input{width:2.7rem;height:3.2rem;padding:0;text-align:center;font-size:1.4rem;font-weight:600}
+  #adminModal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto}
+  #adminModal[hidden]{display:none}
+  .amod{width:100%;max-width:46rem;background:var(--bg2);border:1px solid var(--line);border-radius:1rem;padding:1.3rem 1.4rem;box-shadow:0 18px 50px -20px rgba(0,0,0,.6)}
+  .amod h2{font-size:1.2rem}
+  .amod h3{font-size:.85rem;color:var(--muted);font-weight:600;margin:1.2rem 0 .5rem;text-transform:uppercase;letter-spacing:.05em}
+  .arow{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;padding:.65rem .2rem;border-top:1px solid var(--line);font-size:.85rem}
+  .arow .who2{flex:1;min-width:12rem}
+  .arow .who2 small{display:block;color:var(--muted);font-size:.75rem;word-break:break-all}
+  .tagr{font-size:.7rem;padding:.15rem .5rem;border-radius:1rem;border:1px solid var(--line);color:var(--muted);text-transform:capitalize}
+  .tagr.pending{border-color:#f59e0b;color:#fbbf24}.tagr.disabled{border-color:#f43f5e;color:#fda4af}
+  .abtn{font-size:.78rem;padding:.35rem .7rem;border-radius:.4rem;border:1px solid var(--line);color:var(--text)}
+  .abtn.go{background:var(--accent);color:#1b1f24;border-color:var(--accent);font-weight:600}
+  .abtn:hover{filter:brightness(1.1)}
   .demo button{display:block;width:100%;text-align:left;margin-top:.4rem;padding:.45rem .6rem;border:1px dashed var(--line);border-radius:.4rem;color:var(--muted)}
   .demo button:hover{color:var(--text);border-color:var(--muted)}
   .user{margin-left:auto;display:flex;align-items:center;gap:.7rem}
@@ -174,17 +202,74 @@
   <main class="stage">
     <div class="lcard">
       <div class="lseal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
-      <h1>Welcome</h1>
-      <p class="sub">Sign in to open the School Hub</p>
-      <form id="loginForm" autocomplete="on">
-        <div id="loginErr" class="lerr" hidden></div>
-        <div><label for="lu">Username</label><input id="lu" name="u" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
-        <div><label for="lp">Password</label>
-          <div class="pw"><input id="lp" name="p" type="password" required autocomplete="current-password"><button type="button" id="pwToggle" aria-label="Show password">Show</button></div>
-        </div>
-        <button class="lbtn" type="submit">Sign in</button>
-      </form>
-      <div class="demo" id="demo"><b>Prototype demo accounts</b> (tap to fill in)</div>
+      <div id="paneIn">
+        <h1>Welcome</h1>
+        <p class="sub">Sign in to open the School Hub</p>
+        <form id="loginForm" autocomplete="on">
+          <div id="loginErr" class="lerr" hidden></div>
+          <div><label for="lu">Username or email</label><input id="lu" name="u" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+          <div><div class="lrow"><label for="lp">Password</label><button type="button" class="lnk" id="forgotLink" onclick="showPane('forgot')">Forgot password?</button></div>
+            <div class="pw"><input id="lp" name="p" type="password" required autocomplete="current-password"><button type="button" id="pwToggle" aria-label="Show password">Show</button></div>
+          </div>
+          <button class="lbtn" type="submit">Sign in</button>
+        </form>
+        <p class="alt" id="signupLink">No account yet? <button type="button" class="lnk" onclick="showPane('up')">Create an account</button></p>
+        <div class="demo" id="demo"><b>Prototype demo accounts</b> (tap to fill in)</div>
+      </div>
+
+      <div id="paneUp" hidden>
+        <h1>Create an account</h1>
+        <p class="sub">For students, teachers and staff of the school</p>
+        <form id="signupForm" autocomplete="on">
+          <div id="upErr" class="lerr" hidden></div>
+          <div><label>I am a</label><div class="seg" role="radiogroup">
+            <label><input type="radio" name="role" value="student" checked><span>Student</span></label>
+            <label><input type="radio" name="role" value="teacher"><span>Teacher</span></label>
+            <label><input type="radio" name="role" value="staff"><span>Staff</span></label></div></div>
+          <div><label for="upName">Full name</label><input id="upName" name="name" required autocomplete="name" placeholder="e.g. Juan Dela Cruz"></div>
+          <div><label for="upPos" id="upPosLabel">Grade &amp; section</label><input id="upPos" name="pos" required placeholder="e.g. Grade 8 – Rizal"></div>
+          <div><label for="upEmail">Email address</label><input id="upEmail" name="email" type="email" required autocomplete="email" autocapitalize="none" placeholder="We’ll send a 6-digit code here"></div>
+          <div><label for="upU">Username</label><input id="upU" name="u" required pattern="[A-Za-z0-9._-]{3,30}" title="3 to 30 letters or numbers, no spaces" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+          <div><label for="upP">Password</label><div class="pw"><input id="upP" name="pw" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="pwShow" aria-label="Show password">Show</button></div></div>
+          <div><label for="upP2">Confirm password</label><input id="upP2" name="pw2" type="password" required minlength="8" autocomplete="new-password"></div>
+          <p class="note" id="upNote" hidden>Teacher and staff accounts are checked and approved by the school admin before they can sign in.</p>
+          <button class="lbtn" type="submit">Send verification code</button>
+        </form>
+        <p class="alt">Already have an account? <button type="button" class="lnk" onclick="showPane('in')">Sign in</button></p>
+      </div>
+
+      <div id="paneCode" hidden>
+        <h1>Check your email</h1>
+        <p class="sub">We sent a 6-digit code to <b id="codeTo"></b>. It works for 15 minutes.</p>
+        <form id="codeForm">
+          <div id="codeErr" class="lerr" hidden></div>
+          <div class="codebox" id="codeBox"></div>
+          <div id="newPwBox" hidden>
+            <div><label for="rpP">New password</label><div class="pw"><input id="rpP" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="pwShow" aria-label="Show password">Show</button></div></div>
+            <div style="margin-top:.9rem"><label for="rpP2">Confirm new password</label><input id="rpP2" type="password" minlength="8" autocomplete="new-password"></div>
+          </div>
+          <button class="lbtn" type="submit" id="codeBtn">Verify</button>
+        </form>
+        <p class="alt">No email? Check Spam or Promotions, or <button type="button" class="lnk" id="resendBtn" onclick="resendCode()">send a new code</button></p>
+        <p class="alt"><button type="button" class="lnk" onclick="showPane(CODE && CODE.purpose === 'reset' ? 'forgot' : 'up')">← Go back</button></p>
+      </div>
+
+      <div id="paneForgot" hidden>
+        <h1>Forgot password?</h1>
+        <p class="sub">Enter your username or email. We’ll email you a code to set a new password.</p>
+        <form id="forgotForm">
+          <div id="fgErr" class="lerr" hidden></div>
+          <div><label for="fgWho">Username or email</label><input id="fgWho" required autocapitalize="none" spellcheck="false" autocomplete="username"></div>
+          <button class="lbtn" type="submit">Send code</button>
+        </form>
+        <p class="alt"><button type="button" class="lnk" onclick="showPane('in')">← Back to sign in</button></p>
+      </div>
+
+      <div id="paneMsg" hidden>
+        <h1 id="msgTitle"></h1>
+        <p class="sub" id="msgText"></p>
+        <button class="lbtn" type="button" style="width:100%" onclick="showPane('in')">Back to sign in</button>
+      </div>
     </div>
   </main>
   <div class="foot">Prototype made by Reyel · accounts are for demo only</div>
@@ -198,6 +283,7 @@
     <div class="user">
       <div class="who"><b id="whoName"></b><small id="whoPos"></small></div>
       <div class="av" id="whoAv"></div>
+      <button class="out" id="adminBtn" onclick="openAdmin()" hidden>Accounts</button>
       <button class="out" id="pwBtn" onclick="changePw()" hidden>Change password</button>
       <button class="out" onclick="logout()">Sign out</button>
     </div>
@@ -214,6 +300,11 @@
   </main>
   <div class="foot">Prototype made by Reyel · press a number key 1–9 or 0 to jump to a system</div>
 </section>
+
+<div id="adminModal" hidden onclick="if(event.target===this)closeAdmin()"><div class="amod" role="dialog" aria-modal="true" aria-labelledby="amodT">
+  <div style="display:flex;align-items:center;gap:1rem"><h2 id="amodT" style="flex:1">School Hub accounts</h2><button class="out" onclick="closeAdmin()">Close</button></div>
+  <div id="adminBody"><p class="sub" style="margin-top:1rem">Loading…</p></div>
+</div></div>
 
 <!-- ================= APP SHELL ================= -->
 <section id="shell">
@@ -383,7 +474,7 @@ const BLOCKED_ONLINE = {
 };
 const roleOf = () => me.role || me.u;
 const hasAccess = s => !me || (!(BLOCKED_ONLINE[roleOf()] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][roleOf()]));
-const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent(ACCESS[s.id][roleOf()]) : s.url;
+const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent((me.accounts && me.accounts[s.id]) || ACCESS[s.id][roleOf()]) : s.url;
 function markAccess(){
   document.querySelectorAll('#grid .sys, #switch button').forEach(b => {
     const s = SYSTEMS.find(x => x.id === b.dataset.id); b.classList.toggle('noaccess', !hasAccess(s));
@@ -471,7 +562,7 @@ document.getElementById('loginForm').onsubmit = async e => {
       const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({u, p: f.p.value})});
       const j = await r.json().catch(() => ({}));
       if(r.status !== 200) return fail(j.error || 'Could not sign in. Please try again.');
-      err.hidden = true; f.reset(); signIn(j.user);
+      err.hidden = true; f.reset(); signIn(Object.assign(j.user, {accounts: j.accounts}));
     } catch(x) { fail('Can’t reach the school server. Check the internet connection.'); }
     finally { if(btn) btn.disabled = false; }
     return;
@@ -480,6 +571,109 @@ document.getElementById('loginForm').onsubmit = async e => {
   if(!acc) return fail('Wrong username or password.');
   err.hidden = true; f.reset(); signIn(acc);
 };
+// ---------- create an account, email codes, forgot password (server only) ----------
+const PANES = {in:'paneIn', up:'paneUp', code:'paneCode', forgot:'paneForgot', msg:'paneMsg'};
+let CODE = null; // {purpose:'signup'|'reset', email, who}
+function showPane(k){
+  for (const [n, id] of Object.entries(PANES)) document.getElementById(id).hidden = n !== k;
+  document.querySelectorAll('.lerr').forEach(e => { if (e.id !== 'loginErr') e.hidden = true; });
+  const first = {in:'lu', up:'upName', forgot:'fgWho'}[k]; if (first) setTimeout(() => document.getElementById(first).focus(), 0);
+  if (k === 'code') setTimeout(() => document.querySelector('#codeBox input').focus(), 0);
+}
+const showErr = (id, m) => { const e = document.getElementById(id); e.textContent = m; e.hidden = !m; };
+async function api(path, data){
+  try { const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(data)});
+    return {status: r.status, j: await r.json().catch(() => ({}))}; }
+  catch(e) { return {status: 0, j: {error: 'Can’t reach the school server. Check the internet connection.'}}; }
+}
+async function busy(btn, fn){ btn.disabled = true; const t = btn.textContent; btn.textContent = 'Please wait…'; try { await fn(); } finally { btn.disabled = false; btn.textContent = t; } }
+document.querySelectorAll('.pwShow').forEach(b => b.onclick = () => { const i = b.previousElementSibling, show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; });
+// the "position" field changes with the role
+const POS = {student:['Grade & section', 'e.g. Grade 8 – Rizal'], teacher:['Subject or position', 'e.g. Math Teacher, Grade 8 adviser'], staff:['Office or position', 'e.g. Registrar’s Office']};
+document.getElementById('signupForm').addEventListener('change', e => { if (e.target.name !== 'role') return; const [l, ph] = POS[e.target.value];
+  document.getElementById('upPosLabel').textContent = l; document.getElementById('upPos').placeholder = ph; document.getElementById('upNote').hidden = e.target.value === 'student'; });
+document.getElementById('signupForm').onsubmit = async e => {
+  e.preventDefault(); const f = e.target, btn = f.querySelector('.lbtn');
+  if (f.pw.value !== f.pw2.value) return showErr('upErr', 'The two passwords don’t match.');
+  const data = {step:'start', role: f.role.value, name: f.name.value, pos: f.pos.value, email: f.email.value, u: f.u.value, pw: f.pw.value};
+  await busy(btn, async () => { const {status, j} = await api('/api/signup', data);
+    if (status !== 200) return showErr('upErr', j.error || 'Something went wrong. Please try again.');
+    showErr('upErr', ''); CODE = {purpose:'signup', email: j.email, start: data}; openCode(j.email); });
+};
+function openCode(email){
+  document.getElementById('codeTo').textContent = email; document.getElementById('newPwBox').hidden = CODE.purpose !== 'reset';
+  document.getElementById('codeBtn').textContent = CODE.purpose === 'reset' ? 'Set new password' : 'Verify and create account';
+  const box = document.getElementById('codeBox'); box.innerHTML = Array.from({length: 6}, (_, k) => `<input inputmode="numeric" autocomplete="${k ? 'off' : 'one-time-code'}" maxlength="6" aria-label="Digit ${k + 1}">`).join('');
+  const ins = [...box.children];
+  ins.forEach((inp, k) => {
+    inp.oninput = () => { const d = inp.value.replace(/\D/g, ''); if (d.length > 1) { d.slice(0, 6).split('').forEach((c, i) => ins[i] && (ins[i].value = c)); ins[Math.min(5, d.length - 1)].focus(); }
+      else { inp.value = d; if (d && ins[k + 1]) ins[k + 1].focus(); }
+      if (CODE.purpose === 'signup' && (k === 5 || d.length > 1) && ins.every(i => i.value) && !CODE.sending) document.getElementById('codeForm').requestSubmit(); };
+    inp.onkeydown = ev => { if (ev.key === 'Backspace' && !inp.value && ins[k - 1]) ins[k - 1].focus(); };
+  });
+  showErr('codeErr', ''); startResendTimer(); showPane('code');
+}
+let resendT = null;
+function startResendTimer(){ const b = document.getElementById('resendBtn'); let n = 60; clearInterval(resendT); b.disabled = true;
+  const tick = () => { b.textContent = n > 0 ? `send a new code (${n}s)` : 'send a new code'; if (n-- <= 0) { clearInterval(resendT); b.disabled = false; } }; tick(); resendT = setInterval(tick, 1000); }
+async function resendCode(){
+  if (!CODE) return; const {status, j} = CODE.purpose === 'signup' ? await api('/api/signup', CODE.start) : await api('/api/reset', {step:'start', who: CODE.who});
+  if (status !== 200) return showErr('codeErr', j.error || 'Could not send a new code.');
+  showErr('codeErr', ''); startResendTimer(); document.querySelectorAll('#codeBox input').forEach(i => i.value = ''); document.querySelector('#codeBox input').focus();
+}
+document.getElementById('codeForm').onsubmit = async e => {
+  e.preventDefault(); if (!CODE || CODE.sending) return;
+  const code = [...document.querySelectorAll('#codeBox input')].map(i => i.value).join(''), btn = document.getElementById('codeBtn');
+  const wrong = m => { showErr('codeErr', m); document.querySelectorAll('#codeBox input').forEach(i => i.value = ''); document.querySelector('#codeBox input').focus(); };
+  if (code.length !== 6) return showErr('codeErr', 'Enter all 6 digits from the email.');
+  if (CODE.purpose === 'reset') {
+    const p1 = document.getElementById('rpP').value, p2 = document.getElementById('rpP2').value;
+    if (p1.length < 8) return showErr('codeErr', 'New password: use at least 8 characters.');
+    if (p1 !== p2) return showErr('codeErr', 'The two new passwords don’t match.');
+    CODE.sending = true;
+    return busy(btn, async () => { const {status, j} = await api('/api/reset', {step:'verify', who: CODE.who, code, pw: p1}); CODE.sending = false;
+      if (status !== 200) return wrong(j.error || 'Something went wrong.');
+      document.getElementById('lu').value = j.u || ''; document.getElementById('rpP').value = document.getElementById('rpP2').value = '';
+      message('Password changed', 'Your new password is ready. Sign in with it now.'); });
+  }
+  CODE.sending = true;
+  await busy(btn, async () => { const {status, j} = await api('/api/signup', {step:'verify', email: CODE.email, code}); CODE.sending = false;
+    if (status !== 200) return wrong(j.error || 'Something went wrong.');
+    document.getElementById('signupForm').reset(); CODE = null;
+    if (j.pending) return message('Almost there!', j.message);
+    signIn(Object.assign(j.user, {accounts: j.accounts})); });
+};
+function message(t, m){ document.getElementById('msgTitle').textContent = t; document.getElementById('msgText').textContent = m; showPane('msg'); }
+document.getElementById('forgotForm').onsubmit = async e => {
+  e.preventDefault(); const who = document.getElementById('fgWho').value.trim(), btn = e.target.querySelector('.lbtn');
+  await busy(btn, async () => { const {status, j} = await api('/api/reset', {step:'start', who});
+    if (status !== 200) return showErr('fgErr', j.error || 'Something went wrong.');
+    if (!j.hint) return showErr('fgErr', 'We couldn’t find an account with an email for that. Check the spelling, or ask the school admin to reset your password.');
+    showErr('fgErr', ''); CODE = {purpose:'reset', who}; openCode(j.hint); });
+};
+// ---------- school admin: approve teacher/staff sign-ups, turn accounts off ----------
+async function openAdmin(){ document.getElementById('adminModal').hidden = false; await loadAdmin(); }
+function closeAdmin(){ document.getElementById('adminModal').hidden = true; }
+async function loadAdmin(){
+  const body = document.getElementById('adminBody');
+  let j; try { const r = await fetch('/api/users', {credentials:'same-origin'}); j = await r.json(); if (r.status !== 200) throw new Error(j.error); }
+  catch(e) { body.innerHTML = `<p class="lerr" style="margin-top:1rem">${escH(e.message || 'Could not load the accounts.')}</p>`; return; }
+  const row = x => `<div class="arow"><div class="who2"><b>${escH(x.name)}</b> <span class="tagr">${escH(x.role)}</span> ${x.status !== 'active' ? `<span class="tagr ${escH(x.status)}">${x.status === 'pending' ? 'waiting for approval' : 'turned off'}</span>` : ''}
+      <small>${escH(x.u)}${x.email ? ' · ' + escH(x.email) : ''} · ${escH(x.pos)}</small></div>
+      ${x.u === me.u ? '<small style="color:var(--muted)">you</small>' : x.status === 'pending' ? `<button class="abtn go" onclick="adminAct('${escH(x.u)}','approve')">Approve</button><button class="abtn" onclick="adminAct('${escH(x.u)}','reject')">Reject</button>`
+        : x.status === 'disabled' ? `<button class="abtn" onclick="adminAct('${escH(x.u)}','enable')">Turn on</button>` : `<button class="abtn" onclick="adminAct('${escH(x.u)}','disable')">Turn off</button>`}</div>`;
+  const pend = j.users.filter(x => x.status === 'pending'), rest = j.users.filter(x => x.status !== 'pending');
+  body.innerHTML = `<h3>Waiting for approval (${pend.length})</h3>${pend.length ? pend.map(row).join('') : '<p class="sub" style="font-size:.85rem">No new teacher or staff sign-ups right now.</p>'}
+    <h3>All accounts (${rest.length})</h3>${rest.map(row).join('')}`;
+}
+async function adminAct(u, action){
+  if (action === 'reject' && !confirm('Reject and delete this sign-up?')) return;
+  if (action === 'disable' && !confirm('Turn off this account? The person won’t be able to sign in until you turn it back on.')) return;
+  const {status, j} = await api('/api/users', {u, action}); if (status !== 200) alert(j.error || 'Could not change the account.');
+  loadAdmin();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('adminModal').hidden) closeAdmin(); });
+
 async function changePw(){
   const old = prompt('Current password:'); if(old == null) return;
   const pw = prompt('New password (at least 8 characters):'); if(pw == null) return;
@@ -494,6 +688,7 @@ function signIn(acc){
   document.getElementById('whoPos').textContent = acc.pos;
   document.getElementById('whoAv').textContent = acc.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
   document.body.classList.add('authed');
+  document.getElementById('adminBtn').hidden = !(CLOUD && me.role === 'admin');
   markAccess(); render();
 }
 function logout(){
@@ -503,6 +698,7 @@ function logout(){
   for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
   hideTip(); goHome();
   document.body.classList.remove('authed');
+  showPane('in'); closeAdmin();
   document.title = 'Sign in · School Hub';
   setTimeout(() => document.getElementById('lu').focus(), 0);
 }
@@ -523,9 +719,11 @@ document.addEventListener('keydown', e => {
     document.getElementById('demo').hidden = true;      // real accounts: never show passwords on the page
     document.getElementById('pwBtn').hidden = false;
     document.querySelector('#login .foot, .foot') && (document.querySelector('.foot').textContent = 'School Hub · sign in with your school account');
-    if(r.status === 200) return signIn(j.user);
+    document.getElementById('adminBtn').dataset.cloud = '1';
+    if(r.status === 200) return signIn(Object.assign(j.user, {accounts: j.accounts}));
     render(); document.getElementById('lu').focus(); return;
   }
+  document.getElementById('signupLink').hidden = document.getElementById('forgotLink').hidden = true; // need the school server
   let savedUser = null; try { savedUser = sessionStorage.getItem(SESSION_KEY); } catch(e) {}
   const savedAcc = savedUser && HUB_USERS.find(x => x.u === savedUser);
   if(savedAcc) signIn(savedAcc); else { render(); document.getElementById('lu').focus(); }
