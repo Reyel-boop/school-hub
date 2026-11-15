@@ -5,7 +5,7 @@
 <script src="../shared/cloud.js" data-mod="aralmath"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aral Math</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Patrick+Hand&family=Lilita+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/proto.css">
 <style>
   :root{--brand:#0e7490;--brand-d:#155e75;--brand-soft:#cffafe;--grad:linear-gradient(135deg,#06b6d4,#4338ca)}
@@ -458,6 +458,61 @@
     .blines{font-size:1.35rem}.dcol{font-size:1.5rem}.agrid{width:7.5rem;height:7.5rem}
     .clock{display:none}
   }
+
+  /* ---------- welcome hallway ---------- */
+  .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
+  .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
+  .wstage .hall{position:absolute;inset:0;width:100%;height:100%}
+  .wf{position:absolute;display:grid;place-items:center;overflow:hidden;background:#38bdf8}
+  .wf .wfm{width:86%;height:auto}
+  .wf-big{left:7%;top:12%;width:17%;height:46%;border:1.1vmax solid #f59e0b;outline:.4vmax solid #b45309;border-radius:.4vmax;transform:perspective(60vmax) rotateY(38deg);box-shadow:1vmax 1vmax 0 rgba(0,0,0,.18)}
+  .wf-oval{left:25%;top:30%;width:6.5%;height:20%;border:.7vmax solid #fbbf24;border-radius:50%;transform:perspective(60vmax) rotateY(38deg);background:#0ea5e9}
+  .wf-b1,.wf-b2{top:36%;width:3.6%;height:7%;border:.35vmax solid #f59e0b;background:#a5f3fc}
+  .wf-b1{left:41.5%}.wf-b2{left:55%}
+  .wwin{position:absolute;right:6%;top:12%;width:15%;height:52%;background:linear-gradient(#1d4ed8,#3b82f6);border:1vmax solid #e0f2fe;transform:perspective(60vmax) rotateY(-38deg);overflow:hidden;box-shadow:-1vmax 1vmax 0 rgba(0,0,0,.18)}
+  .wwin i{position:absolute;width:60%;height:12%;background:#fff;border-radius:2vmax;animation:wcloud 14s linear infinite}
+  .wwin i:before{content:"";position:absolute;width:55%;height:160%;left:15%;top:-70%;background:#fff;border-radius:50%}
+  .wwin .c1{top:14%;left:10%}.wwin .c2{top:46%;left:-30%;animation-delay:-5s}.wwin .c3{top:74%;left:30%;animation-delay:-9s}
+  @keyframes wcloud{from{transform:translateX(-60%)}to{transform:translateX(160%)}}
+  .wstar{position:absolute;left:50%;bottom:-9%;width:27%;transform:translateX(-50%);animation:wbob 3s ease-in-out infinite}
+  .wstar .wbuddy{width:100%;height:auto;display:block;filter:drop-shadow(0 1vmax 1vmax rgba(0,0,0,.25))}
+  @keyframes wbob{50%{transform:translate(-50%,-2.5%)}}
+  .wfront{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:4vh 16px 0;pointer-events:none;overflow-y:auto}
+  .welcome.parent .wfront,.welcome.both .wfront{pointer-events:auto;padding-top:6vh}
+  .wfront > *{pointer-events:auto}
+  .wbanner{position:relative;width:min(92vw,58vh + 260px,700px);margin-top:4vh;animation:wdrop .7s cubic-bezier(.3,1.5,.6,1) both}
+  .wbanner svg{width:100%;height:auto;display:block;filter:drop-shadow(0 .8vh 0 rgba(0,0,0,.18))}
+  .wbanner h1{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff7ed;font-weight:400;line-height:1;font-size:clamp(34px,6.4vw,74px);
+    text-shadow:0 .08em 0 #b45309,0 .14em .1em rgba(0,0,0,.25);-webkit-text-stroke:.02em #b45309;transform:rotate(-2deg)}
+  .wbanner h1 span{font-size:.62em;margin-bottom:.05em}
+  @keyframes wdrop{from{transform:translateY(-120%) rotate(-6deg);opacity:0}}
+  .wgo{position:relative;margin-top:-1vh;animation:wdrop .7s .2s cubic-bezier(.3,1.5,.6,1) both}
+  .wbtn{display:block;min-width:min(64vw,260px);font:inherit;font-size:clamp(20px,2.6vw,30px);color:#fff;letter-spacing:.02em;padding:.45em 1.4em;border:0;border-radius:999px;cursor:pointer;
+    background:linear-gradient(#22e35b,#0ab53a);box-shadow:inset 0 .12em 0 rgba(255,255,255,.45),inset 0 -.12em 0 rgba(0,0,0,.12),0 .16em 0 #058a2b,0 .35em .5em rgba(0,0,0,.25);text-shadow:0 .06em 0 rgba(0,0,0,.25)}
+  .wbtn:hover{filter:brightness(1.06)}.wbtn:active{transform:translateY(.1em);box-shadow:inset 0 .12em 0 rgba(255,255,255,.45),0 .06em 0 #058a2b}
+  .wbtn.ghost{background:#fff;color:#0369a1;box-shadow:0 .16em 0 #93c5fd;text-shadow:none}
+  .wgo .wbtn{animation:wpulse 1.6s ease-in-out infinite}
+  @keyframes wpulse{50%{transform:scale(1.05)}}
+  .glove{position:absolute;right:100%;top:50%;width:clamp(70px,9vw,120px);margin-right:-12px;transform:translateY(-35%);animation:wpoint 1s ease-in-out infinite;filter:drop-shadow(0 4px 0 rgba(0,0,0,.15))}
+  @keyframes wpoint{50%{transform:translate(12px,-35%)}}
+  .wpanel{position:relative;margin-top:7vh;width:min(86vw,360px);background:#0ea5e9;border:8px solid #e0f2fe;outline:4px solid #0284c7;border-radius:26px;padding:56px 22px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,.45);animation:wdrop .5s cubic-bezier(.3,1.4,.6,1) both}
+  .wpanel .wbtn{width:100%}
+  .wtab{font-family:'Lilita One',Poppins,sans-serif;position:absolute;top:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#0ea5e9;color:#fff;font-size:clamp(18px,2.2vw,24px);padding:10px 28px;border:6px solid #e0f2fe;outline:3px solid #0284c7;border-radius:16px;text-shadow:0 2px 0 #0369a1}
+  .wpanel.wide{width:min(92vw,560px);margin-top:5vh;align-items:stretch;gap:12px;font-family:Poppins,system-ui,sans-serif;color:#fff;margin-bottom:4vh}
+  .wsub{text-align:center;font-size:15px}
+  .wstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .wstats div{background:rgba(255,255,255,.18);border-radius:14px;padding:10px 6px;text-align:center}
+  .wstats b{display:block;font-family:'Lilita One',Poppins,sans-serif;font-weight:400;font-size:26px;line-height:1.1}
+  .wstats b small{font-size:.6em;opacity:.8}
+  .wstats span{font-size:11px;opacity:.9}
+  .wrows div{display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-top:1px solid rgba(255,255,255,.25);font-size:14px}
+  .wrows b{text-align:right;font-weight:600}
+  .wtip{background:#fef9c3;color:#713f12;border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.45}
+  .wacts{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .wacts .wbtn{font-family:'Lilita One',Poppins,sans-serif;font-size:22px}
+  @media (max-width:560px){.wstats{grid-template-columns:repeat(2,1fr)}.wstar{width:min(60vw,46vh + 40px);bottom:-6%}.glove{display:none}}
+  @media (prefers-reduced-motion:reduce){.welcome *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -1384,6 +1439,7 @@ function learn(el){
   if (LS) return lessonView(el);
   if (STORY) return storyView(el);
   if (S) return battle(el);
+  if (WELCOME || welcomeDue()) return welcomeView(el);
   if (isStudent() && !pref(P.me.u).buddy) return buddyPick(el);
   if (isStudent() && !seenStory('prologue')) return playStory('prologue');
   if (screen === 'book') return book(el);
@@ -2147,6 +2203,72 @@ function finishLesson(){
   if (after) after(); else P.refresh();
 }
 function closeLesson(){ const id = LS && LS.id; if (LS) setResume(LS.k > 0 && LS.k < LS.steps.length - 1 && (LS.phase === 'demo' || LS.phase === 'solve') ? {mode: LS.mode || 'demo', k: LS.k, fd: LS.fd || null, q: LS.item0 ? LS.item0.q : null} : null); stopLesson(); if (id) { const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); } LS = null; P.refresh(); }
+
+/* ================= WELCOME HALLWAY: "Welcome to Aral Math" → Who is here? → Student / Parent / Both =================
+   Plays once per visit for learners. Original art: a cartoon hallway with our Bilang Monsters in picture frames. */
+let WELCOME = null; // null | 'door' | 'who' | 'parent' | 'both'
+const welcomeDue = () => { try { return isStudent() && !sessionStorage.getItem('aralmath-welcome'); } catch (e) { return false; } };
+function welcomeDone(){ try { sessionStorage.setItem('aralmath-welcome', '1'); } catch (e) {} WELCOME = null; P.refresh(); }
+function welcomeGo(step){ sfx(step === 'who' ? 'buy' : 'ok'); WELCOME = step; P.refresh(); }
+const GLOVE = `<svg class="glove" viewBox="0 0 120 80" aria-hidden="true"><g stroke="#1e293b" stroke-width="3.5" stroke-linejoin="round" fill="#fff">
+  <path d="M8 30q0-14 16-16h22q8-10 20-4l40 2q12 2 10 12t-12 10l-26 1q4 8-2 14q6 6-2 12q2 9-10 10H30Q8 71 8 50z"/>
+  <path d="M68 33h-6M58 47h10M56 59h10" fill="none"/><path d="M8 40h-6v24h6" fill="#e2e8f0"/></g></svg>`;
+function hallwayArt(){
+  const stripes = (id, c1, c2) => `<pattern id="${id}" width="44" height="10" patternUnits="userSpaceOnUse"><rect width="44" height="10" fill="${c1}"/><rect width="22" height="10" fill="${c2}"/></pattern>`;
+  return `<svg class="hall" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+    <defs>${stripes('wl', '#22c39a', '#33d6ad')}${stripes('wr', '#20b994', '#30cfa7')}
+      <linearGradient id="ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c026d3"/><stop offset="1" stop-color="#a21caf"/></linearGradient>
+      <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f9fae"/><stop offset="1" stop-color="#0b7f92"/></linearGradient>
+      <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3730a3"/><stop offset="1" stop-color="#1e1b6b"/></linearGradient></defs>
+    <rect x="420" y="240" width="360" height="370" fill="url(#room)"/>
+    <rect x="560" y="430" width="80" height="180" rx="6" fill="#312e81" stroke="#4338ca" stroke-width="5"/><circle cx="626" cy="525" r="5" fill="#fbbf24"/>
+    <ellipse cx="600" cy="600" rx="150" ry="22" fill="#7c3aed" opacity=".55"/><ellipse cx="600" cy="600" rx="100" ry="14" fill="none" stroke="#c4b5fd" stroke-width="5" opacity=".6"/>
+    <polygon points="0,0 1200,0 780,240 420,240" fill="url(#ceil)"/>
+    <polygon points="0,0 420,240 420,610 0,800" fill="url(#wl)"/>
+    <polygon points="1200,0 780,240 780,610 1200,800" fill="url(#wr)"/>
+    <polygon points="0,800 420,610 780,610 1200,800" fill="url(#floor)"/>
+    <polygon points="0,742 420,584 420,610 0,800" fill="#2563eb"/><polygon points="1200,742 780,584 780,610 1200,800" fill="#1d4ed8"/>
+    <polygon points="0,0 36,0 420,236 420,250" fill="#1d4ed8" opacity=".6"/><polygon points="1200,0 1164,0 780,236 780,250" fill="#1d4ed8" opacity=".6"/>
+    <path d="M600 0v58" stroke="#155e75" stroke-width="6"/><ellipse cx="600" cy="62" rx="90" ry="30" fill="#fde68a"/><ellipse cx="600" cy="56" rx="90" ry="22" fill="#fcd34d"/><circle cx="600" cy="92" r="10" fill="#b45309"/>
+  </svg>`;
+}
+function welcomeView(el){
+  if (!WELCOME) WELCOME = 'door';
+  const u = P.me.u, buddy = pref(u).buddy;
+  const star = monsterSVG(buddy || 'mon-welcome', 'happy', buddy ? pref(u).wear || [] : [], 'wbuddy');
+  const frames = `<div class="wf wf-big">${monsterSVG('mon-i-add', 'happy', ['party'], 'wfm')}</div><div class="wf wf-oval">${monsterSVG('mon-f-mul', 'idle', [], 'wfm')}</div>
+    <div class="wf wf-b1">${monsterSVG('mon-e-eval', 'happy', [], 'wfm')}</div><div class="wf wf-b2">${monsterSVG('mon-p-add', 'idle', [], 'wfm')}</div>
+    <div class="wwin"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>`;
+  let panel;
+  if (WELCOME === 'door') panel = `<div class="wbanner"><svg viewBox="0 0 700 230" aria-hidden="true">
+        <path d="M40 70 0 120l40 50h80V70z" fill="#f59e0b"/><path d="M660 70l40 50-40 50h-80V70z" fill="#f59e0b"/><path d="M120 170l-40-20h40zM580 170l40-20h-40z" fill="#b45309"/>
+        <path d="M90 40q260-40 520 0v140q-260-40-520 0z" fill="#fbbf24" stroke="#f59e0b" stroke-width="6"/></svg>
+        <h1><span>Welcome to</span>Aral Math</h1></div>
+      <div class="wgo">${GLOVE}<button class="wbtn" onclick="welcomeGo('who')">Let’s Go!</button></div>`;
+  else if (WELCOME === 'who') panel = `<div class="wpanel"><div class="wtab">Who is here?</div>
+        <button class="wbtn" onclick="welcomeDone()">Student</button><button class="wbtn" onclick="welcomeGo('parent')">Parent</button><button class="wbtn" onclick="welcomeGo('both')">Both of us</button></div>`;
+  else panel = parentReport(u, WELCOME === 'both');
+  el.innerHTML = `<div class="welcome ${WELCOME}"><div class="wstage">${hallwayArt()}${frames}<div class="wstar">${star}</div></div><div class="wfront">${panel}</div></div>`;
+  if (WELCOME === 'door' && ttsOn()) speak('Welcome to Aral Math!', 'nar');
+}
+// a short, friendly report for a parent (or a parent and child together)
+function parentReport(u, both){
+  const b = bandOf(u), all = bandSkills(b), first = esc(P.me.name.split(' ')[0]), mine = myAttempts(u), week = mine.filter(a => a.at > Date.now() - 7 * 864e5);
+  const got = all.filter(id => caught(u, id)).length, stars = all.reduce((s, id) => s + starsOf(bestOf(u, id)), 0);
+  const help = all.filter(id => status(bestOf(u, id))[0] === 'Needs help').slice(0, 3), nx = nextSkill(u, b), last = mine.length ? Math.max(...mine.map(a => a.at)) : null;
+  const tip = help.length ? `Sit together for one battle on <b>${SK[help[0]].title}</b>. Watch the lesson first, then let ${first} try. Use “Show me the steps” after a miss.`
+    : nx ? `Ask ${first} to explain the last lesson to you. Teaching it back is one of the best ways to remember it.` : `${first} has caught every monster in ${BANDS[b].label}. Try a rematch for 3 stars!`;
+  return `<div class="wpanel wide"><div class="wtab">${both ? 'Let’s look together!' : 'Hello, parent!'}</div>
+    <p class="wsub">Here’s how <b>${first}</b> is doing in ${BANDS[b].label} math.</p>
+    <div class="wstats"><div><b>${levelOf(xpOf(u))}</b><span>Level</span></div><div><b>${got}<small>/${all.length}</small></b><span>Monsters caught</span></div>
+      <div><b>${stars}</b><span>Stars</span></div><div><b>${week.length}</b><span>Battles this week</span></div></div>
+    <div class="wrows"><div><span>Last played</span><b>${last ? ago(last) : 'Not yet'}</b></div>
+      <div><span>Learning now</span><b>${nx ? SK[nx].title : 'All lessons done 🎉'}</b></div>
+      <div><span>Needs a little help</span><b>${help.length ? help.map(id => SK[id].title).join(', ') : 'Nothing right now 👍'}</b></div></div>
+    <p class="wtip">💡 ${tip}</p>
+    <div class="wacts">${both ? `<button class="wbtn" onclick="welcomeDone()">▶ Let’s play together!</button>` : `<button class="wbtn" onclick="welcomeDone()">Done</button>`}
+      <button class="wbtn ghost" onclick="try{sessionStorage.setItem('aralmath-welcome','1')}catch(e){}WELCOME=null;P.tab('progress')">See every lesson</button></div></div>`;
+}
 
 /* ================= MY PROGRESS (learner) ================= */
 function progress(el){
