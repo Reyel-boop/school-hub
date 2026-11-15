@@ -495,6 +495,36 @@
   .nlsjar .jarm{width:115%;height:auto;margin-bottom:-12%}
   .nlsjar.pop{animation:pop .5s ease-out}
   @media (max-width:640px){.nlsline .nlx.odd b{visibility:hidden}.nlscls .board.nlsboard{right:3%}.nlsans{right:3%}}
+
+  /* ---------- life: looking, talking, wobbling, depth, shadows, celebrations ---------- */
+  svg .pup{transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .18s ease-out}
+  svg .lmo{opacity:0;transform-box:fill-box;transform-origin:50% 0}
+  .talking svg .lmo{opacity:1;animation:yap .22s ease-in-out infinite alternate}
+  .talking svg .lmouth{opacity:0}
+  @keyframes yap{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+  svg .mtop,svg .marm{transform-box:fill-box;transform-origin:50% 100%}
+  svg .marm.l{transform-origin:100% 30%}svg .marm.r{transform-origin:0 30%}
+  .wob svg .mtop{animation:wob .9s cubic-bezier(.3,.6,.4,1)}
+  .wob svg .marm.l{animation:flapl .7s ease-out}.wob svg .marm.r{animation:flapr .7s ease-out}
+  @keyframes wob{15%{transform:rotate(-14deg) scaleY(.85)}35%{transform:rotate(10deg)}55%{transform:rotate(-6deg)}75%{transform:rotate(3deg)}100%{transform:none}}
+  @keyframes flapl{30%{transform:rotate(28deg)}60%{transform:rotate(-10deg)}100%{transform:none}}
+  @keyframes flapr{30%{transform:rotate(-28deg)}60%{transform:rotate(10deg)}100%{transform:none}}
+  .idle-sway svg{animation:sway2 2.6s ease-in-out infinite;transform-origin:50% 100%}
+  @keyframes sway2{0%,100%{transform:rotate(-2deg) scaleY(1)}50%{transform:rotate(2deg) scaleY(.97)}}
+  .teacher.nod svg{animation:nod .9s ease-in-out;transform-origin:50% 100%}
+  @keyframes nod{20%{transform:rotate(-4deg) translateY(4px)}45%{transform:rotate(2deg)}65%{transform:rotate(-3deg) translateY(3px)}100%{transform:none}}
+  /* depth: the classmates in front are a little soft and darker, so eyes go to the board */
+  .nlscls .kids{filter:blur(1.4px) brightness(.88) saturate(.95)}
+  .nlscls .kids.cheer{filter:none}
+  .nlscls::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 45% 40%,transparent 55%,rgba(0,0,0,.18))}
+  /* shadows under the jumping monsters */
+  .nlssh{position:absolute;left:0;bottom:0;width:clamp(1.5rem,3.4vw,2.2rem);height:.42rem;border-radius:50%;background:radial-gradient(rgba(0,0,0,.5),rgba(0,0,0,0) 70%);z-index:1;will-change:transform,opacity;transform-origin:50% 50%}
+  /* celebrations */
+  .nlseq .ans.glow{display:inline-block}
+  .nlseq .bounce{animation:write .7s cubic-bezier(.35,.1,.3,1) forwards,bouncein .8s cubic-bezier(.34,1.8,.5,1),glowp 1.2s .7s ease-in-out 2}
+  @keyframes bouncein{0%{transform:scale(.3) translateY(20px)}60%{transform:scale(1.25)}100%{transform:none}}
+  .burst{position:absolute;width:.55rem;height:.85rem;border-radius:2px;z-index:6;pointer-events:none;will-change:transform,opacity}
+  @media (prefers-reduced-motion:reduce){.idle-sway svg,.talking svg .lmo,.wob svg *{animation:none!important}}
   /* ---------- welcome hallway ---------- */
   .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
   .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
@@ -1449,8 +1479,12 @@ const PATTERN = [() => '', dk => `<circle cx="32" cy="62" r="5" fill="${dk}" opa
   dk => `<path d="M24 46q8-4 14 0M82 46q8-4 14 0M20 62q9-4 16 0M84 62q9-4 16 0M24 78q8-4 14 0M82 78q8-4 14 0" stroke="${dk}" stroke-width="4" fill="none" opacity=".3" stroke-linecap="round"/>`,
   dk => [[30, 44], [88, 50], [34, 74], [86, 78]].map(([x, y]) => `<path d="M${x} ${y - 6}l2 4 4.5.6-3.3 3 .9 4.4-4.1-2.2-4.1 2.2.9-4.4-3.3-3 4.5-.6z" fill="${dk}" opacity=".32"/>`).join(''),
   dk => `<path d="M22 70l6-6 6 6 6-6M80 70l6-6 6 6 6-6M26 50l5-5 5 5 5-5M80 50l5-5 5 5 5-5" stroke="${dk}" stroke-width="3" fill="none" opacity=".3" stroke-linejoin="round"/>`];
+let SVGN = 0; // unique gradient ids
+const mixHex = (h, w, t) => { const a = parseInt(h.slice(1), 16), b = parseInt(w.slice(1), 16), ch = (x, y, s) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t);
+  return '#' + ((1 << 24) | (ch(a, b, 16) << 16) | (ch(a, b, 8) << 8) | ch(a, b, 0)).toString(16).slice(1); };
 function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
-  const M = monsterOf(seed), [c, dk, bl] = M.pal, st = `stroke="${dk}" stroke-width="3" stroke-linejoin="round"`;
+  const M = monsterOf(seed), [c, dk, bl] = M.pal, gid = 'mg' + (++SVGN), st = `stroke="${dk}" stroke-width="3" stroke-linejoin="round"`;
+  const fillB = `url(#${gid})`;
   const top = [
     `<path d="M40 32L30 4L54 24Z" fill="${dk}"/><path d="M80 32L90 4L66 24Z" fill="${dk}"/>`,
     `<path d="M48 26L38 6M72 26L82 6" stroke="${dk}" stroke-width="3" stroke-linecap="round"/><circle cx="38" cy="6" r="5" fill="${bl}" ${st}/><circle cx="82" cy="6" r="5" fill="${bl}" ${st}/>`,
@@ -1460,7 +1494,7 @@ function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
   const eye = x => mood === 'hit' ? `<path d="M${x - er * .7} ${ey - er * .6}L${x + er * .5} ${ey}L${x - er * .7} ${ey + er * .6}" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/>`
     : mood === 'ko' ? `<path d="M${x - er * .6} ${ey - er * .6}L${x + er * .6} ${ey + er * .6}M${x + er * .6} ${ey - er * .6}L${x - er * .6} ${ey + er * .6}" stroke="${dk}" stroke-width="3" stroke-linecap="round"/>`
     : mood === 'happy' ? `<path d="M${x - er} ${ey + er * .3}Q${x} ${ey - er} ${x + er} ${ey + er * .3}" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/>`
-    : `<circle cx="${x}" cy="${ey}" r="${er}" fill="#fff" stroke="${dk}" stroke-width="2"/><circle cx="${x + 1}" cy="${ey + 1}" r="${er * .5}" fill="#0f172a"/><circle cx="${x + er * .3}" cy="${ey - er * .25}" r="${er * .18}" fill="#fff"/>`;
+    : `<circle cx="${x}" cy="${ey}" r="${er}" fill="#fff" stroke="${dk}" stroke-width="2"/><g class="pup"><circle cx="${x + 1}" cy="${ey + 1}" r="${er * .5}" fill="#0f172a"/><circle cx="${x + er * .3}" cy="${ey - er * .25}" r="${er * .18}" fill="#fff"/></g>`;
   const grin = `<path d="M44 70Q60 92 76 70Z" fill="#7f1d1d" stroke="${dk}" stroke-width="2"/><path d="M50 71L54 77L58 72ZM62 72L66 77L70 71Z" fill="#fff"/>`;
   const mouth = mood === 'happy' ? grin : mood === 'hit' ? `<path d="M46 77Q51 72 56 77Q61 82 66 77Q71 72 76 77" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/>`
     : mood === 'ko' ? `<ellipse cx="60" cy="77" rx="5" ry="6" fill="#7f1d1d"/>`
@@ -1470,9 +1504,12 @@ function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
        `<path d="M42 74Q60 80 78 74" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 75.5l2 4 2-3.6M64 76.2l2 3.6 2-4" fill="#fff" stroke="${dk}" stroke-width="1"/>`][M.mouth] || grin;
   const has = a => acc.includes(a);
   return `<svg class="${cls}" viewBox="-10 -16 140 136" aria-hidden="true">
+    <defs><radialGradient id="${gid}" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="${mixHex(c, '#ffffff', .38)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${mixHex(c, dk, .55)}"/></radialGradient>
+      <linearGradient id="${gid}s" x1="0" y1="0" x2="1" y2="0"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient><clipPath id="${gid}c">${BODY[M.body]('')}</clipPath></defs>
     ${has('cape') ? `<path d="M26 50Q60 38 94 50L106 114Q60 124 14 114Z" fill="#dc2626" stroke="#991b1b" stroke-width="2"/>` : ''}
-    <ellipse cx="15" cy="78" rx="8" ry="13" fill="${c}" ${st}/><ellipse cx="105" cy="78" rx="8" ry="13" fill="${c}" ${st}/>
-    ${top}${BODY[M.body](`fill="${c}" ${st}`)}
+    <g class="marm l"><ellipse cx="15" cy="78" rx="8" ry="13" fill="${fillB}" ${st}/></g><g class="marm r"><ellipse cx="105" cy="78" rx="8" ry="13" fill="${fillB}" ${st}/></g>
+    <g class="mtop">${top}</g>${BODY[M.body](`fill="${fillB}" ${st}`)}${BODY[M.body](`fill="url(#${gid}s)" stroke="none"`)}
+    <ellipse cx="46" cy="38" rx="13" ry="7" fill="#fff" opacity=".3" transform="rotate(-25 46 38)" clip-path="url(#${gid}c)"/>
     ${(PATTERN[M.pat] || PATTERN[0])(dk)}
     <ellipse cx="60" cy="88" rx="23" ry="15" fill="${bl}"/>
     <ellipse cx="44" cy="109" rx="11" ry="6" fill="${dk}"/><ellipse cx="76" cy="109" rx="11" ry="6" fill="${dk}"/>
@@ -1805,7 +1842,7 @@ const ESCAPE = ["Thanks for helping! Let's practice a little more.", "We're gett
 // Lolo Pawikan: a wise old sea turtle with a salakot hat
 function turtleSVG(mood = 'idle', cls = 'mon'){
   const eye = x => mood === 'happy' ? `<path d="M${x - 4} 47Q${x} 41 ${x + 4} 47" stroke="#1a2e05" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
-    : `<circle cx="${x}" cy="46" r="3.6" fill="#1a2e05"/><circle cx="${x + 1}" cy="45" r="1.1" fill="#fff"/>`;
+    : `<g class="pup"><circle cx="${x}" cy="46" r="3.6" fill="#1a2e05"/><circle cx="${x + 1}" cy="45" r="1.1" fill="#fff"/></g>`;
   return `<svg class="${cls}" viewBox="-10 -16 140 136" aria-hidden="true">
     <ellipse cx="40" cy="104" rx="12" ry="7" fill="#65a30d" stroke="#365314" stroke-width="2.5"/><ellipse cx="92" cy="104" rx="12" ry="7" fill="#65a30d" stroke="#365314" stroke-width="2.5"/>
     <path d="M18 92C18 56 40 38 70 38C100 38 118 58 118 92Z" fill="#a16207" stroke="#713f12" stroke-width="3" stroke-linejoin="round"/>
@@ -1815,7 +1852,8 @@ function turtleSVG(mood = 'idle', cls = 'mon'){
     <circle cx="22" cy="50" r="18" fill="#84cc16" stroke="#365314" stroke-width="3"/>
     <g class="eyes" style="animation-delay:-1.7s">${eye(16)}${eye(28)}</g>
     <path d="M11 40Q15.5 35 20 39M24 39Q28.5 35 33 40" stroke="#f8fafc" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M14 57Q22 ${mood === 'happy' ? 64 : 61} 30 57" stroke="#1a2e05" stroke-width="2.5" fill="${mood === 'happy' ? '#7f1d1d' : 'none'}" stroke-linecap="round"/>
+    <path class="lmouth" d="M14 57Q22 ${mood === 'happy' ? 64 : 61} 30 57" stroke="#1a2e05" stroke-width="2.5" fill="${mood === 'happy' ? '#7f1d1d' : 'none'}" stroke-linecap="round"/>
+    <g class="lmo"><ellipse cx="22" cy="59.5" rx="6" ry="4.2" fill="#7f1d1d" stroke="#1a2e05" stroke-width="2"/><ellipse cx="22" cy="61.6" rx="3.2" ry="1.6" fill="#f472b6"/></g>
     <path d="M-2 34L22 14L46 34Z" fill="#fde68a" stroke="#a16207" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 30L22 18L36 30" stroke="#d97706" stroke-width="1.5" fill="none"/>
   </svg>`;
 }
@@ -2271,7 +2309,8 @@ function nlsView(el){
       <div class="board nlsboard" id="nlsBoard"><div class="bt">${SK[N.id].title}</div><div class="nlseq" id="nlsEq"></div>
         <div class="nlsline" id="nlsLine"><div class="ln"></div>${ticks}
           <div class="nlspod"><i class="pole"></i><i class="flag"></i></div>
-          <div class="nlsm" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
+          <div class="nlssh" id="nlsM1S"></div><div class="nlssh" id="nlsM2S"></div>
+          <div class="nlsm idle-sway" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two idle-sway" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
       <div class="nlsans" id="nlsAns"></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
@@ -2281,6 +2320,7 @@ function nlsView(el){
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
         <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
+  nlsLook();
   if (N.phase === 'end') return nlsEnd();
   nlsLater(() => nlsRun(), 350);
 }
@@ -2303,31 +2343,38 @@ function nlsPos(id, v){
   return v == null ? {x: W * (POD.left + (two ? 4 : 0) + 2.5) / 100, y: POD.bottom * R0} : {x: W * nlsX(v) / 100, y: (two ? 2.9 : 1.55) * R0};
 }
 const nlsTf = (e, p, sx = 1, sy = 1, rot = 0) => `translate(${(p.x - e.offsetWidth / 2).toFixed(1)}px,${(-p.y).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
-function nlsPlace(id, v){ const e = $(id); if (!e) return; if (NLS) (NLS.at = NLS.at || {})[id] = v; e.getAnimations && e.getAnimations().forEach(a => a.cancel()); e.style.transform = nlsTf(e, nlsPos(id, v)); }
+const shTf = (sh, p, sc = 1) => `translate(${(p.x - sh.offsetWidth / 2).toFixed(1)}px,${(-p.y + remPx() * .1).toFixed(1)}px) scale(${sc.toFixed(3)})`;
+function nlsPlace(id, v){ const e = $(id), sh = $(id + 'S'); if (!e) return; if (NLS) (NLS.at = NLS.at || {})[id] = v;
+  [e, sh].forEach(x => x && x.getAnimations && x.getAnimations().forEach(a => a.cancel())); const p = nlsPos(id, v); e.style.transform = nlsTf(e, p); if (sh) { sh.style.transform = shTf(sh, p); sh.style.opacity = .85; } }
 // stops: [from, to, to2, ...] (null = the flag stand). Each hop: crouch (anticipation) → smooth arc → land with a squash → settle.
 // flip: a somersault in the air (used for the big first jump off the stand)
 function nlsPath(id, stops, segMs, highRem, flip){
   const e = $(id); if (!e) return 0;
-  const pts = stops.map(v => nlsPos(id, v)), n = pts.length - 1, H = (highRem || 1.2) * remPx(), frames = [], STEPS = 36;
+  const pts = stops.map(v => nlsPos(id, v)), n = pts.length - 1, H = (highRem || 1.2) * remPx(), frames = [], sframes = [], STEPS = 36, sh = $(id + 'S');
   const CROUCH = .18, LAND = .8;   // share of each hop spent crouching before and settling after the jump
   for (let i = 0; i < n; i++) {
     const a = pts[i], b = pts[i + 1], dir = Math.sign(b.x - a.x) || 1, peak = H + Math.max(0, a.y - b.y) * .15;
     for (let k = i ? 1 : 0; k <= STEPS; k++) {
       const t = k / STEPS; let p, sx = 1, sy = 1, rot = 0;
+      let g = a, lift = 0;
       if (t <= CROUCH) { const c = Math.sin(Math.PI * t / CROUCH / 2); p = a; sx = 1 + .14 * c; sy = 1 - .18 * c; }              // crouch down
-      else if (t >= LAND) { const u = (t - LAND) / (1 - LAND), c = Math.cos(Math.PI * u / 2); p = b;                               // land, squash, settle
+      else if (t >= LAND) { const u = (t - LAND) / (1 - LAND), c = Math.cos(Math.PI * u / 2); p = b; g = b;                        // land, squash, settle
         sx = 1 + .16 * c * (1 - u * .3); sy = 1 - .2 * c * (1 - u * .3); }
       else { const u = (t - CROUCH) / (LAND - CROUCH), ue = easeIO(u), air = Math.sin(Math.PI * u);                             // in the air
-        p = {x: a.x + (b.x - a.x) * ue, y: a.y + (b.y - a.y) * ue + peak * 4 * u * (1 - u)};
+        g = {x: a.x + (b.x - a.x) * ue, y: a.y + (b.y - a.y) * ue}; lift = peak * 4 * u * (1 - u); p = {x: g.x, y: g.y + lift};
         sx = 1 - .08 * air; sy = 1 + .12 * air; rot = flip ? dir * 360 * ue : dir * 10 * air; }
       frames.push({transform: nlsTf(e, p, sx, sy, rot), offset: (i + t) / n});
+      if (sh) { const k = Math.min(1, lift / (peak || 1)); sframes.push({transform: shTf(sh, g, 1 - .5 * k), opacity: .85 - .55 * k, offset: (i + t) / n}); }
     }
   }
-  frames[frames.length - 1].offset = 1;
+  frames[frames.length - 1].offset = 1; if (sframes.length) sframes[sframes.length - 1].offset = 1;
   if (NLS) (NLS.at = NLS.at || {})[id] = stops[stops.length - 1];
-  e.getAnimations && e.getAnimations().forEach(x => x.cancel());
-  e.style.transform = nlsTf(e, pts[n]);
-  if (e.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) e.animate(frames, {duration: segMs * n, easing: 'linear'});
+  [e, sh].forEach(x => x && x.getAnimations && x.getAnimations().forEach(a => a.cancel()));
+  e.style.transform = nlsTf(e, pts[n]); if (sh) { sh.style.transform = shTf(sh, pts[n]); sh.style.opacity = .85; }
+  if (e.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) { e.animate(frames, {duration: segMs * n, easing: 'linear'}); if (sh) sh.animate(sframes, {duration: segMs * n, easing: 'linear'});
+    for (let i = 0; i < n; i++) nlsLater(() => { e.classList.remove('wob'); void e.offsetWidth; e.classList.add('wob'); }, segMs * (i + LAND));   // antennae/ears wobble on each landing
+  }
+  if (NLS) NLS.lookAt = id;
   return segMs * n;
 }
 window.addEventListener('resize', () => { if (NLS && NLS.at) for (const [id, v] of Object.entries(NLS.at)) { const e = $(id); if (e && !(e.getAnimations && e.getAnimations().length)) e.style.transform = nlsTf(e, nlsPos(id, v)); } });
@@ -2357,7 +2404,33 @@ function nlsRun(){
     else { N.phase = 'ask'; nlsAsk(); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
   }, t);
 }
-function nlsWrite(p, good){ const eq = $('nlsEq'); if (!eq) return; eq.insertAdjacentHTML('beforeend', ` <span class="chalk ans ${good ? 'glow' : ''}">${m(p.r)}</span>`); if (good) { sfx('win'); confetti(); const k = $('kids'); if (k) { k.classList.remove('cheer'); void k.offsetWidth; k.classList.add('cheer'); } } }
+function nlsWrite(p, good){ const eq = $('nlsEq'); if (!eq) return; eq.insertAdjacentHTML('beforeend', ` <span class="chalk ans ${good ? 'glow bounce' : ''}">${m(p.r)}</span>`); if (good) { sfx('win'); nlsBurst(); const t = $('teacher'); if (t) { t.classList.remove('nod'); void t.offsetWidth; t.classList.add('nod'); } const k = $('kids'); if (k) { k.classList.remove('cheer'); void k.offsetWidth; k.classList.add('cheer'); } } }
+// confetti bursting out of the answer on the chalkboard
+function nlsBurst(){
+  const cls = document.querySelector('.nlscls'), ans = document.querySelector('#nlsEq .ans:last-child'); if (!cls || !ans || !cls.animate) return;
+  const cb = cls.getBoundingClientRect(), ab = ans.getBoundingClientRect(), x0 = ab.left - cb.left + ab.width / 2, y0 = ab.top - cb.top + ab.height / 2;
+  const colors = ['#facc15', '#22c55e', '#38bdf8', '#f472b6', '#a78bfa', '#fb923c'];
+  for (let k = 0; k < 34; k++) { const b = document.createElement('i'); b.className = 'burst'; b.style.left = x0 + 'px'; b.style.top = y0 + 'px'; b.style.background = colors[k % colors.length]; cls.appendChild(b);
+    const ang = Math.random() * Math.PI * 2, d = 80 + Math.random() * 170, dx = Math.cos(ang) * d, dy = Math.sin(ang) * d - 60, rot = (Math.random() - .5) * 900;
+    const an = b.animate([{transform: 'translate(-50%,-50%) scale(.4)', opacity: 1}, {transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rot / 2}deg)`, opacity: 1, offset: .55},
+      {transform: `translate(calc(-50% + ${dx * 1.15}px), calc(-50% + ${dy + 140}px)) rotate(${rot}deg)`, opacity: 0}], {duration: 1300 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.4,1)'});
+    an.onfinish = () => b.remove(); }
+}
+// everyone watches the action: pupils of Lolo, the classmates and the other monster follow the target; Lolo's stick aims at it
+function nlsLook(me){
+  if (me === undefined) { if (!NLS || NLS.looking) return; NLS.looking = true; me = NLS; }
+  if (NLS !== me || !$('nlsLine')) { if (me) me.looking = false; return; }
+  const tgt = NLS.phase === 'ask' ? $('nlsAns').firstElementChild : $(NLS.lookAt || 'nlsM1');
+  if (tgt) { const tb = tgt.getBoundingClientRect(), tx = tb.left + tb.width / 2, ty = tb.top + tb.height / 2;
+    document.querySelectorAll('.nlscls .teacher svg, .nlscls .kid svg, .nlsm svg').forEach(sv => { if (tgt.contains(sv)) return;
+      const b = sv.getBoundingClientRect(), dx = tx - (b.left + b.width / 2), dy = ty - (b.top + b.height * .4), d = Math.hypot(dx, dy) || 1, k = sv.closest('.teacher') ? 1.6 : 2.6;
+      sv.style.setProperty('--lx', (dx / d * k).toFixed(2) + 'px'); sv.style.setProperty('--ly', (dy / d * k * .8).toFixed(2) + 'px'); });
+    const st = document.querySelector('.nlscls .teacher .stick'), te = $('teacher');
+    if (st && te && !te.classList.contains('point')) { const sb = st.getBoundingClientRect(), px = sb.right, py = sb.top + sb.height / 2;
+      const ang = Math.atan2(ty - py, tx - px) * 180 / Math.PI, rot = Math.max(-30, Math.min(40, ang - 180 + (ang < 0 ? 360 : 0)));
+      st.style.transform = `rotate(${rot.toFixed(1)}deg)`; } }
+  requestAnimationFrame(() => nlsLook(me));
+}
 function nlsAsk(msg){
   $('nlsAns').innerHTML = `<div class="nlsbox"><span class="nlsarrow a1">➜</span><input id="nlsIn" inputmode="numeric" autocomplete="off" placeholder="?" aria-label="Your answer"><button class="chk" onclick="nlsCheck()">Check</button><span class="nlsarrow a2">➜</span>${msg ? `<div class="tmsg">${msg}</div>` : ''}</div>`;
   const i = $('nlsIn'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); nlsCheck(); } };
