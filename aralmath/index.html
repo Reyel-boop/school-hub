@@ -117,24 +117,24 @@
   .lb .rk{width:1.4rem;font-weight:700;color:var(--muted);text-align:center}
   .lb .nm{flex:1}
   .homegrid{display:grid;grid-template-columns:1fr 17rem;gap:1rem;align-items:start}
-  /* battle */
+  /* practice */
   .arena{position:relative;border-radius:1rem;overflow:hidden;padding:1rem 1rem .6rem;background:linear-gradient(#bae6fd,#e0f2fe 55%,#bbf7d0 56%,#86efac);min-height:13rem}
   .arena .sun{position:absolute;right:1.4rem;top:1rem;width:2.6rem;height:2.6rem;border-radius:50%;background:#fde047;box-shadow:0 0 30px #fde047}
-  .fighters{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
-  .fighter{display:flex;flex-direction:column;align-items:center;gap:.3rem;width:44%}
-  .fighter svg.mon{width:8.5rem;height:8.5rem;filter:drop-shadow(0 8px 6px rgba(0,0,0,.18))}
-  .fighter .tag{background:rgba(255,255,255,.85);border-radius:.6rem;padding:.3rem .6rem;font-size:.78rem;font-weight:600;width:100%;max-width:12rem}
-  .hp{height:.6rem;border-radius:1rem;background:#e2e8f0;overflow:hidden;margin-top:.25rem}
-  .hp i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#84cc16);transition:width .5s}
-  .hp.low i{background:linear-gradient(90deg,#ef4444,#f97316)}
-  .vs{font-weight:800;color:#0f172a;opacity:.35;font-size:1.4rem;align-self:center}
-  .shake{animation:shake .45s}
-  .lunge{animation:lunge .45s}
-  .lungeL{animation:lungeL .45s}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-4deg)}40%{transform:translateX(8px) rotate(4deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-  @keyframes lunge{50%{transform:translateX(30px) scale(1.08)}}
-  @keyframes lungeL{50%{transform:translateX(-30px) scale(1.08)}}
-  .zap{position:absolute;font-size:1.6rem;font-weight:800;color:#fff;-webkit-text-stroke:1.5px #be123c;pointer-events:none;animation:rise 1s forwards;z-index:3}
+  .pals{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
+  .pal{display:flex;flex-direction:column;align-items:center;gap:.3rem;width:44%}
+  .pal svg.mon{width:8.5rem;height:8.5rem;filter:drop-shadow(0 8px 6px rgba(0,0,0,.18))}
+  .pal .tag{background:rgba(255,255,255,.85);border-radius:.6rem;padding:.3rem .6rem;font-size:.78rem;font-weight:600;width:100%;max-width:12rem}
+  /* friendship meter: one star per right answer, full at ${MASTER} */
+  .joy{display:flex;justify-content:center;gap:2px;margin-top:.3rem}
+  .joy i{width:.85rem;height:.85rem;background:#e2e8f0;clip-path:polygon(50% 0,62% 35%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 35%);transition:background .3s}
+  .joy i.on{background:#facc15}
+  .vs{font-size:1.6rem;align-self:center;animation:beat 1.6s ease-in-out infinite}
+  @keyframes beat{50%{transform:scale(1.18)}}
+  .cheer{animation:cheer .6s ease-out}
+  .ponder{animation:ponder .7s ease-in-out}
+  @keyframes cheer{30%{transform:translateY(-22px) scale(1.04,.96)}60%{transform:translateY(0) scale(1.06,.92)}}
+  @keyframes ponder{30%{transform:rotate(-6deg)}70%{transform:rotate(5deg)}}
+  .zap{position:absolute;font-size:1.4rem;font-weight:800;color:#ca8a04;-webkit-text-stroke:1px #fff;pointer-events:none;animation:rise 1.2s forwards;z-index:3}
   @keyframes rise{to{transform:translateY(-50px);opacity:0}}
   .combo{position:absolute;left:50%;top:.6rem;transform:translateX(-50%);background:#f97316;color:#fff;font-weight:700;font-size:.8rem;border-radius:1rem;padding:.15rem .7rem;z-index:2}
   .qcard{border-radius:1rem}
@@ -167,7 +167,7 @@
   .pick svg{width:7rem;height:7rem;animation:bob 2.6s ease-in-out infinite}
   .mute{position:absolute;right:.6rem;top:.6rem;z-index:2;background:rgba(255,255,255,.75);border-radius:2rem;padding:.25rem .55rem;font-size:.75rem}
   @media (max-width:860px){ .homegrid{grid-template-columns:1fr} }
-  @media (max-width:640px){ .fighter svg.mon{width:6rem;height:6rem} .node{width:6rem} .node .disc{width:4rem;height:4rem} .node .disc svg{width:3.3rem;height:3.3rem} .hud .buddy{width:5rem;height:5rem} }
+  @media (max-width:640px){ .pal svg.mon{width:6rem;height:6rem} .node{width:6rem} .node .disc{width:4rem;height:4rem} .node .disc svg{width:3.3rem;height:3.3rem} .hud .buddy{width:5rem;height:5rem} }
   @media (prefers-reduced-motion: reduce){ .hud .buddy,.pick svg,.node.next .disc{animation:none} }
   svg.mini{width:100%;height:100%}
   svg.locked{filter:brightness(0) opacity(.18)}
@@ -1388,8 +1388,8 @@ function checkItem(it, raw){
 }
 
 /* ================= GAME LAYER: BILANG MONSTERS =================
-   Original creatures drawn in code. Every lesson has its own monster; beat it in a
-   10-question battle (8 right = caught). Learners earn coins, stars and XP, and dress
+   Original creatures drawn in code. Every lesson has its own monster; help it in a
+   10-question practice round (8 right = new friend). Learners earn coins, stars and XP, and dress
    up their own buddy with gear from the shop. */
 const hashS = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const rngOf = seed => { let x = seed || 1; return () => { x = (Math.imul(x, 1664525) + 1013904223) >>> 0; return x / 4294967296; }; };
@@ -1517,7 +1517,7 @@ const CFG = {
   key:'svnhs-aralmath', title:'Aral Math', subtitle:'ARAL Program · Mathematics', icon:ICON,
   roles:{
     teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets']]},
-    student:{tagline:'Beat the Bilang Monsters by mastering ARAL Math!', tabs:[['learn','Play'],['progress','My Progress']]},
+    student:{tagline:'Help the Bilang Monsters by mastering ARAL Math!', tabs:[['learn','Play'],['progress','My Progress']]},
   },
   signup:{roles:[['student','Learner']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 8 – Rizal'}},
   demo:[['teacher','teacher123','Math teacher'],['student','student123','Learner']],
@@ -1533,7 +1533,7 @@ const CFG = {
   views:{learn, progress, class: classView, print: printView},
 };
 
-/* ================= PLAY: MAP, BATTLE, COLLECTION, SHOP ================= */
+/* ================= PLAY: MAP, PRACTICE, MONSTER FRIENDS, SHOP ================= */
 let S = null, screen = 'map';
 function bandSwitch(b, fn){
   return `<div class="bandsw">${Object.entries(BANDS).map(([k, v]) => `<button class="${k === b ? 'on' : ''}" onclick="${fn}('${k}')">${v.label}</button>`).join('')}</div>`;
@@ -1558,7 +1558,7 @@ function hud(u){
   return `<div class="hud">${buddySVG(u)}
     <div class="me"><h2>${esc(P.me.name.split(' ')[0])} &amp; ${monsterOf(buddyOf(u)).name}</h2><small>${esc(P.me.pos)}</small>
       <div class="lvl"><b>Level ${levelOf(xp)}</b><div class="xp"><i style="width:${levelPct(xp)}%"></i></div></div>
-      <div class="hudbtns">${nx ? `<button class="hbtn go" onclick="startPractice('${nx}')">▶ Play: ${SK[nx].title}</button>` : `<span class="chip">All ${all.length} monsters caught! 🎉</span>`}
+      <div class="hudbtns">${nx ? `<button class="hbtn go" onclick="startPractice('${nx}')">▶ Play: ${SK[nx].title}</button>` : `<span class="chip">All ${all.length} monsters are your friends! 🎉</span>`}
         <button class="hbtn ghosty" onclick="go('dex')">Monsters ${all.filter(id => caught(u, id)).length}/${all.length}</button>
         <button class="hbtn ghosty" onclick="go('shop')">Buddy shop</button>
         <button class="hbtn ghosty" onclick="go('book')">📖 Story</button></div></div>
@@ -1567,7 +1567,7 @@ function hud(u){
 function map(el){
   const u = P.me.u, b = bandOf(u), stu = isStudent(), nx = stu ? nextSkill(u, b) : null;
   const islands = BANDS[b].units.map(([name, list], ix) => { const [c, soft] = ISLE[ix % ISLE.length], got = stu ? list.filter(([id]) => caught(u, id)).length : 0;
-    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Chapter ${ix + 1} · ${ISLAND[b][ix]}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} caught</small>` : ''}
+    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Chapter ${ix + 1} · ${ISLAND[b][ix]}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} friends</small>` : ''}
         ${!stu || seenStory(`${b}-${ix}-intro`) ? `<button class="storybtn" onclick="playStory('${b}-${ix}-intro')">📖 Story</button>` : ''}</div>
       <div class="path">${list.map(([id, ws]) => { const cg = stu && caught(u, id), show = !stu || cg;
         return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}">
@@ -1577,20 +1577,20 @@ function map(el){
   el.innerHTML = `<div class="stack">
     ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div><button class="btn ghost sm" onclick="go('book')">📖 Read the story</button></div></div>`}
     <div class="homegrid"><div class="stack">
-      <div class="card" style="padding:.9rem 1.1rem"><div class="ptop"><div class="grow"><b style="font-weight:600">Monster map</b><br><small style="color:var(--muted)">Each lesson hides a Bilang Monster. Beat it to catch it!</small></div>${bandSwitch(b, 'setBand')}</div></div>
+      <div class="card" style="padding:.9rem 1.1rem"><div class="ptop"><div class="grow"><b style="font-weight:600">Monster map</b><br><small style="color:var(--muted)">Each lesson has a Bilang Monster who needs your help. Get ${MASTER} right to make a new friend!</small></div>${bandSwitch(b, 'setBand')}</div></div>
       ${islands}</div>
       <div class="side">
         <div class="card"><h2>${COIN} Top this week</h2><p class="hint" style="margin-bottom:.6rem">${BANDS[b].label} learners</p><div class="lb">
           ${kids.map((k, i) => `<div class="${k.s.u === u ? 'me' : ''}"><span class="rk">${i + 1}</span><span style="width:2rem;height:2rem;flex:none">${monsterSVG(buddyOf(k.s.u), 'idle', pref(k.s.u).wear || [], 'mini')}</span><span class="nm">${esc(k.s.name.split(' ')[0])}</span><b>${k.c}</b></div>`).join('') || '<div class="empty">No players yet.</div>'}</div></div>
         <div class="card"><h2>How to play</h2><ol style="padding-left:1.1rem;font-size:.85rem;line-height:1.7;color:var(--muted)">
-          <li>Tap a monster on the map.</li><li>Answer ${ITEMS} questions. Every right answer hits the monster.</li>
-          <li>Get ${MASTER} right to <b>catch</b> it (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
+          <li>Tap a monster on the map.</li><li>Answer ${ITEMS} questions. Every right answer adds a ⭐ to its friendship meter.</li>
+          <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
           <li>Stuck? Tap <b>🎬 Watch the lesson</b> and Lolo Pawikan will show you how.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div></div>`;
 }
 function buddyPick(el){
   el.innerHTML = `<div class="card" style="text-align:center;padding:2rem 1rem"><h2 style="font-size:1.4rem">Choose your math buddy!</h2>
-    <p class="hint">Your buddy fights the Bilang Monsters with you. You can dress it up later with coins you earn.</p>
+    <p class="hint">Your buddy learns math with you. You can dress it up later with coins you earn.</p>
     <div class="pickrow">${BUDDIES.map(b => `<button class="pick" onclick="chooseBuddy('${b}')">${monsterSVG(b, 'happy', [], 'p')}<b>${monsterOf(b).name}</b><span class="btn sm">Choose</span></button>`).join('')}</div></div>`;
 }
 function chooseBuddy(b){ pref(P.me.u).buddy = b; P.save(); sfx('buy'); P.refresh(); }
@@ -1608,20 +1608,20 @@ function showLesson(){ if (S && !S.answered) S.hint[S.i] = true; playLesson(S.id
 function battle(el){
   if (S.i >= ITEMS) return winScreen(el);
   const sk = SK[S.id], b = bandOf(P.me.u), M = monsterOf('mon-' + S.id), it = S.items[S.i], last = S.last;
-  const hits = S.res.filter(r => r.ok).length, hp = Math.max(0, 100 - hits * (100 / MASTER)), ko = hits >= MASTER;
+  const hits = S.res.filter(r => r.ok).length, joy = Math.min(100, hits * (100 / MASTER)), ko = hits >= MASTER;
   const lvl = isStudent() ? levelOf(xpOf(P.me.u)) : 1;
   el.innerHTML = `<div class="stack">
     <div class="ptop"><button class="btn ghost sm" onclick="leavePractice()">← Map</button><div class="grow"><b style="font-weight:600">${sk.title}</b><br><small style="color:var(--muted)">${BANDS[b].label} · Worksheet ${wsOf(b, S.id) || '—'}</small></div>
       <span class="chip" style="background:var(--brand-soft);color:var(--brand-d)">${COIN} +${S.coins}</span></div>
     <div class="arena" id="arena"><span class="sun"></span>
-      ${S.i === 0 && !S.answered ? `<span class="speech mon-s">${pick(TAUNT).replace('{topic}', sk.title.toLowerCase())}</span>` : ''}<button class="mute" onclick="toggleMute()">${isMuted() ? '🔇 Sound off' : '🔊 Sound on'}</button>
-      ${S.combo >= 2 ? `<span class="combo">Combo ×${S.combo}!</span>` : ''}
-      <div class="fighters">
-        <div class="fighter" id="fBuddy">${monsterSVG(isStudent() ? buddyOf(P.me.u) : BUDDIES[0], last && !last.ok ? 'hit' : last && last.ok ? 'happy' : 'idle', isStudent() ? pref(P.me.u).wear || [] : [], 'mon')}
+      ${S.i === 0 && !S.answered ? `<span class="speech mon-s">${pick(TAUNT).replace('{topic}', sk.title.toLowerCase())}</span>` : ko && !S.answered ? `<span class="speech mon-s">We’re friends now! Try for all ${ITEMS}!</span>` : ''}<button class="mute" onclick="toggleMute()">${isMuted() ? '🔇 Sound off' : '🔊 Sound on'}</button>
+      ${S.combo >= 2 ? `<span class="combo">${S.combo} in a row!</span>` : ''}
+      <div class="pals">
+        <div class="pal" id="fBuddy">${monsterSVG(isStudent() ? buddyOf(P.me.u) : BUDDIES[0], last && last.ok ? 'happy' : 'idle', isStudent() ? pref(P.me.u).wear || [] : [], 'mon')}
           <div class="tag">${isStudent() ? esc(P.me.name.split(' ')[0]) : 'You'} · Lv ${lvl}</div></div>
-        <span class="vs">VS</span>
-        <div class="fighter" id="fMon">${monsterSVG('mon-' + S.id, ko ? 'ko' : last ? (last.ok ? 'hit' : 'happy') : 'idle', [], 'mon')}
-          <div class="tag">${M.name}<div class="hp ${hp <= 25 ? 'low' : ''}"><i style="width:${hp}%"></i></div></div></div>
+        <span class="vs">💛</span>
+        <div class="pal" id="fMon">${monsterSVG('mon-' + S.id, ko || (last && last.ok) ? 'happy' : 'idle', [], 'mon')}
+          <div class="tag">${M.name}<div class="joy" title="Friendship: ${Math.min(hits, MASTER)} of ${MASTER}">${Array.from({length: MASTER}, (_, k) => `<i class="${k < hits ? 'on' : ''}"></i>`).join('')}</div></div></div>
       </div></div>
     <div class="card qcard"><div class="qtools"><small style="color:var(--muted)">Question ${S.i + 1} of ${ITEMS}${ko ? ' · <b style="color:#ca8a04">Bonus round: get them all for 3 stars!</b>' : ''}</small>
         <div class="dots">${S.items.map((_, k) => `<i class="${k < S.res.length ? (S.res[k].ok ? 'ok' : 'no') : k === S.i ? 'cur' : ''}"></i>`).join('')}</div>
@@ -1629,18 +1629,18 @@ function battle(el){
       <div class="qbox ${it.words ? 'words' : ''}">${it.q}</div>
       ${it.kind === 'mc'
         ? `<div class="choices">${it.choices.map((c, k) => `<button id="ch${k}" ${S.answered ? 'disabled' : ''} class="${S.answered ? (k === it.ans ? 'right' : last.k === k ? 'wrong' : '') : ''}" onclick="answer(${k})">${c}</button>`).join('')}</div>`
-        : `<div class="ansrow"><input id="ans" autocomplete="off" autocapitalize="none" spellcheck="false" ${S.answered ? `disabled value="${esc(last.raw)}"` : ''} placeholder="${it.kind === 'frac' ? 'e.g. 3/4 or 2 1/3' : 'Your answer'}">${S.answered ? '' : '<button class="btn" id="chk" onclick="answer()">Attack!</button>'}</div>
+        : `<div class="ansrow"><input id="ans" autocomplete="off" autocapitalize="none" spellcheck="false" ${S.answered ? `disabled value="${esc(last.raw)}"` : ''} placeholder="${it.kind === 'frac' ? 'e.g. 3/4 or 2 1/3' : 'Your answer'}">${S.answered ? '' : '<button class="btn" id="chk" onclick="answer()">Check</button>'}</div>
            <small style="color:var(--muted);display:block;margin-top:.4rem">${it.kind === 'frac' ? 'Fractions: 3/4 · mixed numbers: 2 1/3 · negatives: -5/6. Answer in lowest terms.' : 'Numbers only. Use - for negative.'}</small>`}
-      <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Hit!</b> +${last.coins} coins${S.combo >= 3 ? ' (combo bonus!)' : ''}` : `<b>Missed!</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
+      <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Correct!</b> +${last.coins} coins${S.combo >= 3 ? ' (streak bonus!)' : ''}` : `<b>Not quite.</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
         ${!last.ok && S.wrongRun >= 2 ? `<div class="fb info"><b>Let's review together:</b><div style="margin-top:.3rem">${sk.learn}</div></div>` : ''}
-        <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish battle' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
+        <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
     </div></div>`;
   const inp = $('ans');
   if (inp && !S.answered) { inp.focus(); inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); answer(); } }; }
   if (S.answered) $('nextBtn').focus();
-  if (S.anim) { const [a, bb] = S.anim === 'hit' ? ['fBuddy', 'fMon'] : ['fMon', 'fBuddy'];
-    $(a).classList.add(S.anim === 'hit' ? 'lunge' : 'lungeL'); setTimeout(() => $(bb) && $(bb).classList.add('shake'), 180);
-    if (S.anim === 'hit') { const z = document.createElement('span'); z.className = 'zap'; z.textContent = S.combo >= 3 ? 'CRITICAL!' : 'POW!'; z.style.cssText = 'right:14%;top:22%'; $('arena').appendChild(z); }
+  if (S.anim) { // right: both friends jump for joy and a star floats up; wrong: they think it over together
+    ['fBuddy', 'fMon'].forEach((id, k) => setTimeout(() => $(id) && $(id).classList.add(S.anim === 'yay' ? 'cheer' : 'ponder'), k * 120));
+    if (S.anim === 'yay') { const z = document.createElement('span'); z.className = 'zap'; z.textContent = S.combo >= 3 ? `⭐ ${S.combo} in a row!` : '+1 ⭐'; z.style.cssText = 'right:16%;top:18%'; $('arena').appendChild(z); }
     S.anim = null; }
 }
 function answer(k){
@@ -1649,8 +1649,8 @@ function answer(k){
   if (r.invalid) { S.err = r.msg; P.refresh(); return; }
   S.err = null; S.answered = true;
   let coins = 0;
-  if (r.ok) { S.combo++; S.wrongRun = 0; coins = (S.hint[S.i] ? 5 : 10) + (S.combo >= 3 ? 5 : 0); S.coins += coins; sfx('ok'); S.anim = 'hit'; }
-  else { S.combo = 0; S.wrongRun++; sfx('no'); S.anim = 'miss'; }
+  if (r.ok) { S.combo++; S.wrongRun = 0; coins = (S.hint[S.i] ? 5 : 10) + (S.combo >= 3 ? 5 : 0); S.coins += coins; sfx('ok'); S.anim = 'yay'; }
+  else { S.combo = 0; S.wrongRun++; sfx('no'); S.anim = 'think'; }
   S.last = {ok: r.ok, note: r.note, k, raw: it.kind === 'mc' ? '' : raw, coins};
   S.res.push({ok: r.ok, given: it.kind === 'mc' ? it.choices[k] : esc(raw)});
   P.refresh();
@@ -1669,26 +1669,26 @@ function winScreen(el){
   const storyKey = stu && wix >= 0 && islandDone(u, wb, wix) && !seenStory(`${wb}-${wix}-outro`) ? `${wb}-${wix}-outro` : null;
   if (!S.line) S.line = pick(nowCaught ? THANKS : ESCAPE);
   el.innerHTML = `<div class="stack"><div class="card win">
-      <h2 style="font-size:1.5rem">${nowCaught ? (score === ITEMS ? 'Perfect battle!' : 'You caught it!') : st ? 'So close!' : 'The monster got away!'}</h2>
+      <h2 style="font-size:1.5rem">${nowCaught ? (score === ITEMS ? 'Perfect score!' : 'New friend!') : st ? 'So close!' : 'Keep practicing!'}</h2>
       <div class="bigstars">${[1, 2, 3].map(k => STAR(k <= st)).join('')}</div>
       <div class="big">${score} / ${ITEMS}</div>
-      <div class="caughtcard">${monsterSVG('mon-' + S.id, nowCaught ? 'happy' : 'idle', [], 'c')}<div><b>${M.name}</b><br><small>${nowCaught ? (wasCaught ? 'Already in your collection. Nice rematch!' : 'New monster added to your collection!') : `Get ${MASTER} right to catch ${M.name}.`}</small></div></div>
+      <div class="caughtcard">${monsterSVG('mon-' + S.id, nowCaught ? 'happy' : 'idle', [], 'c')}<div><b>${M.name}</b><br><small>${nowCaught ? (wasCaught ? 'Already your friend. Great practice!' : `${M.name} joined your monster friends!`) : `Get ${MASTER} right to make friends with ${M.name}.`}</small></div></div>
       <div><span class="monsay">${M.name}: “${S.line}”</span></div>
       ${storyKey ? `<div style="margin-top:1rem"><span class="pill p-amber">${ISLAND[wb][wix]} is saved!</span><br><button class="btn" style="margin-top:.6rem;background:#ca8a04" onclick="S=null;playStory('${storyKey}')">📖 Continue the story ▶</button></div>` : ''}
       <p style="margin-top:1rem;font-weight:600">${COIN} +${S.coins} coins${score === ITEMS ? ' (includes +20 perfect bonus)' : ''}</p>
       ${S.lvlUp ? `<p style="margin-top:.4rem;font-weight:700;color:#ca8a04">⬆ Level up! You are now Level ${levelOf(xpOf(u))}.</p>` : ''}
       ${stu ? '' : '<p class="hint">Preview only: nothing was saved.</p>'}
-      <div class="actions" style="justify-content:center;margin-top:1.2rem"><button class="btn ghost" onclick="leavePractice()">Back to map</button>${nowCaught ? '' : `<button class="btn ghost" onclick="const i='${S.id}';S=null;playLesson(i)">🎬 Watch the lesson</button>`}<button class="btn ghost" onclick="startPractice('${S.id}', true, true)">Battle again</button>
+      <div class="actions" style="justify-content:center;margin-top:1.2rem"><button class="btn ghost" onclick="leavePractice()">Back to map</button>${nowCaught ? '' : `<button class="btn ghost" onclick="const i='${S.id}';S=null;playLesson(i)">🎬 Watch the lesson</button>`}<button class="btn ghost" onclick="startPractice('${S.id}', true, true)">Practice again</button>
         ${nx && nx !== S.id ? `<button class="btn" onclick="startPractice('${nx}')">Next monster →</button>` : ''}</div></div>
     <details class="card"><summary style="cursor:pointer;font-weight:600">Review my answers</summary><div class="review">${S.items.map((it, k) => `<div><span class="mk ${S.res[k].ok ? 'ok' : 'no'}">${S.res[k].ok ? '✓' : '✗'}</span>
       <span style="flex:1;min-width:12rem">${it.q}</span><span>You: <b>${S.res[k].given || '—'}</b></span>${S.res[k].ok ? '' : `<span>Answer: <b>${it.show}</b></span><button class="linkbtn" onclick="showSteps(${k})">🪄 Steps</button>`}</div>`).join('')}</div></details></div>`;
 }
 function dex(el){
   const u = P.me.u, b = bandOf(u), all = bandSkills(b), got = all.filter(id => caught(u, id)).length;
-  el.innerHTML = `<div class="stack"><div class="card"><div class="ptop"><button class="btn ghost sm" onclick="go('map')">← Map</button><div class="grow"><h2>My monster collection</h2><small style="color:var(--muted)">${got} of ${all.length} caught · ${BANDS[b].label}</small></div>${bandSwitch(b, 'setBand')}</div>
+  el.innerHTML = `<div class="stack"><div class="card"><div class="ptop"><button class="btn ghost sm" onclick="go('map')">← Map</button><div class="grow"><h2>My monster friends</h2><small style="color:var(--muted)">${got} of ${all.length} caught · ${BANDS[b].label}</small></div>${bandSwitch(b, 'setBand')}</div>
     <div class="bar" style="margin-top:1rem"><i style="width:${Math.round(100 * got / all.length)}%"></i></div></div>
     ${BANDS[b].units.map(([name, list]) => `<div class="card"><h2 style="margin-bottom:.8rem">${name}</h2><div class="dex">${list.map(([id]) => { const cg = caught(u, id);
-      return `<button class="dexcard ${cg ? '' : 'locked'}" onclick="startPractice('${id}')">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], 'd')}<b>${cg ? monName(id) : '???'}</b><small>${SK[id].title}</small>${cg ? stars3(starsOf(bestOf(u, id))) : '<small>Tap to battle</small>'}</button>`; }).join('')}</div></div>`).join('')}</div>`;
+      return `<button class="dexcard ${cg ? '' : 'locked'}" onclick="startPractice('${id}')">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], 'd')}<b>${cg ? monName(id) : '???'}</b><small>${SK[id].title}</small>${cg ? stars3(starsOf(bestOf(u, id))) : '<small>Tap to meet</small>'}</button>`; }).join('')}</div></div>`).join('')}</div>`;
 }
 function shop(el){
   const u = P.me.u, p = pref(u), owned = p.owned || [], wear = p.wear || [], coins = coinsOf(u);
@@ -1705,7 +1705,7 @@ function wearItem(id){ const p = pref(P.me.u), w = p.wear || []; p.wear = w.incl
 
 /* ================= STORY: ANG NAWAWALANG BILANG (The Scrambled Numbers) =================
    An original story told in comic-style panels. The prologue plays once, each island
-   (lesson unit) is a chapter with an intro before its first battle and an outro when all
+   (lesson unit) is a chapter with an intro before its first practice round and an outro when all
    its monsters are caught, and finishing the last island plays the ending. */
 const GULO = 'gulo-95';
 const ISLAND = {
@@ -1727,7 +1727,7 @@ const CHAPTERS = {
      outro:[['mon','happy',"Every box is wrapped perfectly!"],['gulo','idle',"My next island is full of choices. Hehe, good luck choosing!"]]},
     {intro:[['lolo','idle',"At the {island} market, everyone is stuck choosing what to buy."],['mon','hit',"Burger or spaghetti? Buko juice or gulaman? How many ways are there?!"],['buddy','happy',"Multiply the choices together, {name}!"]],
      outro:[['mon','happy',"Now I know all my options!"],['gulo','idle',"Fine! My last island has numbers below zero. Muahaha!"]]},
-    {intro:[['lolo','idle',"This is {island}, Haring Gulo's own island. Positive and negative numbers are fighting everywhere!"],['gulo','happy',"You made it this far, {name}... but can you handle the negatives?"],['buddy','happy',"Same signs, different signs: we know the rules!"]]},
+    {intro:[['lolo','idle',"This is {island}, Haring Gulo's own island. Positive and negative numbers are all mixed up everywhere!"],['gulo','happy',"You made it this far, {name}... but can you handle the negatives?"],['buddy','happy',"Same signs, different signs: we know the rules!"]]},
   ],
   '910': [
     {intro:[['lolo','idle',"Welcome back, {name}! Haring Gulo has new tricks for the high school islands. First stop: {island}, where negative numbers ran wild."],['mon','hit',"Plus a minus, minus a minus... which is which?!"],['buddy','happy',"Remember the sign rules and we're unstoppable!"]],
@@ -1761,9 +1761,9 @@ const ENDING = [
   ['lolo','happy',"Congratulations, {name}! Kapuluan Bilang is in harmony again. You are a true Bilang Hero!"],
   ['nar','idle',"THE END... for now! Keep playing to earn 3 stars on every monster.", 'island'],
 ];
-const TAUNT = ["Grr! Nobody can beat my {topic}!", "Hehe, my {topic} will scramble your brain!", "You want to pass? Beat my {topic} first!", "I bet you can't answer ten {topic} questions!"];
+const TAUNT = ["Hi! Can you help me with {topic}?", "My {topic} is all mixed up. Will you help me?", "Let's practice {topic} together!", "I'm stuck on {topic}. Ten questions, can you do it?"];
 const THANKS = ["Whoa... my numbers make sense again! Salamat!", "I remember who I am now! Let's be friends!", "You did it! I feel so much better!"];
-const ESCAPE = ["Hehe! Practice a little more and come back!", "Not this time! Read the lesson and try again!", "So close! Come back and try again!"];
+const ESCAPE = ["Thanks for helping! Let's practice a little more.", "We're getting there! Watch the lesson and try again.", "So close! Let's try again together."];
 
 // Lolo Pawikan: a wise old sea turtle with a salakot hat
 function turtleSVG(mood = 'idle', cls = 'mon'){
@@ -1997,7 +1997,7 @@ function book(el){
    written in chalk and acted out (number-line hops, fraction bars, area grid, decimal
    columns). Then it's the learner's turn; a wrong answer replays the demo with their numbers. */
 let LS = null;
-window.cloudCanRefresh = () => !LS && !STORY && !S; // shared-database sync: don't redraw during a lesson, story or battle
+window.cloudCanRefresh = () => !LS && !STORY && !S; // shared-database sync: don't redraw during a lesson, story or practice round
 const FAMILY = {'i-add':'nl-add', 'i-sub':'nl-sub', 'i-mul':'nl-mul', 'f-add-sim':'bar-add', 'f-sub-sim':'bar-sub', 'f-add-dis':'bar-add-dis', 'f-sub-dis':'bar-sub-dis', 'f-mul':'area', 'd-add':'dec-add', 'd-sub':'dec-sub'};
 // animation steps run on timers; skipping ahead runs any pending ones at once so the board is never half-drawn
 const later = (fn, ms) => { if (!LS) return; const job = {fn, done:false}; job.id = setTimeout(() => { if (LS && !job.done) { job.done = true; fn(); } }, ms); LS.timers.push(job); };
@@ -2150,7 +2150,7 @@ function playSolution(id, it, after){
 function endSolve(){
   if (!LS) return; clearTimeout(LS.adv); LS.phase = 'solved'; setResume(null); updateTL(0); renderNotes();
   lessonSay(fillText(pick(["That's how we solve it, {name}! Now you know every step.", "And that's the answer! Easy when we go one step at a time, right, {name}?", "Step by step, we got it! You can do this too, {name}."]), null, null));
-  $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? '⚔ Back to the battle' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">✏ Try a similar one</button><button class="icb" style="color:#0f172a" onclick="lessonReplay()">⟲ Watch again</button></div>`;
+  $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? '▶ Back to practice' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">✏ Try a similar one</button><button class="icb" style="color:#0f172a" onclick="lessonReplay()">⟲ Watch again</button></div>`;
   $('lnext').disabled = true; $('lnext').style.opacity = .4;
 }
 function showSteps(k){ if (!S) return; playSolution(S.id, S.items[k === undefined ? S.i : k], () => P.refresh()); }
@@ -2294,8 +2294,8 @@ function lessonCheck(k){
   if (r.ok) {
     sfx('win'); confetti(); const kids = $('kids'); kids.classList.remove('cheer'); void kids.offsetWidth; kids.classList.add('cheer');
     $('teacher').innerHTML = `<span class="stick"></span>${turtleSVG('happy', 't')}`;
-    lessonSay(fillText(pick(["Excellent, {name}! You've got it!", "Magaling, {name}! That's right!", "Perfect! You're ready for the battle, {name}!"]), null, null));
-    $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? (LS.mode === 'solve' ? '⚔ Back to the battle' : '⚔ Start the battle!') : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">Try another</button></div>`;
+    lessonSay(fillText(pick(["Excellent, {name}! You've got it!", "Magaling, {name}! That's right!", "Perfect! You're ready to practice, {name}!"]), null, null));
+    $('tryBox').innerHTML = `<div class="trybox"><button class="chk" onclick="finishLesson()">${LS.after ? (LS.mode === 'solve' ? '▶ Back to practice' : '▶ Start practicing!') : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="startTry()">Try another</button></div>`;
     return;
   }
   sfx('no');
@@ -2465,12 +2465,12 @@ function parentReport(u, both){
   const b = bandOf(u), all = bandSkills(b), first = esc(P.me.name.split(' ')[0]), mine = myAttempts(u), week = mine.filter(a => a.at > Date.now() - 7 * 864e5);
   const got = all.filter(id => caught(u, id)).length, stars = all.reduce((s, id) => s + starsOf(bestOf(u, id)), 0);
   const help = all.filter(id => status(bestOf(u, id))[0] === 'Needs help').slice(0, 3), nx = nextSkill(u, b), last = mine.length ? Math.max(...mine.map(a => a.at)) : null;
-  const tip = help.length ? `Sit together for one battle on <b>${SK[help[0]].title}</b>. Watch the lesson first, then let ${first} try. Use “Show me the steps” after a miss.`
-    : nx ? `Ask ${first} to explain the last lesson to you. Teaching it back is one of the best ways to remember it.` : `${first} has caught every monster in ${BANDS[b].label}. Try a rematch for 3 stars!`;
+  const tip = help.length ? `Sit together for one practice round on <b>${SK[help[0]].title}</b>. Watch the lesson first, then let ${first} try. Use “Show me the steps” after a miss.`
+    : nx ? `Ask ${first} to explain the last lesson to you. Teaching it back is one of the best ways to remember it.` : `${first} made friends with every monster in ${BANDS[b].label}. Try a rematch for 3 stars!`;
   return `<div class="wpanel wide"><div class="wtab">${both ? 'Let’s look together!' : 'Hello, parent!'}</div>
     <p class="wsub">Here’s how <b>${first}</b> is doing in ${BANDS[b].label} math.</p>
-    <div class="wstats"><div><b>${levelOf(xpOf(u))}</b><span>Level</span></div><div><b>${got}<small>/${all.length}</small></b><span>Monsters caught</span></div>
-      <div><b>${stars}</b><span>Stars</span></div><div><b>${week.length}</b><span>Battles this week</span></div></div>
+    <div class="wstats"><div><b>${levelOf(xpOf(u))}</b><span>Level</span></div><div><b>${got}<small>/${all.length}</small></b><span>Monster friends</span></div>
+      <div><b>${stars}</b><span>Stars</span></div><div><b>${week.length}</b><span>Practice rounds this week</span></div></div>
     <div class="wrows"><div><span>Last played</span><b>${last ? ago(last) : 'Not yet'}</b></div>
       <div><span>Learning now</span><b>${nx ? SK[nx].title : 'All lessons done 🎉'}</b></div>
       <div><span>Needs a little help</span><b>${help.length ? help.map(id => SK[id].title).join(', ') : 'Nothing right now 👍'}</b></div></div>
@@ -2485,10 +2485,10 @@ function progress(el){
   const cnt = k => bests.filter(x => status(x)[0] === k).length, mine = myAttempts(u);
   el.innerHTML = `<div class="stack">
     <div class="card"><div class="ptop"><div class="grow"><h2>My progress</h2><p class="hint" style="margin:0">${BANDS[b].label} · ${all.length} lessons · Level ${levelOf(xpOf(u))}</p></div>${bandSwitch(b, 'setBand')}</div></div>
-    <div class="stats"><div class="stat"><b>${cnt('Mastered')}</b><span>Monsters caught (mastered)</span></div><div class="stat"><b>${cnt('Practicing')}</b><span>Practicing</span></div>
-      <div class="stat"><b>${cnt('Needs help')}</b><span>Needs help</span></div><div class="stat"><b>${mine.length}</b><span>Battles played</span></div></div>
+    <div class="stats"><div class="stat"><b>${cnt('Mastered')}</b><span>Monster friends (mastered)</span></div><div class="stat"><b>${cnt('Practicing')}</b><span>Practicing</span></div>
+      <div class="stat"><b>${cnt('Needs help')}</b><span>Needs help</span></div><div class="stat"><b>${mine.length}</b><span>Practice rounds</span></div></div>
     ${BANDS[b].units.map(([name, list]) => `<div class="card"><h3 style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">${name}</h3><div class="tablewrap"><table class="t">
-      <tr><th>Lesson</th><th>Stars</th><th>Status</th><th>Battles</th><th>Last played</th><th></th></tr>
+      <tr><th>Lesson</th><th>Stars</th><th>Status</th><th>Rounds</th><th>Last played</th><th></th></tr>
       ${list.map(([id]) => { const a = myAttempts(u, id); return `<tr><td>${SK[id].title}</td><td>${stars3(starsOf(bestOf(u, id)))}</td><td>${sPill(bestOf(u, id))}</td><td>${a.length}</td><td>${a.length ? ago(Math.max(...a.map(x => x.at))) : '—'}</td>
         <td style="text-align:right"><button class="btn ghost sm" onclick="P.tab('learn');startPractice('${id}')">Play</button></td></tr>`; }).join('')}
     </table></div></div>`).join('')}
@@ -2510,9 +2510,9 @@ function classView(el){
   el.innerHTML = `<div class="stack">
     <div class="card"><div class="ptop"><div class="grow"><h2>Class progress</h2><p class="hint" style="margin:0">Learners are grouped by the grade in their profile. Mastered = ${MASTER}+ out of ${ITEMS} (monster caught).</p></div>${bandSwitch(b, 'setClassBand')}</div></div>
     <div class="stats"><div class="stat"><b>${kids.length}</b><span>Learners</span></div><div class="stat"><b>${avg}%</b><span>Average lessons mastered</span></div>
-      <div class="stat"><b>${week}</b><span>Battles this week</span></div><div class="stat"><b>${rows.filter(r => r.help).length}</b><span>Learners needing help</span></div></div>
+      <div class="stat"><b>${week}</b><span>Practice rounds this week</span></div><div class="stat"><b>${rows.filter(r => r.help).length}</b><span>Learners needing help</span></div></div>
     <div class="twocol">
-      <div class="card"><h2>Learners</h2><div class="tablewrap"><table class="t"><tr><th>Name</th><th>Mastered</th><th>Stars</th><th>Battles</th><th>Last active</th><th></th></tr>
+      <div class="card"><h2>Learners</h2><div class="tablewrap"><table class="t"><tr><th>Name</th><th>Mastered</th><th>Stars</th><th>Rounds</th><th>Last active</th><th></th></tr>
         ${rows.map(r => `<tr><td><div style="display:flex;align-items:center;gap:.5rem"><span style="width:2.2rem;height:2.2rem;flex:none">${monsterSVG(buddyOf(r.s.u), 'idle', pref(r.s.u).wear || [], 'mini')}</span><span><b style="font-weight:500">${esc(r.s.name)}</b><br><small style="color:var(--muted)">${esc(r.s.pos)}</small></span></div></td>
           <td><div style="display:flex;align-items:center;gap:.5rem"><div class="bar" style="flex:1"><i style="width:${Math.round(100 * r.mastered / all.length)}%"></i></div><small>${r.mastered}/${all.length}</small></div>${r.help ? `<span class="pill p-red" style="margin-top:.3rem">${r.help} need help</span>` : ''}</td>
           <td>${STAR()} ${r.stars}</td><td>${r.sets}</td><td>${r.last ? ago(r.last) : '—'}</td><td style="text-align:right"><button class="btn ghost sm" onclick="viewLearner('${r.s.u}')">View</button></td></tr>`).join('') || `<tr><td colspan="6"><div class="empty">No learners in ${BANDS[b].label} yet.</div></td></tr>`}
@@ -2527,7 +2527,7 @@ function viewLearner(u){
   const s = P.userOf(u), b = bandOf(u);
   P.open(`<div class="head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><div><h2>${esc(s.name)}</h2><small style="color:var(--muted)">${esc(s.pos)} · ${BANDS[b].label} · Level ${levelOf(xpOf(u))} · ${COIN} ${coinsOf(u)}</small></div><button class="btn ghost sm" onclick="P.close()">Close</button></div>
     ${BANDS[b].units.map(([name, list]) => `<h3 style="font-size:.85rem;font-weight:600;margin:1rem 0 .4rem">${name}</h3><table class="t">
-      ${list.map(([id]) => { const a = myAttempts(u, id); return `<tr><td>${SK[id].title}</td><td>${stars3(starsOf(bestOf(u, id)))}</td><td>${sPill(bestOf(u, id))}</td><td style="color:var(--muted);font-size:.78rem">${a.length ? a.length + ' battle' + (a.length > 1 ? 's' : '') : ''}</td></tr>`; }).join('')}</table>`).join('')}`);
+      ${list.map(([id]) => { const a = myAttempts(u, id); return `<tr><td>${SK[id].title}</td><td>${stars3(starsOf(bestOf(u, id)))}</td><td>${sPill(bestOf(u, id))}</td><td style="color:var(--muted);font-size:.78rem">${a.length ? a.length + ' round' + (a.length > 1 ? 's' : '') : ''}</td></tr>`; }).join('')}</table>`).join('')}`);
 }
 
 /* ================= PRINT WORKSHEETS (teacher) ================= */
