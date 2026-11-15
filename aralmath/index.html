@@ -537,6 +537,8 @@
   @keyframes narrbob{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-3px) scale(1.04,.97) rotate(2deg)}}
   .lbub .whorow{gap:.7rem}
   @media (prefers-reduced-motion:reduce){.narr.talking{animation:none}}
+  .lsobo{position:absolute;left:.3%;bottom:.25rem;width:clamp(5rem,10vw,7rem);aspect-ratio:1;z-index:5;pointer-events:none}
+  @media (max-width:640px){.lsobo{width:4.4rem}}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
   .soboslot{flex:none;width:8rem;height:8rem}
@@ -547,6 +549,7 @@
   .sobosay{position:relative;flex:1;background:#fff;border-radius:1rem;padding:.7rem 1rem;font-weight:600;font-size:1rem;color:#0f172a;box-shadow:0 4px 12px -6px rgba(15,23,42,.35);animation:pop .35s ease-out}
   .sobosay::before{content:"";position:absolute;left:-.5rem;top:50%;width:1rem;height:1rem;background:#fff;transform:translateY(-50%) rotate(45deg);border-radius:.15rem}
   .sobopanel.nosobo .sobosay::before{display:none}
+  .mapsobo{min-height:7.5rem}.mapsobo .btn{flex:none}
   .sobostars{position:absolute;right:1rem;bottom:.45rem;display:flex;gap:2px}
   .sobostars i{width:.85rem;height:.85rem;background:#cbd5e1;clip-path:polygon(50% 0,62% 35%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 35%);transition:background .3s}
   .sobostars i.on{background:#facc15}
@@ -1674,7 +1677,10 @@ function map(el){
           <span class="disc">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
           ${stu ? stars3(starsOf(bestOf(u, id))) : ''}<b>${SK[id].title}</b><small>WS ${ws}</small></button>`; }).join('')}</div></div>`; }).join('');
   const kids = P.usersWith('student').filter(s => bandOf(s.u) === b).map(s => ({s, c: weekCoins(s.u)})).sort((x, y) => y.c - x.c).slice(0, 6);
+  const first = esc(P.me.name.split(' ')[0]), mapLine = !stu ? 'Hi, teacher! Tap any monster to preview a lesson the way learners see it.'
+    : nx ? `Hi, ${first}! Next up: <b>${esc(SK[nx].title)}</b>. Tap the glowing monster to practice.` : `Hi, ${first}! Every monster is your friend now. Try a rematch for 3 stars!`;
   el.innerHTML = `<div class="stack">
+    <div class="sobopanel mapsobo"><div class="soboslot" id="soboMap"></div><div class="sobosay">${mapLine}</div>${stu && nx ? `<button class="btn" onclick="startPractice('${nx}')">▶ Let's go</button>` : ''}</div>
     ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div></div></div>`}
     <div class="homegrid"><div class="stack">
       <div class="card" style="padding:.9rem 1.1rem"><div class="ptop"><div class="grow"><b style="font-weight:600">Monster map</b><br><small style="color:var(--muted)">Each lesson has a Bilang Monster who needs your help. Get ${MASTER} right to make a new friend!</small></div>${bandSwitch(b, 'setBand')}</div></div>
@@ -1686,7 +1692,9 @@ function map(el){
           <li>Tap a monster on the map.</li><li>Answer ${ITEMS} questions. Every right answer adds a ⭐ to its friendship meter.</li>
           <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
           <li>Stuck? Tap <b>🎬 Watch the lesson</b> and Lolo Pawikan will show you how.</li><li>Spend coins on gear for your buddy.</li></ol></div>
-      </div></div></div>`;
+      </div></div>
+    <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
+  soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400});
 }
 function buddyPick(el){
   el.innerHTML = `<div class="card" style="text-align:center;padding:2rem 1rem"><h2 style="font-size:1.4rem">Choose your math buddy!</h2>
@@ -2170,14 +2178,15 @@ function nlsView(el){
           <div class="nlsm idle-sway" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two idle-sway" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
       <div class="nlsans" id="nlsAns"></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
-      <div class="kids" id="kids">${kids}</div></div>
+      <div class="kids" id="kids">${kids}</div><div class="lsobo" id="soboLesson"></div></div>
     <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="nlsSay"></span></p>
       <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div></div>`;
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Sobo by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, CC BY 4.0 · made with Rive</p></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
   nlsLook(); narrMount();
+  soboAttach('soboLesson', {key: 'nls-' + N.id + '-' + Date.now(), anim: 'Hello', hold: 2400});
   if (N.phase === 'end') return nlsEnd();
   nlsLater(() => nlsRun(), 350);
 }
@@ -2257,8 +2266,8 @@ function nlsRun(){
     for (let k = 1; k <= n; k++) nlsLater(() => { nlsLight(p.a + dir * k, k === n ? 'land' : 'pass'); sfx('buy'); }, (k - 1) * HOP + HOP * .8); }, t);
   t += n * HOP + 600;
   nlsLater(() => {
-    if (demo) { nlsWrite(p, true); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
-    else { N.phase = 'ask'; nlsAsk(); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
+    if (demo) { nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
+    else { N.phase = 'ask'; nlsAsk(); soboDo(['Listen'], 0); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
   }, t);
 }
 function nlsWrite(p, good){ const eq = $('nlsEq'); if (!eq) return; eq.insertAdjacentHTML('beforeend', ` <span class="chalk ans ${good ? 'glow bounce' : ''}">${m(p.r)}</span>`); if (good) { sfx('win'); nlsBurst(); const t = $('teacher'); if (t) { t.classList.remove('nod'); void t.offsetWidth; t.classList.add('nod'); } const k = $('kids'); if (k) { k.classList.remove('cheer'); void k.offsetWidth; k.classList.add('cheer'); } } }
@@ -2296,11 +2305,11 @@ function nlsCheck(){
   const N = NLS, p = N.probs[N.k], raw = ($('nlsIn').value || '').trim().replace(/[−–]/g, '-');
   if (!/^-?\d+$/.test(raw)) return nlsAsk('Type a whole number, like 3 or -2.');
   N.tried++; $('nlsAns').innerHTML = '';
-  if (+raw === p.r) { N.got++; nlsWrite(p, true);
+  if (+raw === p.r) { N.got++; nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400);
     const first = !N.friend; N.friend = true;
     nlsSay(pick([`Yes! It landed on ${m(p.r)}. Magaling!`, `Correct! ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} is ${m(p.r)}.`, `That's right! Great counting!`]) + (first ? ' Look, a monster friend joined you!' : ''));
     if (first) { const j = $('nlsJar'); if (j) { j.innerHTML = monsterSVG('mon-' + N.id, 'happy', [], 'jarm'); j.classList.add('pop'); } } }
-  else { sfx('no'); nlsWrite(p, false);
+  else { sfx('no'); nlsWrite(p, false); soboDo(['NoBump'], 1800);
     nlsSay(`Not quite. We started at ${m(p.a)} and hopped ${Math.abs(p.step)} to the ${p.step > 0 ? 'right' : 'left'}. The monster landed on ${m(p.r)}.`); }
   nlsDone();
 }
@@ -2340,16 +2349,17 @@ function lessonView(el){
       <div class="clock"><i class="h"></i><i class="m"></i></div>
       <div class="board" id="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
-      <div class="kids" id="kids">${kids}</div></div>
+      <div class="kids" id="kids">${kids}</div><div class="lsobo" id="soboLesson"></div></div>
     <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
       <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
         <div class="grow ltl"><div class="tsegs" id="tsegs"></div><small class="ttime" id="ttime">0:00 / 0:00</small></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div>
+        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Sobo by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, CC BY 4.0 · made with Rive</p></div></div>
     <aside class="lnotes"><div class="ntabs"><button id="ntab0" class="on" onclick="noteTab(0)">📑 Lesson notes</button><button id="ntab1" onclick="noteTab(1)">✏ My notes</button></div>
       <div id="lres"></div><div class="nbody" id="nbody"></div></aside></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect); NOTETAB = 0; narrMount();
+  soboAttach('soboLesson', {key: 'lesson-' + LS.id + '-' + Date.now(), anim: 'Hello', hold: 2400});
   const me = LS; setTimeout(() => { if (LS !== me || LS.started) return;
     if (LS.resumeK) { const k = LS.resumeK; LS.resumeK = 0; jumpTo(k);
       $('lres').innerHTML = `<div class="lres">▶ Resumed where you left off, at ${fmtT(LS.T[k])}<button onclick="$('lres').innerHTML='';jumpTo(0)">Start over</button></div>`; }
@@ -2413,7 +2423,7 @@ function renderTry(msg){
 function lessonCheck(k){
   const it = LS.item, raw = it.kind === 'mc' ? k : $('tryIn').value, r = checkItem(it, raw);
   if (r.invalid) return renderTry(r.msg);
-  LS.tries++;
+  LS.tries++; if (r.ok) soboDo(['Yes', 'Sparkles'], 2400); else soboDo(['NoBump'], 1800);
   if (r.ok) {
     sfx('win'); confetti(); const kids = $('kids'); kids.classList.remove('cheer'); void kids.offsetWidth; kids.classList.add('cheer');
     $('teacher').innerHTML = `<span class="stick"></span>${turtleSVG('happy', 't')}`;
