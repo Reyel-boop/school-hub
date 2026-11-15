@@ -130,9 +130,9 @@
   .joy i.on{background:#facc15}
   .vs{font-size:1.6rem;align-self:center;animation:beat 1.6s ease-in-out infinite}
   @keyframes beat{50%{transform:scale(1.18)}}
-  .cheer{animation:cheer .6s ease-out}
+  .cheer{animation:palyay .6s ease-out}
   .ponder{animation:ponder .7s ease-in-out}
-  @keyframes cheer{30%{transform:translateY(-22px) scale(1.04,.96)}60%{transform:translateY(0) scale(1.06,.92)}}
+  @keyframes palyay{30%{transform:translateY(-22px) scale(1.04,.96)}60%{transform:translateY(0) scale(1.06,.92)}}
   @keyframes ponder{30%{transform:rotate(-6deg)}70%{transform:rotate(5deg)}}
   .zap{position:absolute;font-size:1.4rem;font-weight:800;color:#ca8a04;-webkit-text-stroke:1px #fff;pointer-events:none;animation:rise 1.2s forwards;z-index:3}
   @keyframes rise{to{transform:translateY(-50px);opacity:0}}
@@ -459,6 +459,42 @@
     .clock{display:none}
   }
 
+
+  /* ---------- number-line show ---------- */
+  .nlscls .board.nlsboard{right:24%;display:flex;flex-direction:column}
+  .nlseq{flex:1;display:flex;align-items:center;gap:.4rem;font-size:clamp(2rem,5vw,3.4rem);padding-left:.4rem;transition:opacity .5s,filter .5s}
+  .nlseq.wipe{opacity:0;filter:blur(8px)}
+  .nlseq .chalk{animation-duration:.8s}
+  .nlseq .ans{color:#fde047}.nlseq .ans:not(.glow){color:#fda4af}
+  .nlseq .glow{text-shadow:0 0 12px #86efac,0 0 24px #22c55e;color:#bbf7d0;animation:write .6s steps(10) forwards,glowp 1.2s .6s ease-in-out 2}
+  @keyframes glowp{50%{text-shadow:0 0 22px #bbf7d0,0 0 40px #22c55e}}
+  .nlsline{position:relative;height:5.4rem;margin:0 -.3rem -.2rem}
+  .nlsline .ln{position:absolute;left:2%;right:2%;bottom:1.25rem;height:4px;border-radius:2px;background:#f8fafc}
+  .nlsline .nlx{position:absolute;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:clamp(.62rem,1.5vw,.95rem);line-height:1}
+  .nlsline .nlx i{width:2px;height:.6rem;background:#f8fafc;margin-bottom:.15rem}
+  .nlsline .nlx.zero b{color:#fde047}
+  .nlsline .nlx.start b{color:#4ade80;transform:scale(1.4);text-shadow:0 0 8px #22c55e}
+  .nlsline .nlx.pass b{color:#fde68a}
+  .nlsline .nlx.land b{color:#fde047;transform:scale(1.6);text-shadow:0 0 10px #facc15}
+  .nlsline .nlx b{transition:transform .25s,color .25s}
+  .nlspod{position:absolute;left:0;bottom:3.2rem;width:9%;height:.7rem;background:#a7f3d0;border-radius:.2rem;box-shadow:0 .35rem 0 #059669}
+  .nlspod .pole{position:absolute;left:12%;bottom:100%;width:2px;height:1.6rem;background:#e2e8f0}
+  .nlspod .flag{position:absolute;left:calc(12% + 2px);bottom:calc(100% + .9rem);width:1rem;height:.7rem;background:conic-gradient(#0f172a 25%,#fff 0 50%,#0f172a 0 75%,#fff 0) 0 0/.5rem .35rem}
+  .nlsm{position:absolute;width:clamp(1.7rem,4vw,2.6rem);transform:translateX(-50%);z-index:2;transition:none}
+  .nlsm.two{z-index:3}
+  .nlsm svg{width:100%;height:auto;display:block}
+  .nlsans{position:absolute;left:3%;right:25%;bottom:.8rem;display:flex;justify-content:center;z-index:4}
+  .nlsbox{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center;background:#0284c7;border:4px solid #e0f2fe;border-radius:1rem;padding:.45rem .6rem;box-shadow:0 8px 18px -6px rgba(0,0,0,.4);font-family:Poppins,system-ui,sans-serif;animation:pop .35s ease-out}
+  .nlsbox input{width:5.5rem;font-size:1.3rem;text-align:center;border:0;border-radius:.6rem;padding:.35rem .4rem}
+  .nlsbox .chk{background:#22c55e;color:#fff;font-weight:700;border-radius:.6rem;padding:.5rem 1rem;box-shadow:0 4px 0 #15803d;border:0;cursor:pointer}
+  .nlsbox .tmsg{width:100%;text-align:center;font-size:.85rem;color:#fef9c3}
+  .nlsarrow{font-size:1.8rem;color:#fde047;text-shadow:0 2px 0 #a16207;animation:nlsa .7s ease-in-out infinite alternate}
+  .nlsarrow.a2{transform:scaleX(-1);animation-name:nlsb}
+  @keyframes nlsa{to{transform:translateX(6px)}}@keyframes nlsb{from{transform:scaleX(-1)}to{transform:scaleX(-1) translateX(6px)}}
+  .nlsjar{position:absolute;left:.6%;top:2.4rem;width:2.4rem;height:3.3rem;border:3px solid rgba(255,255,255,.85);border-top-width:6px;border-radius:.5rem .5rem 1rem 1rem;background:rgba(224,242,254,.35);z-index:3;display:grid;place-items:end center;overflow:hidden}
+  .nlsjar .jarm{width:115%;height:auto;margin-bottom:-12%}
+  .nlsjar.pop{animation:pop .5s ease-out}
+  @media (max-width:640px){.nlsline .nlx.odd b{visibility:hidden}.nlscls .board.nlsboard{right:3%}.nlsans{right:3%}}
   /* ---------- welcome hallway ---------- */
   .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
   .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
@@ -1542,6 +1578,7 @@ function setBand(b){ pref(P.me.u).band = b; P.save(); P.refresh(); }
 function go(s){ screen = s; P.refresh(); window.scrollTo(0, 0); }
 
 function learn(el){
+  if (NLS) return nlsView(el);
   if (LS) return lessonView(el);
   if (STORY) return storyView(el);
   if (S) return battle(el);
@@ -1997,7 +2034,7 @@ function book(el){
    written in chalk and acted out (number-line hops, fraction bars, area grid, decimal
    columns). Then it's the learner's turn; a wrong answer replays the demo with their numbers. */
 let LS = null;
-window.cloudCanRefresh = () => !LS && !STORY && !S; // shared-database sync: don't redraw during a lesson, story or practice round
+window.cloudCanRefresh = () => !LS && !STORY && !S && !NLS; // shared-database sync: don't redraw during a lesson, story or practice round
 const FAMILY = {'i-add':'nl-add', 'i-sub':'nl-sub', 'i-mul':'nl-mul', 'f-add-sim':'bar-add', 'f-sub-sim':'bar-sub', 'f-add-dis':'bar-add-dis', 'f-sub-dis':'bar-sub-dis', 'f-mul':'area', 'd-add':'dec-add', 'd-sub':'dec-sub'};
 // animation steps run on timers; skipping ahead runs any pending ones at once so the board is never half-drawn
 const later = (fn, ms) => { if (!LS) return; const job = {fn, done:false}; job.id = setTimeout(() => { if (LS && !job.done) { job.done = true; fn(); } }, ms); LS.timers.push(job); };
@@ -2200,8 +2237,135 @@ function jumpTo(k){
   if (c < k) $('tryBox').innerHTML = '';
   LS.k = k; runStep();
 }
+/* ================= NUMBER-LINE SHOW (adding & subtracting integers) =================
+   Lolo Pawikan writes a problem on the chalkboard. Two Bilang Monsters wait on a stand with a flag:
+   the first jumps onto the starting number, the second hops the steps (right for +, left for −).
+   Lolo solves the first problem; then the learner types where monster two landed and presses Check.
+   Right answers are written in glowing chalk with confetti; then the board is wiped for the next one. */
+let NLS = null;
+const NLS_N = 5;
+const nlsX = v => 4 + (v + 10) / 20 * 92; // % across the number line
+function nlsProblems(id){
+  const sub = id === 'i-sub', out = [];
+  while (out.length < NLS_N) { const a = R(-6, 6), b = nz(-6, 6), r = sub ? a - b : a + b, step = sub ? -b : b;
+    if (Math.abs(r) > 9 || Math.abs(step) > 7 || out.some(p => p.a === a && p.b === b)) continue;
+    out.push({a, b, r, step, sub}); }
+  return out;
+}
+function playNumberLine(id, after){
+  stopLesson(); LS = null; nlsStop();
+  NLS = {id, after: after || null, probs: nlsProblems(id), k: 0, phase: 'show', timers: [], got: 0, tried: 0, friend: false};
+  P.tab('learn'); window.scrollTo(0, 0);
+}
+function nlsStop(){ if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; if (NLS.typer) clearInterval(NLS.typer); try { speechSynthesis.cancel(); } catch (e) {} }
+const nlsLater = (fn, ms) => { if (!NLS) return; const me = NLS; NLS.timers.push(setTimeout(() => { if (NLS === me) fn(); }, ms)); };
+function nlsView(el){
+  const N = NLS, kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
+  const ticks = Array.from({length: 21}, (_, k) => k - 10).map(v => `<span class="nlx ${v % 2 ? 'odd' : ''} ${v ? '' : 'zero'}" id="nt${v}" style="left:${nlsX(v)}%"><i></i><b>${m(v)}</b></span>`).join('');
+  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="nlsClose()">✕ Close</button><div class="grow"><b style="font-weight:600">🎬 Lesson: ${SK[N.id].title}</b><br><small style="color:var(--muted)">Watch the monsters hop on the number line, then you answer!</small></div>
+      <span class="chip" id="nlsCount">Problem ${N.k + 1} of ${NLS_N}</span></div>
+    <div class="lshow"><div class="cls nlscls">
+      <div class="bunting">${['1', '+', '2', '−', '3', '×', '4', '÷', '5', '='].map((s, k) => `<span style="background:${['#f43f5e', '#facc15', '#22c55e', '#a855f7', '#3b82f6'][k % 5]}">${s}</span>`).join('')}</div>
+      <div class="clock"><i class="h"></i><i class="m"></i></div>
+      <div class="nlsjar" id="nlsJar" title="A friend you helped">${N.friend ? monsterSVG('mon-' + N.id, 'happy', [], 'jarm') : ''}</div>
+      <div class="board nlsboard" id="nlsBoard"><div class="bt">${SK[N.id].title}</div><div class="nlseq" id="nlsEq"></div>
+        <div class="nlsline" id="nlsLine"><div class="ln"></div>${ticks}
+          <div class="nlspod"><i class="pole"></i><i class="flag"></i></div>
+          <div class="nlsm" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
+      <div class="nlsans" id="nlsAns"></div>
+      <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
+      <div class="kids" id="kids">${kids}</div></div>
+    <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
+      <p class="say"><span id="nlsSay"></span></p>
+      <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
+        <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div></div></div></div>`;
+  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
+  if (N.phase === 'end') return nlsEnd();
+  nlsLater(() => nlsRun(), 350);
+}
+function nlsSay(text){
+  const s = $('nlsSay'), t = $('teacher'); if (!s || !NLS) return;
+  if (NLS.typer) clearInterval(NLS.typer); let n = 0; s.textContent = ''; t.classList.add('talking');
+  NLS.typer = setInterval(() => { const el = $('nlsSay'); if (!NLS || !el) return clearInterval(NLS && NLS.typer);
+    n = Math.min(text.length, n + 2); el.textContent = text.slice(0, n); if (n % 6 === 0) blip('lolo');
+    if (n >= text.length) { clearInterval(NLS.typer); NLS.typer = null; t.classList.remove('talking'); } }, 30);
+  if (ttsOn()) speak(text, 'lolo');
+}
+function nlsPoint(){ const t = $('teacher'); if (!t) return; t.classList.remove('point'); void t.offsetWidth; t.classList.add('point'); }
+// put a monster on the flag stand, or move it with a jump arc to a number
+const POD = {left: 1.5, bottom: 4.2};
+function nlsPlace(id, v){ const e = $(id); if (!e) return; if (v == null) { e.style.left = POD.left + (id === 'nlsM2' ? 4 : 0) + '%'; e.style.bottom = POD.bottom + 'rem'; } else { e.style.left = nlsX(v) + '%'; e.style.bottom = (id === 'nlsM2' ? 2.9 : 1.55) + 'rem'; } }
+function nlsJump(id, from, to, ms, high){
+  const e = $(id); if (!e) return;
+  const fx = from == null ? POD.left + (id === 'nlsM2' ? 4 : 0) : nlsX(from), fy = from == null ? POD.bottom : (id === 'nlsM2' ? 2.9 : 1.55);
+  const tx = nlsX(to), ty = id === 'nlsM2' ? 2.9 : 1.55, peak = Math.max(fy, ty) + (high || 1.6);
+  const frames = [0, .25, .5, .75, 1].map(t => ({left: (fx + (tx - fx) * t) + '%', bottom: (fy + (ty - fy) * t + (peak - Math.max(fy, ty)) * 4 * t * (1 - t)) + 'rem'}));
+  if (e.animate) e.animate(frames, {duration: ms, easing: 'ease-in-out'});
+  e.style.left = tx + '%'; e.style.bottom = ty + 'rem';
+}
+const nlsLight = (v, cls) => { const t = $('nt' + v); if (t) t.classList.add(cls); };
+function nlsRun(){
+  const N = NLS; if (!N || !$('nlsEq')) return;
+  const p = N.probs[N.k], op = p.sub ? '−' : '+', demo = N.k === 0;
+  N.phase = 'show'; $('nlsNext').hidden = true; $('nlsAns').innerHTML = ''; $('nlsCount').textContent = `Problem ${N.k + 1} of ${NLS_N}`;
+  document.querySelectorAll('.nlsline .nlx').forEach(t => t.className = t.className.replace(/\b(start|pass|land)\b/g, '').trim());
+  nlsPlace('nlsM1'); nlsPlace('nlsM2');
+  const eq = $('nlsEq'); eq.classList.remove('wipe'); eq.innerHTML = `<span class="chalk">${sn(p.a)} ${op} ${sn(p.b)} =</span>`; nlsPoint();
+  nlsSay(demo ? `Let's solve ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} together. Watch the monsters on the number line!` : pick([`Next problem: ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)}.`, `Here's another one: ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)}.`]));
+  let t = 1500;
+  nlsLater(() => { nlsJump('nlsM1', null, p.a, 700); sfx('ok'); nlsLater(() => nlsLight(p.a, 'start'), 650);
+    nlsSay(`The first monster jumps to ${m(p.a)}. That's where we start.`); }, t);
+  t += 2400;
+  const dir = Math.sign(p.step), n = Math.abs(p.step);
+  nlsLater(() => { nlsSay(p.sub ? `Subtracting ${m(p.b)} is the same as adding ${m(-p.b)}. So the second monster hops ${n} step${n > 1 ? 's' : ''} to the ${dir > 0 ? 'right' : 'left'}.`
+      : `Adding ${m(p.b)} means ${n} hop${n > 1 ? 's' : ''} to the ${dir > 0 ? 'right' : 'left'}${dir < 0 ? ', because it is negative' : ''}.`); nlsJump('nlsM2', null, p.a, 650); nlsPoint(); }, t);
+  t += 2600;
+  for (let k = 1; k <= n; k++) nlsLater(() => { nlsJump('nlsM2', p.a + dir * (k - 1), p.a + dir * k, 380, .9); sfx('buy'); nlsLater(() => nlsLight(p.a + dir * k, k === n ? 'land' : 'pass'), 330); }, t + (k - 1) * 520);
+  t += n * 520 + 500;
+  nlsLater(() => {
+    if (demo) { nlsWrite(p, true); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
+    else { N.phase = 'ask'; nlsAsk(); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
+  }, t);
+}
+function nlsWrite(p, good){ const eq = $('nlsEq'); if (!eq) return; eq.insertAdjacentHTML('beforeend', ` <span class="chalk ans ${good ? 'glow' : ''}">${m(p.r)}</span>`); if (good) { sfx('win'); confetti(); const k = $('kids'); if (k) { k.classList.remove('cheer'); void k.offsetWidth; k.classList.add('cheer'); } } }
+function nlsAsk(msg){
+  $('nlsAns').innerHTML = `<div class="nlsbox"><span class="nlsarrow a1">➜</span><input id="nlsIn" inputmode="numeric" autocomplete="off" placeholder="?" aria-label="Your answer"><button class="chk" onclick="nlsCheck()">Check</button><span class="nlsarrow a2">➜</span>${msg ? `<div class="tmsg">${msg}</div>` : ''}</div>`;
+  const i = $('nlsIn'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); nlsCheck(); } };
+}
+function nlsCheck(){
+  const N = NLS, p = N.probs[N.k], raw = ($('nlsIn').value || '').trim().replace(/[−–]/g, '-');
+  if (!/^-?\d+$/.test(raw)) return nlsAsk('Type a whole number, like 3 or -2.');
+  N.tried++; $('nlsAns').innerHTML = '';
+  if (+raw === p.r) { N.got++; nlsWrite(p, true);
+    const first = !N.friend; N.friend = true;
+    nlsSay(pick([`Yes! It landed on ${m(p.r)}. Magaling!`, `Correct! ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} is ${m(p.r)}.`, `That's right! Great counting!`]) + (first ? ' Look, a monster friend joined you!' : ''));
+    if (first) { const j = $('nlsJar'); if (j) { j.innerHTML = monsterSVG('mon-' + N.id, 'happy', [], 'jarm'); j.classList.add('pop'); } } }
+  else { sfx('no'); nlsWrite(p, false);
+    nlsSay(`Not quite. We started at ${m(p.a)} and hopped ${Math.abs(p.step)} to the ${p.step > 0 ? 'right' : 'left'}. The monster landed on ${m(p.r)}.`); }
+  nlsDone();
+}
+function nlsDone(){ NLS.phase = 'done'; const b = $('nlsNext'); b.hidden = false; b.textContent = NLS.k === NLS_N - 1 ? 'Finish ▶' : 'Next problem ▶'; b.focus(); }
+function nlsNext(){
+  const N = NLS; if (!N) return; N.timers.forEach(clearTimeout); N.timers = [];
+  if (N.k >= NLS_N - 1) return nlsEnd();
+  N.k++; const eq = $('nlsEq'); if (eq) eq.classList.add('wipe'); sfx('buy');   // wipe the board, then the next problem
+  nlsLater(nlsRun, 650);
+}
+function nlsReplay(){ if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; nlsRun(); }
+function nlsEnd(){
+  const N = NLS; N.phase = 'end'; nlsStop();
+  const ask = NLS_N - 1, stars = N.got >= ask ? 3 : N.got >= ask - 1 ? 2 : N.got ? 1 : 0;
+  $('nlsEq').innerHTML = `<span class="chalk">${N.got} / ${ask} correct ${'⭐'.repeat(stars)}</span>`; $('nlsNext').hidden = true;
+  nlsSay(N.got >= ask - 1 ? `Wonderful, ${P.me.name.split(' ')[0]}! You're ready to practice.` : `Good try! Watch it once more, or start practicing and use the steps when you need them.`);
+  $('nlsAns').innerHTML = `<div class="nlsbox"><button class="chk" onclick="nlsFinish()">${N.after ? '▶ Start practicing' : '✓ Done'}</button><button class="icb" style="color:#0f172a" onclick="playNumberLine('${N.id}', NLS.after)">⟲ Watch again</button></div>`;
+}
+function nlsFinish(){ const id = NLS.id, after = NLS.after; nlsStop(); NLS = null; const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); if (after) after(); else P.refresh(); }
+function nlsClose(){ const id = NLS && NLS.id; nlsStop(); NLS = null; if (id) { const p = pref(P.me.u); p.watched = Object.assign(p.watched || {}, {[id]: true}); P.save(); } P.refresh(); }
+
 /* ---- player ---- */
 function playLesson(id, after){
+  if (id === 'i-add' || id === 'i-sub') return playNumberLine(id, after); // the number-line show
   stopLesson(); LS = {id, fam: FAMILY[id], timers: [], k: 0, playing: true, phase: 'demo', after: after || null, tries: 0};
   const rs = resumeOf(id); LS.fd = rs && rs.mode === 'demo' && rs.fd ? rs.fd : LS.fam ? famGen(LS.fam) : null;
   LS.steps = LS.fam ? famScript(LS.fam, LS.fd, id) : genericScript(id);
