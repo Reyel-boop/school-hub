@@ -525,6 +525,14 @@
   @keyframes bouncein{0%{transform:scale(.3) translateY(20px)}60%{transform:scale(1.25)}100%{transform:none}}
   .burst{position:absolute;width:.55rem;height:.85rem;border-radius:2px;z-index:6;pointer-events:none;will-change:transform,opacity}
   @media (prefers-reduced-motion:reduce){.idle-sway svg,.talking svg .lmo,.wob svg *{animation:none!important}}
+
+  /* Sobo (Rive) */
+  .credit{margin-top:.6rem;font-size:.7rem;color:var(--muted)}.credit a{color:inherit}
+  .sobo{position:absolute;left:.3%;bottom:.25rem;width:clamp(5rem,10vw,7rem);aspect-ratio:1;z-index:5;opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+  .sobo.on{opacity:1;transform:none}
+  .sobo canvas{width:100%;height:100%;display:block}
+  .sobotag{position:absolute;left:50%;bottom:-.35rem;transform:translateX(-50%);background:#fff;color:#166534;font:700 .7rem Poppins,sans-serif;padding:.05rem .5rem;border-radius:1rem;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+  @media (max-width:640px){.sobo{width:4.4rem}}
   /* ---------- welcome hallway ---------- */
   .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
   .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
@@ -2275,6 +2283,33 @@ function jumpTo(k){
   if (c < k) $('tryBox').innerHTML = '';
   LS.k = k; runStep();
 }
+/* ---- Sobo: a Rive character (rive/sobo.riv, from the Rive Marketplace) who reacts during the number-line show.
+   The Rive player (rive/rive.js + rive.wasm) is loaded only when needed; if anything fails, Sobo just stays hidden. ---- */
+let SOBO = null, SOBO_T = null, riveLoading = null;
+function loadRive(){
+  if (window.rive) return Promise.resolve();
+  return riveLoading || (riveLoading = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'rive/rive.js';
+    sc.onload = () => { try { rive.RuntimeLoader.setWasmUrl('rive/rive.wasm'); ok(); } catch (e) { no(e); } }; sc.onerror = no; document.head.appendChild(sc); }));
+}
+function soboMount(){
+  const cv = $('soboCv'); if (!cv) return;
+  soboStop();
+  loadRive().then(() => { if (!$('soboCv') || $('soboCv') !== cv) return;
+    const box = cv.parentElement, px = window.devicePixelRatio || 1; cv.width = box.clientWidth * px; cv.height = box.clientHeight * px;
+    SOBO = new rive.Rive({src: 'rive/sobo.riv', canvas: cv, artboard: 'SOBO-Talk', animations: ['Hello', 'Blink'], autoplay: true,
+      layout: new rive.Layout({fit: rive.Fit.Contain, alignment: rive.Alignment.BottomCenter}),
+      onLoad: () => { box.classList.add('on'); soboDo('Hello'); },
+      onLoadError: () => { box.hidden = true; }});
+  }).catch(() => { const b = cv.parentElement; if (b) b.hidden = true; });
+}
+// play one of Sobo's moves; one-shot moves go back to Idle + Blink afterwards
+function soboDo(name, holdMs = 1900){
+  if (!SOBO) return; clearTimeout(SOBO_T);
+  try { SOBO.stop(); SOBO.play(Array.isArray(name) ? name.concat('Blink') : [name, 'Blink']); } catch (e) { return; }
+  if (holdMs) SOBO_T = setTimeout(() => { try { SOBO && (SOBO.stop(), SOBO.play(['Idle', 'Blink'])); } catch (e) {} }, holdMs);
+}
+function soboStop(){ clearTimeout(SOBO_T); if (SOBO) { try { SOBO.cleanup(); } catch (e) {} SOBO = null; } }
+
 /* ================= NUMBER-LINE SHOW (adding & subtracting integers) =================
    Lolo Pawikan writes a problem on the chalkboard. Two Bilang Monsters wait on a stand with a flag:
    the first jumps onto the starting number, the second hops the steps (right for +, left for −).
@@ -2295,7 +2330,7 @@ function playNumberLine(id, after){
   NLS = {id, after: after || null, probs: nlsProblems(id), k: 0, phase: 'show', timers: [], got: 0, tried: 0, friend: false};
   P.tab('learn'); window.scrollTo(0, 0);
 }
-function nlsStop(){ if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; if (NLS.typer) clearInterval(NLS.typer); try { speechSynthesis.cancel(); } catch (e) {} }
+function nlsStop(){ soboStop(); if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; if (NLS.typer) clearInterval(NLS.typer); try { speechSynthesis.cancel(); } catch (e) {} }
 const nlsLater = (fn, ms) => { if (!NLS) return; const me = NLS; NLS.timers.push(setTimeout(() => { if (NLS === me) fn(); }, ms)); };
 function nlsView(el){
   const N = NLS, kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
@@ -2312,15 +2347,17 @@ function nlsView(el){
           <div class="nlssh" id="nlsM1S"></div><div class="nlssh" id="nlsM2S"></div>
           <div class="nlsm idle-sway" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two idle-sway" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
       <div class="nlsans" id="nlsAns"></div>
+      <div class="sobo" title="Sobo, your study buddy"><canvas id="soboCv"></canvas><span class="sobotag">Sobo</span></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
     <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
       <p class="say"><span id="nlsSay"></span></p>
       <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div></div></div></div>`;
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div>
+      <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
-  nlsLook();
+  nlsLook(); soboMount();
   if (N.phase === 'end') return nlsEnd();
   nlsLater(() => nlsRun(), 350);
 }
@@ -2400,7 +2437,7 @@ function nlsRun(){
     for (let k = 1; k <= n; k++) nlsLater(() => { nlsLight(p.a + dir * k, k === n ? 'land' : 'pass'); sfx('buy'); }, (k - 1) * HOP + HOP * .8); }, t);
   t += n * HOP + 600;
   nlsLater(() => {
-    if (demo) { nlsWrite(p, true); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
+    if (demo) { nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
     else { N.phase = 'ask'; nlsAsk(); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
   }, t);
 }
@@ -2432,6 +2469,7 @@ function nlsLook(me){
   requestAnimationFrame(() => nlsLook(me));
 }
 function nlsAsk(msg){
+  soboDo('Listen', 0);
   $('nlsAns').innerHTML = `<div class="nlsbox"><span class="nlsarrow a1">➜</span><input id="nlsIn" inputmode="numeric" autocomplete="off" placeholder="?" aria-label="Your answer"><button class="chk" onclick="nlsCheck()">Check</button><span class="nlsarrow a2">➜</span>${msg ? `<div class="tmsg">${msg}</div>` : ''}</div>`;
   const i = $('nlsIn'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); nlsCheck(); } };
 }
@@ -2439,11 +2477,11 @@ function nlsCheck(){
   const N = NLS, p = N.probs[N.k], raw = ($('nlsIn').value || '').trim().replace(/[−–]/g, '-');
   if (!/^-?\d+$/.test(raw)) return nlsAsk('Type a whole number, like 3 or -2.');
   N.tried++; $('nlsAns').innerHTML = '';
-  if (+raw === p.r) { N.got++; nlsWrite(p, true);
+  if (+raw === p.r) { N.got++; nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400);
     const first = !N.friend; N.friend = true;
     nlsSay(pick([`Yes! It landed on ${m(p.r)}. Magaling!`, `Correct! ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} is ${m(p.r)}.`, `That's right! Great counting!`]) + (first ? ' Look, a monster friend joined you!' : ''));
     if (first) { const j = $('nlsJar'); if (j) { j.innerHTML = monsterSVG('mon-' + N.id, 'happy', [], 'jarm'); j.classList.add('pop'); } } }
-  else { sfx('no'); nlsWrite(p, false);
+  else { sfx('no'); nlsWrite(p, false); soboDo('NoBump', 1800);
     nlsSay(`Not quite. We started at ${m(p.a)} and hopped ${Math.abs(p.step)} to the ${p.step > 0 ? 'right' : 'left'}. The monster landed on ${m(p.r)}.`); }
   nlsDone();
 }
