@@ -76,7 +76,7 @@
   .hud{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;background:var(--grad);color:#fff;border-radius:1rem;padding:1rem 1.2rem;position:relative;overflow:hidden}
   .hud::after{content:"";position:absolute;right:-3rem;top:-3rem;width:12rem;height:12rem;border-radius:50%;background:rgba(255,255,255,.08)}
   .hud .buddy{width:6.5rem;height:6.5rem;flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));animation:bob 2.6s ease-in-out infinite}
-  .hudsobo{width:7.5rem;height:7.5rem;flex:none;position:relative;z-index:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+  .hudsobo{width:12rem;height:12rem;margin:-1.2rem 0 -1.2rem -.6rem;flex:none;position:relative;z-index:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
   .hudsay{margin:.45rem 0 .1rem;background:rgba(255,255,255,.95);color:#0f172a;border-radius:.8rem;padding:.45rem .75rem;font-size:.9rem;font-weight:600;display:inline-block;max-width:100%}
   .hudsay b{color:var(--brand-d)}
   .hud .me{flex:1;min-width:12rem;position:relative;z-index:1}
@@ -540,11 +540,11 @@
   @keyframes narrbob{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-3px) scale(1.04,.97) rotate(2deg)}}
   .lbub .whorow{gap:.7rem}
   @media (prefers-reduced-motion:reduce){.narr.talking{animation:none}}
-  .lsobo{position:absolute;left:.3%;bottom:.25rem;width:clamp(5rem,10vw,7rem);aspect-ratio:1;z-index:5;pointer-events:none}
-  @media (max-width:640px){.lsobo{width:4.4rem}}
+  .lsobo{position:absolute;left:.3%;bottom:.25rem;width:clamp(6.5rem,14vw,10.5rem);aspect-ratio:1;z-index:5;pointer-events:none}
+  @media (max-width:640px){.lsobo{width:6rem}.hudsobo{width:8.5rem;height:8.5rem;margin:-.6rem auto}}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
-  .soboslot{flex:none;width:8rem;height:8rem}
+  .soboslot{flex:none;width:12rem;height:12rem;margin:-1rem 0}
   .soboin{width:100%;height:100%;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s cubic-bezier(.34,1.56,.64,1)}
   .soboin.on{opacity:1;transform:none}
   .soboin canvas{width:100%;height:100%;display:block}
@@ -557,7 +557,7 @@
   .sobostars i{width:.85rem;height:.85rem;background:#cbd5e1;clip-path:polygon(50% 0,62% 35%,100% 38%,70% 60%,80% 100%,50% 76%,20% 100%,30% 60%,0 38%,38% 35%);transition:background .3s}
   .sobostars i.on{background:#facc15}
   .credit{margin-top:.6rem;font-size:.7rem;color:var(--muted)}.credit a{color:inherit}
-  @media (max-width:640px){.soboslot{width:5.5rem;height:5.5rem}.sobopanel{min-height:6rem}.sobosay{font-size:.9rem}}
+  @media (max-width:640px){.soboslot{width:8rem;height:8rem;margin:-.5rem 0}.sobopanel{min-height:6rem}.sobosay{font-size:.9rem}}
   /* ---------- welcome hallway ---------- */
   .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
   .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
@@ -1727,7 +1727,7 @@ function soboAttach(slotId, move){
     SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin'; const cv = document.createElement('canvas'); SOBO_EL.appendChild(cv);
     slot.appendChild(SOBO_EL);
     loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
-      const px = window.devicePixelRatio || 1; cv.width = SOBO_EL.clientWidth * px; cv.height = SOBO_EL.clientHeight * px;
+      const px = Math.max(2, window.devicePixelRatio || 1); cv.width = 220 * px; cv.height = 220 * px; // big enough to stay sharp in every spot
       SOBO = new rive.Rive({src: 'rive/sobo.riv', canvas: cv, artboard: 'SOBO-Talk', animations: ['Idle', 'Blink'], autoplay: true,
         layout: new rive.Layout({fit: rive.Fit.Contain, alignment: rive.Alignment.BottomCenter}),
         onLoad: () => { SOBO_EL && SOBO_EL.classList.add('on'); if (SOBO_KEY) soboDo(SOBO_KEY.split('|')[1].split(','), +SOBO_KEY.split('|')[2]); },
