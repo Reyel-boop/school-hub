@@ -606,6 +606,8 @@
   .wacts .wbtn{font-family:'Lilita One',Poppins,sans-serif;font-size:22px}
   @media (max-width:560px){.wstats{grid-template-columns:repeat(2,1fr)}.wstar{width:min(60vw,46vh + 40px);bottom:-6%}.glove{display:none}}
 
+  .welcome.plain{background:linear-gradient(160deg,#0ea5e9,#6366f1);overflow-y:auto}
+  .welcome.plain .wfront{padding-top:5vh}
   /* --- after "Student": thought cloud + two choices --- */
   .wstar.think{animation:none;transform:translateX(-50%)}
   .wthink{position:absolute;right:4vw;top:6vh;width:min(46vw,520px);pointer-events:none;animation:wdrop .6s cubic-bezier(.3,1.4,.6,1) both}
@@ -2434,11 +2436,11 @@ function closeLesson(){ const id = LS && LS.id; if (LS) setResume(LS.k > 0 && LS
 /* ================= WELCOME HALLWAY: "Welcome to Aral Math" → Who is here? → Student / Parent / Both =================
    Plays once per visit for learners. Original art: a cartoon hallway with our Bilang Monsters in picture frames. */
 let WELCOME = null; // null | 'door' | 'who' | 'parent' | 'both'
-const welcomeDue = () => { try { return isStudent() && !sessionStorage.getItem('aralmath-welcome'); } catch (e) { return false; } };
+const welcomeDue = () => false; // the welcome hallway is turned off: learners go straight to the map
 /* ---------- first-visit journey (after "Who is here?") ----------
    Student → Let's continue / get my parent → pick your grade → "Get it wrong!" first try →
    Monster Maker → map room (your monster jumps into your grade's map) → story → map */
-const ONB_ORDER = ['grade', 'tryit', 'maker', 'maproom'];
+const ONB_ORDER = ['maker']; // only the Monster Maker remains (for learners without a buddy yet)
 function onbNeed(step){ const p = pref(P.me.u); return step === 'grade' ? !p.gradeSet : step === 'tryit' ? !p.tried : step === 'maker' ? !p.buddy : !p.mapIntro; }
 function nextOnboard(){ const s = ONB_ORDER.find(onbNeed); if (s) { WELCOME = s; if (s === 'tryit') TRY = null; if (s === 'maker') MK = null; P.refresh(); } else welcomeDone(); }
 function kidChoice(){
@@ -2583,7 +2585,7 @@ function welcomeView(el){
   else panel = parentReport(u, WELCOME === 'both');
   if (WELCOME === 'tryit') { el.innerHTML = `<div class="welcome w-tryit">${tryView()}</div>`; return; }
   if (WELCOME === 'maproom') { el.innerHTML = `<div class="welcome w-maproom">${mapRoomView()}</div>`; return; }
-  el.innerHTML = `<div class="welcome w-${WELCOME}"><div class="wstage">${hallwayArt()}${frames}<div class="wstar ${WELCOME === 'kid' ? 'think' : ''}">${star}</div></div><div class="wfront">${panel}</div></div>`;
+  el.innerHTML = `<div class="welcome w-${WELCOME} plain"><div class="wfront">${panel}</div></div>`; // no hallway background
   if (WELCOME === 'door' && ttsOn()) speak('Welcome to Aral Math!', 'nar');
 }
 // a short, friendly report for a parent (or a parent and child together)
