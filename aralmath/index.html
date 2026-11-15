@@ -527,6 +527,16 @@
   @media (prefers-reduced-motion:reduce){.idle-sway svg,.talking svg .lmo,.wob svg *{animation:none!important}}
 
 
+
+  /* narrator (Rive) */
+  .narr{flex:none;position:relative;width:3.6rem;height:3.6rem;border-radius:50%;overflow:hidden;background:#fff;border:3px solid #0e7490;box-shadow:0 3px 0 rgba(14,116,144,.25);transform-origin:50% 100%}
+  .narr canvas{position:absolute;width:220%;height:220%;left:-60%;top:-40%;display:block;opacity:0;transition:opacity .4s} /* the artboard has wide margins: zoom in on the face */
+  .narr.on canvas{opacity:1}
+  .narr.off{display:none}
+  .narr.talking{animation:narrbob .32s ease-in-out infinite alternate}
+  @keyframes narrbob{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-3px) scale(1.04,.97) rotate(2deg)}}
+  .lbub .whorow{gap:.7rem}
+  @media (prefers-reduced-motion:reduce){.narr.talking{animation:none}}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
   .soboslot{flex:none;width:8rem;height:8rem}
@@ -1721,6 +1731,18 @@ function soboDo(names, holdMs = 1900){
 }
 function soboStop(){ clearTimeout(SOBO_T); if (SOBO) { try { SOBO.cleanup(); } catch (e) {} } SOBO = null; SOBO_EL = null; SOBO_KEY = ''; }
 
+// the narrator: a Rive character (rive/narrator.riv, CC BY 4.0 by alinazari) beside the spoken lines; it blinks and follows the pointer
+let NARR = null;
+function narrMount(){
+  const box = $('narr'); if (!box) return; const cv = box.querySelector('canvas');
+  if (NARR) { try { NARR.cleanup(); } catch (e) {} NARR = null; }
+  loadRive().then(() => { if (!cv.isConnected) return; const px = Math.max(2, window.devicePixelRatio || 1); cv.width = cv.clientWidth * px; cv.height = cv.clientHeight * px;
+    NARR = new rive.Rive({src: 'rive/narrator.riv', canvas: cv, artboard: 'Artboard', stateMachines: 'State Machine 1', autoplay: true,
+      layout: new rive.Layout({fit: rive.Fit.Cover, alignment: rive.Alignment.Center}),
+      onLoad: () => box.classList.add('on'), onLoadError: () => box.classList.add('off')});
+  }).catch(() => box.classList.add('off'));
+}
+function narrTalk(on){ const b = $('narr'); if (b) b.classList.toggle('talking', on); }
 function leavePractice(){ soboStop(); S = null; P.refresh(); }
 function showLesson(){ if (S && !S.answered) S.hint[S.i] = true; playLesson(S.id, () => P.refresh()); }
 
@@ -2147,22 +2169,22 @@ function nlsView(el){
       <div class="nlsans" id="nlsAns"></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
-    <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
+    <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="nlsSay"></span></p>
       <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div></div></div></div>`;
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
-  nlsLook();
+  nlsLook(); narrMount();
   if (N.phase === 'end') return nlsEnd();
   nlsLater(() => nlsRun(), 350);
 }
 function nlsSay(text){
   const s = $('nlsSay'), t = $('teacher'); if (!s || !NLS) return;
-  if (NLS.typer) clearInterval(NLS.typer); let n = 0; s.textContent = ''; t.classList.add('talking');
+  if (NLS.typer) clearInterval(NLS.typer); let n = 0; s.textContent = ''; t.classList.add('talking'); narrTalk(true);
   NLS.typer = setInterval(() => { const el = $('nlsSay'); if (!NLS || !el) return clearInterval(NLS && NLS.typer);
     n = Math.min(text.length, n + 2); el.textContent = text.slice(0, n); if (n % 6 === 0) blip('lolo');
-    if (n >= text.length) { clearInterval(NLS.typer); NLS.typer = null; t.classList.remove('talking'); } }, 30);
+    if (n >= text.length) { clearInterval(NLS.typer); NLS.typer = null; t.classList.remove('talking'); narrTalk(false); } }, 30);
   if (ttsOn()) speak(text, 'lolo');
 }
 function nlsPoint(){ const t = $('teacher'); if (!t) return; t.classList.remove('point'); void t.offsetWidth; t.classList.add('point'); }
@@ -2317,15 +2339,15 @@ function lessonView(el){
       <div class="board" id="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
-    <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
+    <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
       <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
         <div class="grow ltl"><div class="tsegs" id="tsegs"></div><small class="ttime" id="ttime">0:00 / 0:00</small></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div></div></div>
+        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div>
     <aside class="lnotes"><div class="ntabs"><button id="ntab0" class="on" onclick="noteTab(0)">📑 Lesson notes</button><button id="ntab1" onclick="noteTab(1)">✏ My notes</button></div>
       <div id="lres"></div><div class="nbody" id="nbody"></div></aside></div></div>`;
-  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect); NOTETAB = 0;
+  document.querySelectorAll('select.vsel').forEach(fillVoiceSelect); NOTETAB = 0; narrMount();
   const me = LS; setTimeout(() => { if (LS !== me || LS.started) return;
     if (LS.resumeK) { const k = LS.resumeK; LS.resumeK = 0; jumpTo(k);
       $('lres').innerHTML = `<div class="lres">▶ Resumed where you left off, at ${fmtT(LS.T[k])}<button onclick="$('lres').innerHTML='';jumpTo(0)">Start over</button></div>`; }
@@ -2333,9 +2355,9 @@ function lessonView(el){
 }
 function lessonSay(text){
   const s = $('lsay'), t = $('teacher'); if (!s) return;
-  if (LS.typer) clearInterval(LS.typer); let n = 0; s.textContent = ''; $('lcaret').classList.remove('off'); t.classList.add('talking');
+  if (LS.typer) clearInterval(LS.typer); let n = 0; s.textContent = ''; $('lcaret').classList.remove('off'); t.classList.add('talking'); narrTalk(true);
   LS.typer = setInterval(() => { if (!LS || !$('lsay')) return; n = Math.min(text.length, n + 2); s.textContent = text.slice(0, n); if (n % 6 === 0) blip('lolo');
-    if (n >= text.length) { clearInterval(LS.typer); LS.typer = null; $('lcaret').classList.add('off'); t.classList.remove('talking'); } }, 30);
+    if (n >= text.length) { clearInterval(LS.typer); LS.typer = null; $('lcaret').classList.add('off'); t.classList.remove('talking'); narrTalk(false); } }, 30);
   if (ttsOn()) speak(text, 'lolo');
 }
 function runStep(){
