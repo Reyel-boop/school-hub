@@ -526,13 +526,6 @@
   .burst{position:absolute;width:.55rem;height:.85rem;border-radius:2px;z-index:6;pointer-events:none;will-change:transform,opacity}
   @media (prefers-reduced-motion:reduce){.idle-sway svg,.talking svg .lmo,.wob svg *{animation:none!important}}
 
-  /* Sobo (Rive) */
-  .credit{margin-top:.6rem;font-size:.7rem;color:var(--muted)}.credit a{color:inherit}
-  .sobo{position:absolute;left:.3%;bottom:.25rem;width:clamp(5rem,10vw,7rem);aspect-ratio:1;z-index:5;opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
-  .sobo.on{opacity:1;transform:none}
-  .sobo canvas{width:100%;height:100%;display:block}
-  .sobotag{position:absolute;left:50%;bottom:-.35rem;transform:translateX(-50%);background:#fff;color:#166534;font:700 .7rem Poppins,sans-serif;padding:.05rem .5rem;border-radius:1rem;box-shadow:0 2px 0 rgba(0,0,0,.12)}
-  @media (max-width:640px){.sobo{width:4.4rem}}
   /* ---------- welcome hallway ---------- */
   .welcome{position:fixed;inset:0;z-index:60;overflow:hidden;background:#0f766e;font-family:'Lilita One',Poppins,system-ui,sans-serif}
   .wstage{position:absolute;left:50%;top:50%;width:max(100vw,150vh);height:max(66.67vw,100vh);transform:translate(-50%,-50%)}
@@ -1625,12 +1618,9 @@ function go(s){ screen = s; P.refresh(); window.scrollTo(0, 0); }
 function learn(el){
   if (NLS) return nlsView(el);
   if (LS) return lessonView(el);
-  if (STORY) return storyView(el);
   if (S) return battle(el);
   if (WELCOME || welcomeDue()) return welcomeView(el);
   if (isStudent() && !pref(P.me.u).buddy) { WELCOME = 'maker'; return welcomeView(el); }
-  if (isStudent() && !seenStory('prologue')) return playStory('prologue');
-  if (screen === 'book') return book(el);
   if (screen === 'dex') return dex(el);
   if (screen === 'shop') return shop(el);
   map(el);
@@ -1643,21 +1633,21 @@ function hud(u){
       <div class="hudbtns">${nx ? `<button class="hbtn go" onclick="startPractice('${nx}')">▶ Play: ${SK[nx].title}</button>` : `<span class="chip">All ${all.length} monsters are your friends! 🎉</span>`}
         <button class="hbtn ghosty" onclick="go('dex')">Monsters ${all.filter(id => caught(u, id)).length}/${all.length}</button>
         <button class="hbtn ghosty" onclick="go('shop')">Buddy shop</button>
-        <button class="hbtn ghosty" onclick="go('book')">📖 Story</button></div></div>
+</div></div>
     <div class="chips"><span class="chip">${COIN} ${coinsOf(u)}</span><span class="chip">${STAR()} ${totalStars(u)}</span><span class="chip">${FLAME} ${streakOf(u)} day${streakOf(u) === 1 ? '' : 's'}</span></div></div>`;
 }
 function map(el){
   const u = P.me.u, b = bandOf(u), stu = isStudent(), nx = stu ? nextSkill(u, b) : null;
   const islands = BANDS[b].units.map(([name, list], ix) => { const [c, soft] = ISLE[ix % ISLE.length], got = stu ? list.filter(([id]) => caught(u, id)).length : 0;
-    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Chapter ${ix + 1} · ${ISLAND[b][ix]}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} friends</small>` : ''}
-        ${!stu || seenStory(`${b}-${ix}-intro`) ? `<button class="storybtn" onclick="playStory('${b}-${ix}-intro')">📖 Story</button>` : ''}</div>
+    return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Unit ${ix + 1}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} friends</small>` : ''}
+</div>
       <div class="path">${list.map(([id, ws]) => { const cg = stu && caught(u, id), show = !stu || cg;
         return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}">
           <span class="disc">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
           ${stu ? stars3(starsOf(bestOf(u, id))) : ''}<b>${SK[id].title}</b><small>WS ${ws}</small></button>`; }).join('')}</div></div>`; }).join('');
   const kids = P.usersWith('student').filter(s => bandOf(s.u) === b).map(s => ({s, c: weekCoins(s.u)})).sort((x, y) => y.c - x.c).slice(0, 6);
   el.innerHTML = `<div class="stack">
-    ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div><button class="btn ghost sm" onclick="go('book')">📖 Read the story</button></div></div>`}
+    ${stu ? hud(u) : `<div class="card"><div class="ptop"><div class="grow"><h2>Lessons (preview)</h2><p class="hint" style="margin:0">Play any lesson the way learners see it. Nothing you do here is saved.</p></div></div></div>`}
     <div class="homegrid"><div class="stack">
       <div class="card" style="padding:.9rem 1.1rem"><div class="ptop"><div class="grow"><b style="font-weight:600">Monster map</b><br><small style="color:var(--muted)">Each lesson has a Bilang Monster who needs your help. Get ${MASTER} right to make a new friend!</small></div>${bandSwitch(b, 'setBand')}</div></div>
       ${islands}</div>
@@ -1679,7 +1669,6 @@ function chooseBuddy(b){ pref(P.me.u).buddy = b; P.save(); sfx('buy'); P.refresh
 
 function startPractice(id, skipStory, skipLesson){
   const sb = bandOf(P.me.u), ix = unitIndex(sb, id);
-  if (isStudent() && !skipStory && ix >= 0 && !seenStory(`${sb}-${ix}-intro`)) return playStory(`${sb}-${ix}-intro`, () => startPractice(id, true));
   if (!skipLesson && !(pref(P.me.u).watched || {})[id] && !myAttempts(P.me.u, id).length) return playLesson(id, () => startPractice(id, true, true));
   S = {id, items: Array.from({length: ITEMS}, () => toChoices(SK[id].gen())), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
   screen = 'map'; P.tab('learn'); window.scrollTo(0, 0);
@@ -1748,7 +1737,6 @@ function winScreen(el){
     setTimeout(() => { sfx(S && S.lvlUp ? 'lvl' : nowCaught ? 'win' : 'no'); if (nowCaught) confetti(); }, 150);
   }
   const nx = stu ? nextSkill(u, bandOf(u)) : null, wb = bandOf(u), wix = unitIndex(wb, S.id);
-  const storyKey = stu && wix >= 0 && islandDone(u, wb, wix) && !seenStory(`${wb}-${wix}-outro`) ? `${wb}-${wix}-outro` : null;
   if (!S.line) S.line = pick(nowCaught ? THANKS : ESCAPE);
   el.innerHTML = `<div class="stack"><div class="card win">
       <h2 style="font-size:1.5rem">${nowCaught ? (score === ITEMS ? 'Perfect score!' : 'New friend!') : st ? 'So close!' : 'Keep practicing!'}</h2>
@@ -1756,7 +1744,6 @@ function winScreen(el){
       <div class="big">${score} / ${ITEMS}</div>
       <div class="caughtcard">${monsterSVG('mon-' + S.id, nowCaught ? 'happy' : 'idle', [], 'c')}<div><b>${M.name}</b><br><small>${nowCaught ? (wasCaught ? 'Already your friend. Great practice!' : `${M.name} joined your monster friends!`) : `Get ${MASTER} right to make friends with ${M.name}.`}</small></div></div>
       <div><span class="monsay">${M.name}: “${S.line}”</span></div>
-      ${storyKey ? `<div style="margin-top:1rem"><span class="pill p-amber">${ISLAND[wb][wix]} is saved!</span><br><button class="btn" style="margin-top:.6rem;background:#ca8a04" onclick="S=null;playStory('${storyKey}')">📖 Continue the story ▶</button></div>` : ''}
       <p style="margin-top:1rem;font-weight:600">${COIN} +${S.coins} coins${score === ITEMS ? ' (includes +20 perfect bonus)' : ''}</p>
       ${S.lvlUp ? `<p style="margin-top:.4rem;font-weight:700;color:#ca8a04">⬆ Level up! You are now Level ${levelOf(xpOf(u))}.</p>` : ''}
       ${stu ? '' : '<p class="hint">Preview only: nothing was saved.</p>'}
@@ -1785,64 +1772,10 @@ function buyItem(id, price){ const p = pref(P.me.u); if (coinsOf(P.me.u) < price
   p.owned = (p.owned || []).concat(id); p.spent = (p.spent || 0) + price; p.wear = (p.wear || []).concat(id); P.save(); sfx('buy'); P.refresh(); }
 function wearItem(id){ const p = pref(P.me.u), w = p.wear || []; p.wear = w.includes(id) ? w.filter(x => x !== id) : w.concat(id); P.save(); P.refresh(); }
 
-/* ================= STORY: ANG NAWAWALANG BILANG (The Scrambled Numbers) =================
+/* ================= CHARACTERS & READ-ALOUD =================
    An original story told in comic-style panels. The prologue plays once, each island
    (lesson unit) is a chapter with an intro before its first practice round and an outro when all
    its monsters are caught, and finishing the last island plays the ending. */
-const GULO = 'gulo-95';
-const ISLAND = {
-  '78': ['Isla Hati', 'Isla Tuldok', 'Isla Hugis', 'Isla Takbo', 'Isla Sukat', 'Isla Pili', 'Isla Buumbilang'],
-  '910': ['Isla Buumbilang', 'Isla Halo', 'Isla Kapangyarihan', 'Isla Ugat', 'Isla Salita', 'Isla Hanay', 'Isla Timbangan', 'Isla Salik'],
-};
-// [speaker, mood, text]; speaker: nar | lolo | gulo | buddy | mon (the island's first monster) | crowd
-const CHAPTERS = {
-  '78': [
-    {intro:[['lolo','idle',"Welcome to {island}, where everything is shared in parts. Haring Gulo mixed up all the fractions here!"],['mon','hit',"Grr! Halves, thirds, quarters... I can't tell them apart anymore!"],['buddy','happy',"Don't worry! {name} knows how to add, subtract, multiply and divide fractions. Let's help!"]],
-     outro:[['mon','happy',"Salamat, {name}! Every piece fits together again."],['gulo','idle',"Hmph! You fixed my fractions... but you'll never put the decimal points back!"]]},
-    {intro:[['lolo','idle',"{island} is famous for its tiny decimal points. Haring Gulo moved them all to the wrong places!"],['mon','hit',"Is it 2.5? 25? 0.25? My head is spinning!"],['buddy','happy',"Line up the decimal points and we'll be fine, {name}!"]],
-     outro:[['mon','happy',"Every point is back where it belongs!"],['gulo','idle',"Lucky! Wait until you see my island of shapes..."]]},
-    {intro:[['lolo','idle',"On {island}, the houses are prisms, the hills are pyramids and the fruits are spheres... or they used to be!"],['mon','hit',"I forgot if I'm a cone or a cylinder!"],['buddy','happy',"Count the faces, edges and bases, {name}!"]],
-     outro:[['mon','happy',"I'm a proud solid figure again!"],['gulo','idle',"Grr! Then I'll make everyone run late!"]]},
-    {intro:[['lolo','idle',"The jeepneys and bangkas of {island} can't tell how fast or how far they're going."],['mon','hit',"Vroom! I don't know if I'm early or late!"],['buddy','happy',"Distance equals speed times time. We can do this!"]],
-     outro:[['mon','happy',"Right on schedule, thanks to you!"],['gulo','idle',"Next I'll stretch the land so no one can measure it!"]]},
-    {intro:[['lolo','idle',"Builders on {island} need areas to make gardens, boxes and water tanks."],['mon','hit',"How much paint? How much grass? I'm lost!"],['buddy','happy',"Break the big shapes into small ones, {name}!"]],
-     outro:[['mon','happy',"Every box is wrapped perfectly!"],['gulo','idle',"My next island is full of choices. Hehe, good luck choosing!"]]},
-    {intro:[['lolo','idle',"At the {island} market, everyone is stuck choosing what to buy."],['mon','hit',"Burger or spaghetti? Buko juice or gulaman? How many ways are there?!"],['buddy','happy',"Multiply the choices together, {name}!"]],
-     outro:[['mon','happy',"Now I know all my options!"],['gulo','idle',"Fine! My last island has numbers below zero. Muahaha!"]]},
-    {intro:[['lolo','idle',"This is {island}, Haring Gulo's own island. Positive and negative numbers are all mixed up everywhere!"],['gulo','happy',"You made it this far, {name}... but can you handle the negatives?"],['buddy','happy',"Same signs, different signs: we know the rules!"]]},
-  ],
-  '910': [
-    {intro:[['lolo','idle',"Welcome back, {name}! Haring Gulo has new tricks for the high school islands. First stop: {island}, where negative numbers ran wild."],['mon','hit',"Plus a minus, minus a minus... which is which?!"],['buddy','happy',"Remember the sign rules and we're unstoppable!"]],
-     outro:[['mon','happy',"Positives and negatives are friends again!"],['gulo','idle',"Hah! Now try mixing fractions AND decimals!"]]},
-    {intro:[['lolo','idle',"On {island}, Haring Gulo mixed fractions and decimals together like halo-halo!"],['mon','hit',"Is 0.75 the same as three-fourths? I'm all mixed up!"],['buddy','happy',"Change the decimals to fractions first, {name}!"]],
-     outro:[['mon','happy',"Now I'm as neat as a fresh halo-halo!"],['gulo','idle',"Then let's see you handle POWER!"]]},
-    {intro:[['lolo','idle',"The towers of {island} grow by powers. Haring Gulo knocked the exponents over!"],['mon','hit',"Two to the fifth... is that ten? Or thirty-two?"],['buddy','happy',"Multiply the base by itself, {name}!"]],
-     outro:[['mon','happy',"My towers are standing tall again!"],['gulo','idle',"Grr! Then let's dig down to the roots..."]]},
-    {intro:[['lolo','idle',"Deep in the forest of {island}, the old trees have square roots. Haring Gulo tangled them all."],['mon','hit',"Which number times itself makes me? I forgot!"],['buddy','happy',"Find the pairs of factors, {name}!"]],
-     outro:[['mon','happy',"My roots are strong again!"],['gulo','idle',"Hmph. Can you even read my riddles?"]]},
-    {intro:[['lolo','idle',"The people of {island} speak in words, but Haring Gulo turned their math into riddles."],['mon','hit',"'Four less than x'... is that x minus 4 or 4 minus x?!"],['buddy','happy',"Read slowly and translate word by word!"]],
-     outro:[['mon','happy',"My words and my symbols match again!"],['gulo','idle',"Next: my polynomial maze!"]]},
-    {intro:[['lolo','idle',"In {island}, terms stand in neat rows. Haring Gulo shuffled every like term!"],['mon','hit',"x squared, x, plain numbers... who goes with whom?"],['buddy','happy',"Only like terms can be combined, {name}!"]],
-     outro:[['mon','happy',"Every term is back in its row!"],['gulo','idle',"Let's see if you can keep things balanced..."]]},
-    {intro:[['lolo','idle',"{island} is famous for its giant balance scale. Haring Gulo tipped it over!"],['mon','hit',"Left side, right side... nothing is equal anymore!"],['buddy','happy',"Whatever we do to one side, we do to the other!"]],
-     outro:[['mon','happy',"Balanced at last!"],['gulo','idle',"Fine. Come to my castle on Isla Salik... if you dare!"]]},
-    {intro:[['lolo','idle',"This is {island}, Haring Gulo's castle. Everything here is multiplied together and hidden."],['gulo','happy',"Welcome, {name}. Can you break my numbers back into factors?"],['buddy','happy',"Let's factor everything, one step at a time!"]]},
-  ],
-};
-const PROLOGUE = [
-  ['nar','idle',"Far across the sea lies Kapuluan Bilang, a chain of islands where numbers live in peace.", 'island'],
-  ['gulo','happy',"Hahaha! I am Haring Gulo, the King of Chaos! I scrambled every number on every island!", 'night'],
-  ['crowd','hit',"The friendly Bilang Monsters got so confused that they started causing trouble everywhere.", 'night'],
-  ['lolo','idle',"Oh no! Only someone good at math can calm them down. I am Lolo Pawikan. Will you help us, {name}?"],
-  ['buddy','happy',"Let's go together, {name}! Every right answer helps a monster remember who it really is!"],
-];
-const ENDING = [
-  ['gulo','hit',"Wait... you fixed everything? But... I only scrambled the numbers because nobody wanted to play with me.", 'night'],
-  ['buddy','happy',"Then play with us! Math is more fun with friends."],
-  ['gulo','happy',"Really? Then I'm not Haring Gulo anymore. From now on, call me Haring Galing!"],
-  ['lolo','happy',"Congratulations, {name}! Kapuluan Bilang is in harmony again. You are a true Bilang Hero!"],
-  ['nar','idle',"THE END... for now! Keep playing to earn 3 stars on every monster.", 'island'],
-];
 const TAUNT = ["Hi! Can you help me with {topic}?", "My {topic} is all mixed up. Will you help me?", "Let's practice {topic} together!", "I'm stuck on {topic}. Ten questions, can you do it?"];
 const THANKS = ["Whoa... my numbers make sense again! Salamat!", "I remember who I am now! Let's be friends!", "You did it! I feel so much better!"];
 const ESCAPE = ["Thanks for helping! Let's practice a little more.", "We're getting there! Watch the lesson and try again.", "So close! Let's try again together."];
@@ -1865,23 +1798,8 @@ function turtleSVG(mood = 'idle', cls = 'mon'){
     <path d="M-2 34L22 14L46 34Z" fill="#fde68a" stroke="#a16207" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 30L22 18L36 30" stroke="#d97706" stroke-width="1.5" fill="none"/>
   </svg>`;
 }
-const ROLE_NAME = {lolo:'Lolo Pawikan', gulo:'Haring Gulo'};
-let STORY = null;
-const seenStory = k => !!(pref(P.me.u).seen || {})[k];
-const unitIndex = (b, id) => BANDS[b].units.findIndex(([, list]) => list.some(([s]) => s === id));
-const islandDone = (u, b, ix) => BANDS[b].units[ix][1].every(([id]) => caught(u, id));
-function storyPanels(key){
-  if (key === 'prologue') return {title:'Prologue', panels: PROLOGUE};
-  const [b, ix, part] = key.split('-'), i = +ix;
-  if (part === 'end') return {title:'The Ending', panels: ENDING, b};
-  const ch = CHAPTERS[b][i], last = i === BANDS[b].units.length - 1;
-  return {title:`Chapter ${i + 1}: ${ISLAND[b][i]}`, b, i, panels: part === 'outro' ? (last ? ENDING : ch.outro) : ch.intro};
-}
-function playStory(key, after){
-  stopStoryAudio();
-  const s = storyPanels(key); STORY = Object.assign(s, {key, k:0, after: after || null, onStage: []}); P.tab('learn'); window.scrollTo(0, 0);
-}
-/* ---- read-aloud (each character gets a voice) + typing blips ---- */
+const fillText = t => t.replace(/\{name\}/g, esc(P.me.name.split(' ')[0])); // put the learner's first name into lines
+const unitIndex = (b, id) => BANDS[b].units.findIndex(([, list]) => list.some(([x]) => x === id));
 const ttsOn = () => { try { return localStorage.getItem('aralmath-tts') === '1'; } catch (e) { return false; } };
 /* ---- read-aloud with the most natural voice on this device ----
    Picks neural/"Natural" voices first (Edge, Chrome, Apple enhanced voices), prefers Philippine
@@ -1935,12 +1853,7 @@ function speak(text, who = 'nar'){
       if (v) { u.voice = v; u.lang = v.lang; } u.pitch = pitch; u.rate = rate; speechSynthesis.speak(u); }); } catch (e) {}
 }
 function toggleTTS(){ try { localStorage.setItem('aralmath-tts', ttsOn() ? '0' : '1'); } catch (e) {} const b = $('ttsBtn'); if (b) { b.classList.toggle('on', ttsOn()); b.textContent = ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'; }
-  if (ttsOn()) { if (LS && $('lsay')) speak($('lsay').textContent || '', 'lolo'); else speakPanel(); } else stopStoryAudio(); }
-function speakPanel(){
-  if (!ttsOn() || !STORY) return;
-  const [who, , text] = STORY.panels[STORY.k]; speak(fillText(text, STORY.b, STORY.i), who);
-}
-function stopStoryAudio(){ try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} if (STORY && STORY.timer) { clearInterval(STORY.timer); STORY.timer = null; } }
+  if (ttsOn()) { const t = $('lsay') || $('nlsSay'); if (t) speak(t.textContent || '', 'lolo'); } else { try { speechSynthesis.cancel(); } catch (e) {} } }
 function blip(who){
   if (isMuted() || ttsOn() || QUIET) return;
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
@@ -1948,139 +1861,12 @@ function blip(who){
     g.gain.setValueAtTime(.025, t); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + .05); } catch (e) {}
 }
 /* ---- stage ---- */
-const PALM = `<svg viewBox="0 0 80 110"><path d="M40 108C38 80 40 55 44 34" stroke="#92400e" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M40 100h5M41 88h5M41 76h5M42 64h5M43 52h5" stroke="#78350f" stroke-width="1.5"/>
-  <path d="M44 34C30 22 14 24 4 34C18 30 30 32 44 34Z" fill="#16a34a"/><path d="M44 34C56 20 72 20 78 30C66 28 56 30 44 34Z" fill="#15803d"/><path d="M44 34C42 18 32 8 20 6C30 14 38 22 44 34Z" fill="#22c55e"/><path d="M44 34C50 18 60 10 72 10C60 18 52 24 44 34Z" fill="#16a34a"/><path d="M44 34C36 40 30 52 30 62C36 52 40 44 44 34Z" fill="#15803d"/>
-  <circle cx="42" cy="36" r="3.5" fill="#78350f"/><circle cx="47" cy="37" r="3.5" fill="#78350f"/></svg>`;
-const WAVE = `<svg class="wave" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M0 10Q25 0 50 10T100 10T150 10T200 10T250 10T300 10T350 10T400 10V20H0Z" fill="#fff"/></svg>`;
-function storyView(el){
-  const s = STORY, [c, soft] = s.i != null ? ISLE[s.i % ISLE.length] : ['#22c55e', '#dcfce7'];
-  const stars = Array.from({length: 26}, () => `<i style="left:${R(0, 100)}%;top:${R(0, 100)}%;animation-delay:-${R(0, 24) / 10}s"></i>`).join('');
-  el.innerHTML = `<div class="stack"><div class="storybox">
-    <div class="scene" id="scene" style="--land:${c};--soft:${soft}">
-      <div class="world"><div class="sky"></div><div class="sky n"></div><div class="stars">${stars}</div><span class="orb"></span>
-        <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
-        <svg class="birds" viewBox="0 0 60 24"><path d="M2 12Q9 4 16 12Q23 4 30 12" stroke="#334155" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M34 18Q39 13 44 18Q49 13 54 18" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        <div class="sea">${WAVE.replace('wave', 'wave w1')}${WAVE.replace('wave', 'wave w2')}</div>
-        <div class="land l1"></div><div class="land l2"></div><div class="palm">${PALM}</div><div class="palm p2">${PALM}</div></div>
-      <div class="gloom"></div><div class="chaos" id="chaos">${Array.from({length: 16}, () => `<span style="left:${R(2, 96)}%;font-size:${R(10, 22) / 10}rem;animation-delay:-${R(0, 40) / 10}s;animation-duration:${R(30, 55) / 10}s">${pick(['7', '½', '×', '÷', '3', '%', '−', '+', '9', '¾', '0.5', 'x²', '√', '='])}</span>`).join('')}</div>
-      <div class="cast" id="cast"></div><div class="flash" id="flash"></div>
-      <span class="chap">${s.title}</span><button class="skip" onclick="endStory()">Skip ⏭</button>
-      <div class="titlecard"><div><small>${s.key === 'prologue' ? 'Ang Nawawalang Bilang' : s.i != null ? (/outro/.test(s.key) ? 'Chapter ending' : 'Chapter ' + (s.i + 1)) : ''}</small><b>${s.key === 'prologue' ? 'The Scrambled Numbers' : s.i != null ? ISLAND[s.b][s.i] : s.title}</b></div></div>
-    </div>
-    <div class="bubble" id="bubble"><div class="whorow"><span class="avatar" id="avatar"></span><b class="who-n" id="whoN"></b></div>
-      <p class="say"><span id="say"></span><i class="caret" id="caret"></i></p>
-      <div class="snav"><button class="btn ghost sm" id="storyBack" onclick="storyStep(-1)">◀ Back</button>
-        <div class="mid"><div class="dots" id="sdots"></div><button class="tts ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}</div>
-        <button class="btn" id="storyNext" onclick="storyStep(1)">Next ▶</button></div>
-    </div></div></div>`;
-  s.onStage = []; document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
-  setTimeout(() => STORY === s && renderPanel(), s.k === 0 ? 900 : 0); // let the title card show first
-  document.onkeydown = e => { if (!STORY || (e.target.closest && e.target.closest('input,textarea,button'))) return;
-    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); storyStep(1); } else if (e.key === 'ArrowLeft') storyStep(-1); else if (e.key === 'Escape') endStory(); };
-}
-function actorHTML(id, mood, role, b, i, enter, emote){
-  const svg = id.startsWith('crowd:') ? monsterSVG('mon-' + id.slice(6), mood, [], 'mon') : castSVG(id, mood, b, i);
-  const em = emote === 'dizzy' ? '<div class="emote dizzy"><span>?</span><span>✶</span><span>?</span></div>' : emote === 'love' ? '<div class="emote love"><span>♥</span><span>★</span><span>♥</span></div>'
-    : emote === 'evil' ? '<div class="emote love evil"><span>⚡</span><span>✖</span><span>⚡</span></div>' : '';
-  return `<div class="actor ${role} ${enter}" data-id="${id}">${em}${svg}</div>`;
-}
-function renderPanel(){
-  const s = STORY; if (!s || !$('cast')) return;
-  stopStoryAudio();
-  const [who, mood, text, scene] = s.panels[s.k], b = s.b, i = s.i, night = scene === 'night';
-  const sc = $('scene');
-  sc.classList.toggle('night', night);
-  sc.classList.toggle('gloomy', who === 'gulo' && !night);
-  $('chaos').classList.toggle('on', who === 'gulo' || (night && who === 'crowd'));
-  // who is on stage for this panel
-  let actors;
-  if (who === 'crowd' || (who === 'nar' && scene === 'island')) actors = ['f-add-sim', 'd-add', 'g-solids'].map(id => ({id:'crowd:' + id, mood, role:'crowd ' + (mood === 'hit' ? 'panic' : 'walk')}));
-  else if (who === 'buddy' || who === 'nar') actors = [{id:'buddy', mood, role:'talker'}];
-  else actors = [{id:'buddy', mood: who === 'gulo' ? 'hit' : 'idle', role:'side dim'}, {id: who, mood, role:'talker'}];
-  const prev = s.onStage;
-  $('cast').innerHTML = actors.map(a => actorHTML(a.id, a.mood, a.role, b, i,
-    prev.includes(a.id) ? '' : a.id === 'gulo' ? 'in-pop' : a.role.startsWith('side') || a.id === 'buddy' ? 'in-l' : 'in-r',
-    a.role === 'talker' ? (mood === 'hit' ? 'dizzy' : mood === 'happy' ? (a.id === 'gulo' && night ? 'evil' : 'love') : a.id === 'gulo' ? 'evil' : '') : a.role.includes('panic') ? 'dizzy' : '')).join('');
-  s.onStage = actors.map(a => a.id);
-  if (who === 'gulo' && !prev.includes('gulo')) { const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); sc.classList.remove('quake'); void sc.offsetWidth; sc.classList.add('quake'); }
-  // speech bubble
-  const name = speakerName(who, b, i), narr = who === 'nar' || who === 'crowd';
-  $('bubble').classList.toggle('narr', narr);
-  $('bubble').style.setProperty('--tail', actors.length === 2 ? '62%' : '50%');
-  $('whoN').style.display = name ? '' : 'none'; $('whoN').textContent = name;
-  $('avatar').style.display = name ? '' : 'none'; $('avatar').innerHTML = name ? castSVG(who, 'idle', b, i).replace('class="mon"', '') : '';
-  $('sdots').innerHTML = s.panels.map((_, k) => `<i class="${k < s.k ? 'ok' : k === s.k ? 'cur' : ''}"></i>`).join('');
-  $('storyBack').style.visibility = s.k ? 'visible' : 'hidden';
-  const last = s.k === s.panels.length - 1;
-  $('storyNext').textContent = last ? (s.after ? "Let's go! ▶" : 'The end ✓') : 'Next ▶';
-  $('storyNext').classList.remove('pulse');
-  // typewriter
-  const full = fillText(text, b, i).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-  let n = 0; s.typing = true; $('say').textContent = ''; $('caret').classList.remove('off');
-  const talker = document.querySelector('.actor.talker') || document.querySelector('.actor');
-  if (talker && !narr) talker.classList.add('talking');
-  s.timer = setInterval(() => { if (STORY !== s) return clearInterval(s.timer);
-    n = Math.min(full.length, n + 2); $('say').textContent = full.slice(0, n); if (n % 6 === 0) blip(who);
-    if (n >= full.length) finishTyping(); }, 28);
-  speakPanel();
-}
-function finishTyping(){
-  const s = STORY; if (!s) return;
-  if (s.timer) { clearInterval(s.timer); s.timer = null; }
-  const [who, , text] = s.panels[s.k];
-  $('say').textContent = fillText(text, s.b, s.i).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-  s.typing = false; $('caret').classList.add('off'); $('storyNext').classList.add('pulse');
-  document.querySelectorAll('.actor.talking').forEach(a => a.classList.remove('talking'));
-}
-function storyStep(d){
-  if (!STORY) return;
-  if (d > 0 && STORY.typing) return finishTyping();
-  STORY.k += d;
-  if (STORY.k < 0) STORY.k = 0;
-  if (STORY.k >= STORY.panels.length) return endStory();
-  renderPanel();
-}
-function endStory(){
-  if (!STORY) return;
-  stopStoryAudio(); document.onkeydown = null;
-  if (isStudent()) { const p = pref(P.me.u); p.seen = Object.assign(p.seen || {}, {[STORY.key]: true}); P.save(); }
-  const after = STORY.after; STORY = null;
-  if (after) after(); else { screen = 'map'; P.refresh(); }
-}
-function castSVG(who, mood, b, i){
-  const u = P.me.u;
-  if (who === 'lolo') return turtleSVG(mood, 'mon');
-  if (who === 'gulo') return monsterSVG(GULO, mood, ['crown', 'cape'], 'mon');
-  if (who === 'buddy') return isStudent() ? buddySVG(u, mood, 'mon') : monsterSVG(BUDDIES[0], mood, [], 'mon');
-  if (who === 'mon') return monsterSVG('mon-' + BANDS[b || '78'].units[i || 0][1][0][0], mood, [], 'mon');
-  return '';
-}
-function speakerName(who, b, i){
-  if (who === 'buddy') return isStudent() ? monsterOf(buddyOf(P.me.u)).name : 'Your buddy';
-  if (who === 'mon') return monName(BANDS[b || '78'].units[i || 0][1][0][0]);
-  return ROLE_NAME[who] || '';
-}
-const fillText = (t, b, i) => t.replace(/\{name\}/g, esc(P.me.name.split(' ')[0])).replace(/\{island\}/g, b != null && i != null ? ISLAND[b][i] : 'the islands');
-function book(el){
-  const u = P.me.u, b = bandOf(u), stu = isStudent(), units = BANDS[b].units;
-  const row = (key, title, sub, open) => `<div class="bookrow ${open ? '' : 'lockedrow'}"><div><b>${title}</b><br><small>${sub}</small></div>
-    ${open ? `<button class="btn ghost sm" onclick="playStory('${key}')">▶ Watch</button>` : '<small>🔒 Keep playing</small>'}</div>`;
-  el.innerHTML = `<div class="stack"><div class="card"><div class="ptop"><button class="btn ghost sm" onclick="go('map')">← Map</button><div class="grow"><h2>📖 Storybook</h2><small style="color:var(--muted)">Ang Nawawalang Bilang: The Scrambled Numbers · ${BANDS[b].label}</small></div>${bandSwitch(b, 'setBand')}</div></div>
-    <div class="card"><div class="bookrows">
-      ${row('prologue', 'Prologue', 'Haring Gulo scrambles the numbers', true)}
-      ${units.map(([name], ix) => { const last = ix === units.length - 1;
-        return row(`${b}-${ix}-intro`, `Chapter ${ix + 1}: ${ISLAND[b][ix]}`, name, !stu || seenStory(`${b}-${ix}-intro`))
-          + (last ? '' : row(`${b}-${ix}-outro`, `Chapter ${ix + 1} ending`, `${ISLAND[b][ix]} is saved`, !stu || seenStory(`${b}-${ix}-outro`))); }).join('')}
-      ${row(`${b}-${units.length - 1}-outro`, 'The Ending', 'A new friend', !stu || seenStory(`${b}-${units.length - 1}-outro`))}
-    </div></div></div>`;
-}
-
 /* ================= LESSON SHOW: animated lessons with Lolo Pawikan =================
    Plays like a short cartoon: the teacher explains at the chalkboard while the steps are
    written in chalk and acted out (number-line hops, fraction bars, area grid, decimal
    columns). Then it's the learner's turn; a wrong answer replays the demo with their numbers. */
 let LS = null;
-window.cloudCanRefresh = () => !LS && !STORY && !S && !NLS; // shared-database sync: don't redraw during a lesson, story or practice round
+window.cloudCanRefresh = () => !LS && !S && !NLS; // shared-database sync: don't redraw during a lesson or practice round
 const FAMILY = {'i-add':'nl-add', 'i-sub':'nl-sub', 'i-mul':'nl-mul', 'f-add-sim':'bar-add', 'f-sub-sim':'bar-sub', 'f-add-dis':'bar-add-dis', 'f-sub-dis':'bar-sub-dis', 'f-mul':'area', 'd-add':'dec-add', 'd-sub':'dec-sub'};
 // animation steps run on timers; skipping ahead runs any pending ones at once so the board is never half-drawn
 const later = (fn, ms) => { if (!LS) return; const job = {fn, done:false}; job.id = setTimeout(() => { if (LS && !job.done) { job.done = true; fn(); } }, ms); LS.timers.push(job); };
@@ -2283,33 +2069,6 @@ function jumpTo(k){
   if (c < k) $('tryBox').innerHTML = '';
   LS.k = k; runStep();
 }
-/* ---- Sobo: a Rive character (rive/sobo.riv, from the Rive Marketplace) who reacts during the number-line show.
-   The Rive player (rive/rive.js + rive.wasm) is loaded only when needed; if anything fails, Sobo just stays hidden. ---- */
-let SOBO = null, SOBO_T = null, riveLoading = null;
-function loadRive(){
-  if (window.rive) return Promise.resolve();
-  return riveLoading || (riveLoading = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'rive/rive.js';
-    sc.onload = () => { try { rive.RuntimeLoader.setWasmUrl('rive/rive.wasm'); ok(); } catch (e) { no(e); } }; sc.onerror = no; document.head.appendChild(sc); }));
-}
-function soboMount(){
-  const cv = $('soboCv'); if (!cv) return;
-  soboStop();
-  loadRive().then(() => { if (!$('soboCv') || $('soboCv') !== cv) return;
-    const box = cv.parentElement, px = window.devicePixelRatio || 1; cv.width = box.clientWidth * px; cv.height = box.clientHeight * px;
-    SOBO = new rive.Rive({src: 'rive/sobo.riv', canvas: cv, artboard: 'SOBO-Talk', animations: ['Hello', 'Blink'], autoplay: true,
-      layout: new rive.Layout({fit: rive.Fit.Contain, alignment: rive.Alignment.BottomCenter}),
-      onLoad: () => { box.classList.add('on'); soboDo('Hello'); },
-      onLoadError: () => { box.hidden = true; }});
-  }).catch(() => { const b = cv.parentElement; if (b) b.hidden = true; });
-}
-// play one of Sobo's moves; one-shot moves go back to Idle + Blink afterwards
-function soboDo(name, holdMs = 1900){
-  if (!SOBO) return; clearTimeout(SOBO_T);
-  try { SOBO.stop(); SOBO.play(Array.isArray(name) ? name.concat('Blink') : [name, 'Blink']); } catch (e) { return; }
-  if (holdMs) SOBO_T = setTimeout(() => { try { SOBO && (SOBO.stop(), SOBO.play(['Idle', 'Blink'])); } catch (e) {} }, holdMs);
-}
-function soboStop(){ clearTimeout(SOBO_T); if (SOBO) { try { SOBO.cleanup(); } catch (e) {} SOBO = null; } }
-
 /* ================= NUMBER-LINE SHOW (adding & subtracting integers) =================
    Lolo Pawikan writes a problem on the chalkboard. Two Bilang Monsters wait on a stand with a flag:
    the first jumps onto the starting number, the second hops the steps (right for +, left for −).
@@ -2330,7 +2089,7 @@ function playNumberLine(id, after){
   NLS = {id, after: after || null, probs: nlsProblems(id), k: 0, phase: 'show', timers: [], got: 0, tried: 0, friend: false};
   P.tab('learn'); window.scrollTo(0, 0);
 }
-function nlsStop(){ soboStop(); if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; if (NLS.typer) clearInterval(NLS.typer); try { speechSynthesis.cancel(); } catch (e) {} }
+function nlsStop(){ if (!NLS) return; NLS.timers.forEach(clearTimeout); NLS.timers = []; if (NLS.typer) clearInterval(NLS.typer); try { speechSynthesis.cancel(); } catch (e) {} }
 const nlsLater = (fn, ms) => { if (!NLS) return; const me = NLS; NLS.timers.push(setTimeout(() => { if (NLS === me) fn(); }, ms)); };
 function nlsView(el){
   const N = NLS, kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
@@ -2347,17 +2106,15 @@ function nlsView(el){
           <div class="nlssh" id="nlsM1S"></div><div class="nlssh" id="nlsM2S"></div>
           <div class="nlsm idle-sway" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two idle-sway" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
       <div class="nlsans" id="nlsAns"></div>
-      <div class="sobo" title="Sobo, your study buddy"><canvas id="soboCv"></canvas><span class="sobotag">Sobo</span></div>
       <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
       <div class="kids" id="kids">${kids}</div></div>
     <div class="lbub"><div class="whorow"><span class="avatar">${turtleSVG('happy', '')}</span><b class="who-n">Lolo Pawikan</b></div>
       <p class="say"><span id="nlsSay"></span></p>
       <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div>
-      <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div></div></div>`;
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
-  nlsLook(); soboMount();
+  nlsLook();
   if (N.phase === 'end') return nlsEnd();
   nlsLater(() => nlsRun(), 350);
 }
@@ -2437,7 +2194,7 @@ function nlsRun(){
     for (let k = 1; k <= n; k++) nlsLater(() => { nlsLight(p.a + dir * k, k === n ? 'land' : 'pass'); sfx('buy'); }, (k - 1) * HOP + HOP * .8); }, t);
   t += n * HOP + 600;
   nlsLater(() => {
-    if (demo) { nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
+    if (demo) { nlsWrite(p, true); nlsSay(`It landed on ${m(p.r)}. So ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} equals ${m(p.r)}! Now it's your turn.`); nlsDone(); }
     else { N.phase = 'ask'; nlsAsk(); nlsSay(`Where did the second monster land? Type your answer and press Check.`); }
   }, t);
 }
@@ -2469,7 +2226,6 @@ function nlsLook(me){
   requestAnimationFrame(() => nlsLook(me));
 }
 function nlsAsk(msg){
-  soboDo('Listen', 0);
   $('nlsAns').innerHTML = `<div class="nlsbox"><span class="nlsarrow a1">➜</span><input id="nlsIn" inputmode="numeric" autocomplete="off" placeholder="?" aria-label="Your answer"><button class="chk" onclick="nlsCheck()">Check</button><span class="nlsarrow a2">➜</span>${msg ? `<div class="tmsg">${msg}</div>` : ''}</div>`;
   const i = $('nlsIn'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); nlsCheck(); } };
 }
@@ -2477,11 +2233,11 @@ function nlsCheck(){
   const N = NLS, p = N.probs[N.k], raw = ($('nlsIn').value || '').trim().replace(/[−–]/g, '-');
   if (!/^-?\d+$/.test(raw)) return nlsAsk('Type a whole number, like 3 or -2.');
   N.tried++; $('nlsAns').innerHTML = '';
-  if (+raw === p.r) { N.got++; nlsWrite(p, true); soboDo(['Yes', 'Sparkles'], 2400);
+  if (+raw === p.r) { N.got++; nlsWrite(p, true);
     const first = !N.friend; N.friend = true;
     nlsSay(pick([`Yes! It landed on ${m(p.r)}. Magaling!`, `Correct! ${m(p.a)} ${p.sub ? 'minus' : 'plus'} ${m(p.b)} is ${m(p.r)}.`, `That's right! Great counting!`]) + (first ? ' Look, a monster friend joined you!' : ''));
     if (first) { const j = $('nlsJar'); if (j) { j.innerHTML = monsterSVG('mon-' + N.id, 'happy', [], 'jarm'); j.classList.add('pop'); } } }
-  else { sfx('no'); nlsWrite(p, false); soboDo('NoBump', 1800);
+  else { sfx('no'); nlsWrite(p, false);
     nlsSay(`Not quite. We started at ${m(p.a)} and hopped ${Math.abs(p.step)} to the ${p.step > 0 ? 'right' : 'left'}. The monster landed on ${m(p.r)}.`); }
   nlsDone();
 }
@@ -2701,7 +2457,7 @@ function mkRandom(){ for (const [k, , n] of MK_PARTS) MK[k] = Math.floor(Math.ra
 function mkDone(){ const nm = (MK.name || '').trim() || 'Buddy'; MK.name = nm; pref(P.me.u).buddy = mkSeed(MK, nm); P.save(); sfx('win'); confetti(); MK = null; nextOnboard(); }
 // map room: your monster jumps into your grade's island map
 function islandArt(b){
-  const isl = ISLAND[b].slice(0, 6);
+  const isl = BANDS[b].units.slice(0, 6);
   return `<svg viewBox="0 0 300 170" aria-hidden="true"><rect width="300" height="170" fill="${b === '78' ? '#7dd3fc' : '#a5b4fc'}"/>
     <path d="M0 120Q75 100 150 118T300 112V170H0Z" fill="${b === '78' ? '#38bdf8' : '#818cf8'}" opacity=".6"/>
     <path d="M30 ${88}Q54 60 78 ${66}T126 ${88}T174 ${66}T222 ${88}T270 ${66}" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
