@@ -2779,7 +2779,7 @@ function mapJump(){ WELCOME_JUMP = true; sfx('lvl'); P.refresh(); setTimeout(() 
    and "Math is a croc" by Jared_Freitag (rive/croc.riv). Spoken lines use only the admin's own recordings. */
 let HELLO = {step: 'path'}, HELLO_R = [];
 const helloSeen = () => { try { return sessionStorage.getItem('aralmath-hello') === '1'; } catch (e) { return true; } };
-const HELLO_CREDIT = `Animations: <a href="https://rive.app/community/files/28393-53674-interactive-cute-red-monster/" target="_blank" rel="noopener">Interactive cute red monster</a> by ElmerVergara · <a href="https://rive.app/community/files/18443-34862-math-is-a-croc/" target="_blank" rel="noopener">Math is a croc</a> by Jared_Freitag · CC BY 4.0 · made with Rive`;
+const HELLO_CREDIT = `Animations: <a href="https://rive.app/community/files/28393-53674-interactive-cute-red-monster/" target="_blank" rel="noopener">Interactive cute red monster</a> by ElmerVergara (belly text changed) · <a href="https://rive.app/community/files/18443-34862-math-is-a-croc/" target="_blank" rel="noopener">Math is a croc</a> by Jared_Freitag · CC BY 4.0 · made with Rive`;
 function helloView(){
   const nm = esc(P.me.name.split(' ')[0]); setTimeout(helloMount, 0);
   if (HELLO.step === 'path') return `<div class="wpanel wide hello"><div class="wtab">Welcome!</div>
@@ -2802,7 +2802,7 @@ function helloMount(){
     if (mc && mc.isConnected) { // the pink monster: eyes follow the pointer, tap its belly to make it giggle
       mc.width = Math.round(mc.clientWidth * px); mc.height = Math.round(mc.width * 559 / 500);
       const r = new rive.Rive({src: 'rive/pinkmonster.riv', canvas: mc, stateMachines: 'State Machine 1', autoplay: true, layout: new rive.Layout({fit: rive.Fit.Contain}),
-        onLoad: () => mc.classList.add('on')});
+        assetLoader: helloBelly, onLoad: () => mc.classList.add('on')});
       HELLO_R.push(r);
     }
     if (cc && cc.isConnected) {
@@ -2812,6 +2812,21 @@ function helloMount(){
       HELLO_R.push(r); HELLO.croc = r;
     }
   }).catch(() => {});
+}
+// the pink monster's belly says "Aral-Math": the file's "PUSH" letters were made transparent (rive/pinkmonster.riv is a modified copy),
+// and the words are painted onto its torso picture as it loads, so they move with the body when it breathes and giggles
+function helloBelly(asset, bytes){
+  if (asset.name !== 'torso' || !bytes || !window.createImageBitmap) return false;
+  (async () => { try {
+    const bmp = await createImageBitmap(new Blob([bytes])), W = bmp.width, H = bmp.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d'); g.drawImage(bmp, 0, 0);
+    try { await document.fonts.load(`${Math.round(W * .1)}px "Lilita One"`); } catch (e) {}
+    let fs = Math.round(W * .16); g.font = `${fs}px "Lilita One", Poppins, sans-serif`; while (g.measureText('Aral-Math').width > W * .6 && fs > 8) g.font = `${--fs}px "Lilita One", Poppins, sans-serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f4166b'; g.fillText('Aral-Math', W * .507, H * .47);
+    const png = await new Promise(ok => cv.toBlob(ok, 'image/png')), img = await rive.decodeImage(new Uint8Array(await png.arrayBuffer()));
+    asset.setRenderImage(img); if (img.unref) img.unref();
+  } catch (e) { try { asset.decode(bytes); } catch (x) {} } })();
+  return true;
 }
 function helloStep(s){ HELLO.step = s; if (s === 'croc') HELLO.ok = false; sfx('ok'); P.refresh(); }
 // apple 2 is the croc's right answer (1 + 1 = 2); its inputs: Boolean 2/1/3 light apples 1/2/3, "Is Correct" eats apple 2
