@@ -151,7 +151,7 @@ function boyNod(){ if (!BOY) return; try { const h = BOY.stateMachineInputs('Sta
 function narrHtml(text, label){ return `<div class="narr"><div id="boySlot"></div><div class="say" id="say"><small>${label || 'Your reading buddy'}</small><span id="sayText">${text}</span></div></div>`; }
 // say a line: show it, nod, and play the admin's own recording of it (no computer voice; unrecorded lines stay silent)
 function narrate(text){ const t = $('sayText'); if (t) t.innerHTML = text; boyNod(); if (BOY_EL) { BOY_EL.classList.add('talk'); clearTimeout(narrate.t); narrate.t = setTimeout(() => BOY_EL && BOY_EL.classList.remove('talk'), 1800); }
-  speak(String(text).replace(/<[^>]+>/g, '')); }
+  speak(text); }
 
 /* ================= recorded voice-over (shared with Aral Math; the admin records, everyone hears) ================= */
 const vkey = t => String(t).toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -181,7 +181,18 @@ async function vplay(plan){ vstop(); const ctx = vac(); try { await ctx.resume()
   VPLAY.me = me; }
 function soundOn(){ try { return localStorage.getItem('aralread-sound') !== '0'; } catch (e) { return true; } }
 function toggleSound(){ try { localStorage.setItem('aralread-sound', soundOn() ? '0' : '1'); } catch (e) {} if (!soundOn()) vstop(); P.refresh(); }
-function speak(text){ vstop(); if (!soundOn()) return; const plan = vplan(text); if (plan) vplay(plan).catch(() => {}); }
+// turn HTML back into plain text (&#39; -> ', &quot; -> ") so it matches the recorded line
+const plain = t => { const d = document.createElement('textarea'); d.innerHTML = String(t).replace(/<[^>]+>/g, ''); return d.value; };
+let SPEAK_ID = 0;
+async function speak(text){
+  vstop(); if (!soundOn()) return; const id = ++SPEAK_ID, t = plain(text);
+  if (!VCLIPS || VCLIPS.__offline) await voiceLoad(VCLIPS && VCLIPS.__offline); // wait for the list of recordings
+  if (id !== SPEAK_ID) return; // a newer line started meanwhile
+  const plan = VCLIPS[vkey(t)] ? [vkey(t), '|'] : vplan(t); // the whole line as one recording first, then pieced together
+  if (plan) vplay(plan).catch(() => {});
+}
+// browsers keep sound off until the first tap: unlock it then, and replay the current line if it was blocked
+document.addEventListener('pointerdown', () => { try { const c = vac(); if (c.state === 'suspended') c.resume().then(() => { const l = $('sayText'); if (l && !VPLAY.length) speak(l.innerHTML); }); } catch (e) {} }, {once: true, capture: true});
 voiceLoad();
 
 /* ================= STUDENT: library, reader, quiz ================= */
