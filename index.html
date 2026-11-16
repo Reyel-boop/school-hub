@@ -56,6 +56,13 @@
   .rlogin input:focus{border-color:#f5b301;box-shadow:0 4px 0 #b45309}
   .rpw{position:relative}.rpw input{padding-right:4.5rem}
   .rshow{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none!important;border:0!important;box-shadow:none!important;color:#64748b!important;font-size:.85rem!important;padding:.3rem .5rem!important}
+  .rseg{display:flex;gap:.5rem;flex-wrap:wrap}.rseg label{flex:1;min-width:3.4rem}.rseg input{position:absolute;opacity:0;pointer-events:none}
+  .rseg span{display:block;text-align:center;padding:.6rem .8rem;border:2px solid #0f172a;border-radius:1rem;background:#fff;font-weight:600;box-shadow:0 4px 0 #0f172a;cursor:pointer}
+  .rseg input:checked+span{background:#f5b301}.rseg input:focus-visible+span{outline:3px solid #b45309}
+  .rchoices:has(form){max-height:62vh}
+  .rlab{font-weight:600;font-size:.9rem;color:#334155;margin-bottom:-.3rem}
+  .rlogin input.rcode{font-size:1.6rem;letter-spacing:.6em;text-align:center;font-weight:700}
+  .rok{background:#dcfce7;color:#166534;border-radius:.7rem;padding:.55rem .8rem;font-weight:600;font-size:.9rem}
   .rerr{background:#fee2e2;color:#991b1b;border-radius:.7rem;padding:.55rem .8rem;font-weight:600;font-size:.9rem}
   .rrow{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
   .rchoices .rlink{background:none!important;border:0!important;box-shadow:none!important;text-decoration:underline;color:#334155!important;padding:.4rem .3rem!important}
@@ -825,8 +832,8 @@ function riveLib(){ return RIVE_P || (RIVE_P = new Promise((ok, no) => { if (win
   const sc = document.createElement('script'); sc.src = 'aralmath/rive/rive.js'; sc.onload = () => { rive.RuntimeLoader.setWasmUrl('aralmath/rive/rive.wasm'); ok(); }; sc.onerror = no; document.head.appendChild(sc); })); }
 // Reyel, drawn in code: wavy hair, boxed (rectangular) glasses; eyes and head follow the pointer, he blinks and talks
 const REYEL_SVG = `<svg class="rsvg" viewBox="0 0 400 400" aria-hidden="true"><g class="rhead"><g transform="translate(-118.75 -82.5) scale(1.25)" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M234 330 L226 420 M324 298 L354 420" stroke="#111" stroke-width="6.5" fill="none"/>
-  <path d="M232 334 C266 340 302 324 322 296 L326 316 C304 346 266 356 236 352 Z" fill="#d9d9d9"/>
+  <path d="M238 334 L232 420 M308 314 L316 420" stroke="#111" stroke-width="6.5" fill="none"/>
+  <path d="M238 336 C266 338 292 328 308 314 L310 334 C290 348 264 354 237 352 Z" fill="#d9d9d9"/>
   <path d="M190 168 C180 216 184 264 198 298 C210 324 226 336 248 336 C282 334 306 314 322 278 L334 196 Z" fill="#fff" stroke="#111" stroke-width="6.5"/>
   <path d="M322 236 C340 226 352 244 340 256 C334 262 326 262 320 258" fill="#fff" stroke="#111" stroke-width="6.5"/>
   <g fill="#111"><path d="M180 150 L326 150 L328 186 L182 184 Z"/><circle cx="190" cy="140" r="32"/><circle cx="228" cy="118" r="34"/><circle cx="268" cy="114" r="34"/><circle cx="306" cy="130" r="32"/>
@@ -930,7 +937,7 @@ function reyelExplain(){
 }
 
 // sign in right inside Reyel's screen
-function reyelLogin(msg){
+function reyelLogin(msg, pre){
   reyelSay(msg || 'Please type your username and password.', () => {
     const c = document.getElementById('rChoices'); c.classList.remove('on');
     c.innerHTML = `<form class="rlogin" id="rLogin" autocomplete="on">
@@ -938,11 +945,11 @@ function reyelLogin(msg){
       <div class="rpw"><input name="p" type="password" placeholder="Password" autocomplete="current-password" required><button type="button" class="rshow">Show</button></div>
       <div class="rerr" id="rErr" hidden></div>
       <div class="rrow"><button type="submit" class="main">Sign in</button>${CLOUD ? '<button type="button" class="rlink" id="rForgot">I forgot my password</button>' : ''}${CLOUD ? `<button type="button" class="rlink" id="rNew">${REYEL_ROLE === 'student' ? 'No account yet? Create one' : 'New teacher? Create an account'}</button>` : ''}<button type="button" class="rlink" id="rBack">Back</button></div></form>`;
-    const f = document.getElementById('rLogin'); setTimeout(() => { c.classList.add('on'); f.u.focus(); }, 60);
+    const f = document.getElementById('rLogin'); if (pre) f.u.value = pre; setTimeout(() => { c.classList.add('on'); (pre ? f.p : f.u).focus(); }, 60);
     f.querySelector('.rshow').onclick = e => { const i = f.p, sh = i.type === 'password'; i.type = sh ? 'text' : 'password'; e.target.textContent = sh ? 'Hide' : 'Show'; };
     document.getElementById('rBack').onclick = () => me ? reyelChoices(reyelMenu()) : reyelOpen('hello');
     const nw = document.getElementById('rNew'); if (nw) nw.onclick = () => reyelSignup(REYEL_ROLE === 'student' ? 'student' : 'teacher');
-    const fg = document.getElementById('rForgot'); if (fg) fg.onclick = () => { reyelClose(); showPane('forgot'); };
+    const fg = document.getElementById('rForgot'); if (fg) fg.onclick = () => reyelForgot();
     f.onsubmit = async e => { e.preventDefault(); const err = document.getElementById('rErr'), btn = f.querySelector('button[type=submit]'), u = f.u.value.trim().toLowerCase(), pw = f.p.value;
       const fail = m => { err.textContent = m; err.hidden = false; f.p.select(); };
       btn.disabled = true; btn.textContent = 'Signing in…';
@@ -957,12 +964,89 @@ function reyelLogin(msg){
       finally { btn.disabled = false; btn.textContent = 'Sign in'; } };
   });
 }
-function reyelSignup(role){ reyelClose(); showPane('up'); const i = document.querySelector(`#signupForm input[name=role][value=${role}]`); if (i) { i.checked = true; i.dispatchEvent(new Event('change', {bubbles: true})); } }
+// ---- create an account and reset a password, all inside Reyel's page ----
+function reyelForm(html, focus){ const c = document.getElementById('rChoices'); c.classList.remove('on'); c.innerHTML = html;
+  c.querySelectorAll('.rshow').forEach(b => b.onclick = () => { const i = b.previousElementSibling, sh = i.type === 'password'; i.type = sh ? 'text' : 'password'; b.textContent = sh ? 'Hide' : 'Show'; });
+  const f = c.querySelector('form'); setTimeout(() => { c.classList.add('on'); const i = f && f.querySelector(focus || 'input:not([type=radio])'); i && i.focus(); }, 60); return f; }
+const rErr = (f, m) => { const e = f.querySelector('.rerr'); e.textContent = m; e.hidden = !m; };
+async function rBusy(f, fn){ const b = f.querySelector('button[type=submit]'), t = b.textContent; b.disabled = true; b.textContent = 'Please wait…'; try { await fn(); } finally { b.disabled = false; b.textContent = t; } }
+const rPw = (name, ph, ac) => `<div class="rpw"><input name="${name}" type="password" placeholder="${ph}" autocomplete="${ac}" minlength="8" required><button type="button" class="rshow">Show</button></div>`;
+let RSU = null; // the sign-up in progress: {role, grade, name, email, u, pw}
+function reyelSignup(role){
+  const stu = role === 'student';
+  reyelSay(stu ? 'Let’s make your student account! Fill this in and I’ll email you a 6-digit code.' : 'Let’s make your account! The school admin checks teacher and staff accounts before you can sign in.', () => {
+    const v = RSU || {};
+    const f = reyelForm(`<form class="rlogin" id="rSignup" autocomplete="on">
+      ${stu ? `<div class="rlab">Your grade</div><div class="rseg">${[7, 8, 9, 10].map(g => `<label><input type="radio" name="grade" value="${g}" ${v.grade == g ? 'checked' : ''}><span>${g}</span></label>`).join('')}</div>`
+            : `<div class="rlab">I am a</div><div class="rseg">${[['teacher', 'Teacher'], ['staff', 'Staff']].map(([k, l]) => `<label><input type="radio" name="role" value="${k}" ${(v.role || 'teacher') === k ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`}
+      <input name="name" placeholder="Full name (e.g. Juan Dela Cruz)" autocomplete="name" required value="${escH(v.name || '')}">
+      <input name="email" type="email" placeholder="Email address" autocomplete="email" autocapitalize="none" required value="${escH(v.email || '')}">
+      <input name="u" placeholder="Username (no spaces)" pattern="[A-Za-z0-9._-]{3,30}" title="3 to 30 letters or numbers, no spaces" autocomplete="username" autocapitalize="none" spellcheck="false" required value="${escH(v.u || '')}">
+      ${rPw('pw', 'Password (at least 8 characters)', 'new-password')}${rPw('pw2', 'Type the password again', 'new-password')}
+      <div class="rerr" hidden></div>
+      <div class="rrow"><button type="submit" class="main">Send my code</button><button type="button" class="rlink" id="rHave">I already have an account</button></div></form>`, 'input[name=name]');
+    document.getElementById('rHave').onclick = () => reyelLogin();
+    f.onsubmit = e => { e.preventDefault();
+      const gr = f.querySelector('input[name=grade]:checked'), rl = stu ? 'student' : f.querySelector('input[name=role]:checked').value;
+      if (stu && !gr) return rErr(f, 'Please choose your grade: 7, 8, 9 or 10.');
+      if (f.pw.value !== f.pw2.value) return rErr(f, 'The two passwords don’t match.');
+      const data = {step: 'start', role: rl, name: f.name.value.trim(), grade: gr ? +gr.value : null, email: f.email.value.trim(), u: f.u.value.trim(), pw: f.pw.value};
+      rBusy(f, async () => { const {status, j} = await api('/api/signup', data);
+        if (status !== 200) return rErr(f, j.error || 'Something went wrong. Please try again.');
+        RSU = Object.assign({}, data); reyelCode({purpose: 'signup', email: j.email, start: data}); }); };
+  });
+}
+function reyelForgot(){
+  reyelSay('No problem! Type your username or email, and I’ll send a code to your email so you can make a new password.', () => {
+    const f = reyelForm(`<form class="rlogin" id="rForgotF">
+      <input name="who" placeholder="Username or email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <div class="rerr" hidden></div>
+      <div class="rrow"><button type="submit" class="main">Send code</button><button type="button" class="rlink" id="rBack2">Back to sign in</button></div></form>`);
+    document.getElementById('rBack2').onclick = () => reyelLogin();
+    f.onsubmit = e => { e.preventDefault(); const who = f.who.value.trim();
+      rBusy(f, async () => { const {status, j} = await api('/api/reset', {step: 'start', who});
+        if (status !== 200) return rErr(f, j.error || 'Something went wrong.');
+        if (!j.hint) return rErr(f, 'I couldn’t find an account with an email for that. Check the spelling, or ask the school admin to reset your password.');
+        reyelCode({purpose: 'reset', who, email: j.hint}); }); };
+  });
+}
+function reyelCode(C){
+  const reset = C.purpose === 'reset';
+  reyelSay(`I sent a 6-digit code to ${C.email}. Type it here.${reset ? ' Then choose your new password.' : ''} (No email? Check Spam.)`, () => {
+    const f = reyelForm(`<form class="rlogin" id="rCodeF">
+      <input name="code" class="rcode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
+      ${reset ? rPw('pw', 'New password (at least 8 characters)', 'new-password') + rPw('pw2', 'Type the new password again', 'new-password') : ''}
+      <div class="rerr" hidden></div><div class="rok" hidden></div>
+      <div class="rrow"><button type="submit" class="main">${reset ? 'Save new password' : 'Create my account'}</button><button type="button" class="rlink" id="rResend" disabled>Send a new code</button><button type="button" class="rlink" id="rBack3">Go back</button></div></form>`);
+    const ok = f.querySelector('.rok'), rs = document.getElementById('rResend');
+    let n = 60; const tick = () => { if (!document.body.contains(rs)) return clearInterval(t); rs.textContent = n > 0 ? `Send a new code (${n}s)` : 'Send a new code'; rs.disabled = n-- > 0; if (n < -1) clearInterval(t); }; tick(); const t = setInterval(tick, 1000);
+    rs.onclick = async () => { const {status, j} = reset ? await api('/api/reset', {step: 'start', who: C.who}) : await api('/api/signup', C.start);
+      if (status !== 200) return rErr(f, j.error || 'Could not send a new code.'); rErr(f, ''); ok.textContent = 'I sent a new code. Check your email.'; ok.hidden = false; n = 60; clearInterval(t); tick(); };
+    document.getElementById('rBack3').onclick = () => { clearInterval(t); reset ? reyelForgot() : reyelSignup(C.start.role === 'student' ? 'student' : 'teacher'); };
+    f.code.oninput = () => { f.code.value = f.code.value.replace(/\D/g, '').slice(0, 6); if (!reset && f.code.value.length === 6) f.requestSubmit(); };
+    let sending = false;
+    f.onsubmit = e => { e.preventDefault(); if (sending) return; const code = f.code.value; ok.hidden = true;
+      if (code.length !== 6) return rErr(f, 'Type all 6 digits from the email.');
+      if (reset && f.pw.value !== f.pw2.value) return rErr(f, 'The two new passwords don’t match.');
+      sending = true;
+      rBusy(f, async () => { try {
+        const {status, j} = reset ? await api('/api/reset', {step: 'verify', who: C.who, code, pw: f.pw.value}) : await api('/api/signup', {step: 'verify', email: C.email, code});
+        if (status !== 200) { f.code.value = ''; f.code.focus(); return rErr(f, j.error || 'Something went wrong.'); }
+        clearInterval(t);
+        if (reset) return reyelSay('Your password is changed! Sign in with your new password now.', () => reyelLoginAs(j.u || C.who));
+        RSU = null;
+        if (j.pending) return reyelSay(j.message || 'Your account is made! The school admin will check it, then you can sign in.', () => reyelChoices([['Back to sign in', () => reyelLogin(), true], ['What does each system do?', reyelExplain]]));
+        signIn(Object.assign(j.user, {accounts: j.accounts}));
+        reyelSay(`Your account is ready, ${callName()}! You're signed in. How can I help you today?`, () => reyelChoices(reyelMenu()));
+      } finally { sending = false; } }); };
+  });
+}
+function reyelLoginAs(u){ reyelLogin('Type your new password to sign in.', u); }
 function reyelMenu(){
   const R = reyelWho();
   if (!me) return [['Sign in', () => reyelLogin(), true],
     ...(CLOUD && R !== 'admin' ? [[R === 'teacher' ? 'Create a teacher account' : 'Create a student account', () => reyelSignup(R === 'teacher' ? 'teacher' : 'student')]] : []),
-    ...(CLOUD ? [['I forgot my password', () => { reyelClose(); showPane('forgot'); }]] : []),
+    ...(CLOUD ? [['I forgot my password', () => reyelForgot()]] : []),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain],
     ['What is the School Hub?', () => reyelSay('The School Hub keeps all your school systems in one place: lessons, grades, the clinic, payments and more. Sign in to start!', () => reyelChoices(reyelMenu()))]];
   const mine = SYSTEMS.filter(s => hasAccess(s) && ACCESS[s.id]);
