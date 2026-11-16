@@ -68,9 +68,12 @@
   .rchoices .rlink{background:none!important;border:0!important;box-shadow:none!important;text-decoration:underline;color:#334155!important;padding:.4rem .3rem!important}
   .rskip{position:absolute;top:1.2rem;right:1.4rem;background:none;border:0;color:#64748b;font-size:.9rem;font-weight:600;cursor:pointer}
   .rcredit{position:absolute;left:0;right:0;bottom:.8rem;text-align:center;font-size:.72rem;color:#94a3b8}.rcredit a{color:inherit}
-  #reyelBtn{position:fixed;right:1rem;bottom:1rem;z-index:150;width:4.2rem;height:4.2rem;border-radius:50%;overflow:hidden;background:#fff;border:3px solid #f5b301;box-shadow:0 8px 20px -6px rgba(0,0,0,.5);padding:0}
+  #reyelBtn{position:fixed;right:1.2rem;bottom:1.2rem;z-index:150;width:7rem;height:7rem;border-radius:50%;overflow:hidden;background:#fff;border:3px solid #f5b301;box-shadow:0 8px 20px -6px rgba(0,0,0,.5);padding:0}
   #reyelBtn canvas{position:absolute;width:190%;height:190%;left:-45%;top:-30%}
+  #reyelBtn .rsvg{inset:auto;width:118%;height:118%;left:-10%;top:4%}
   #reyelBtn[hidden]{display:none}
+  #reyelBtn:hover{transform:scale(1.05)}#reyelBtn{transition:transform .2s}
+  @media (max-width:760px){#reyelBtn{width:5.4rem;height:5.4rem;right:.9rem;bottom:.9rem}}
   body.in-app #reyelBtn{display:none}
   @media (max-width:760px){#reyel{flex-direction:column;justify-content:flex-start;padding-top:6vh;gap:1rem}.rchar{width:min(62vw,40vh)}.rside{width:100%}.rbubble{min-height:5em}.rbubble::before{left:50%;top:-1.15rem;transform:translateX(-50%) rotate(135deg)}}
   @media (prefers-reduced-motion:reduce){.rchar.talking{animation:none}}
