@@ -237,6 +237,9 @@
             <label><input type="radio" name="role" value="student" checked><span>Student</span></label>
             <label><input type="radio" name="role" value="teacher"><span>Teacher</span></label>
             <label><input type="radio" name="role" value="staff"><span>Staff</span></label></div></div>
+          <div id="upGradeRow"><label>Grade</label><div class="seg" role="radiogroup">
+            <label><input type="radio" name="grade" value="7"><span>7</span></label><label><input type="radio" name="grade" value="8"><span>8</span></label>
+            <label><input type="radio" name="grade" value="9"><span>9</span></label><label><input type="radio" name="grade" value="10"><span>10</span></label></div></div>
           <div><label for="upName">Full name</label><input id="upName" name="name" required autocomplete="name" placeholder="e.g. Juan Dela Cruz"></div>
           <div><label for="upEmail">Email address</label><input id="upEmail" name="email" type="email" required autocomplete="email" autocapitalize="none" placeholder="We’ll send a 6-digit code here"></div>
           <div><label for="upU">Username</label><input id="upU" name="u" required pattern="[A-Za-z0-9._-]{3,30}" title="3 to 30 letters or numbers, no spaces" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
@@ -612,11 +615,14 @@ async function api(path, data){
 async function busy(btn, fn){ btn.disabled = true; const t = btn.textContent; btn.textContent = 'Please wait…'; try { await fn(); } finally { btn.disabled = false; btn.textContent = t; } }
 document.querySelectorAll('.pwShow').forEach(b => b.onclick = () => { const i = b.previousElementSibling, show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; });
 // the "position" field changes with the role
-document.getElementById('signupForm').addEventListener('change', e => { if (e.target.name === 'role') document.getElementById('upNote').hidden = e.target.value === 'student'; });
+document.getElementById('signupForm').addEventListener('change', e => { if (e.target.name !== 'role') return; const stu = e.target.value === 'student';
+  document.getElementById('upNote').hidden = stu; document.getElementById('upGradeRow').hidden = !stu; });
 document.getElementById('signupForm').onsubmit = async e => {
   e.preventDefault(); const f = e.target, btn = f.querySelector('.lbtn');
   if (f.pw.value !== f.pw2.value) return showErr('upErr', 'The two passwords don’t match.');
-  const data = {step:'start', role: f.role.value, name: f.name.value, email: f.email.value, u: f.u.value, pw: f.pw.value};
+  const gr = f.querySelector('input[name=grade]:checked');
+  if (f.role.value === 'student' && !gr) return showErr('upErr', 'Please choose your grade: 7, 8, 9 or 10.');
+  const data = {step:'start', role: f.role.value, name: f.name.value, grade: gr ? +gr.value : null, email: f.email.value, u: f.u.value, pw: f.pw.value};
   await busy(btn, async () => { const {status, j} = await api('/api/signup', data);
     if (status !== 200) return showErr('upErr', j.error || 'Something went wrong. Please try again.');
     showErr('upErr', ''); CODE = {purpose:'signup', email: j.email, start: data}; openCode(j.email); });

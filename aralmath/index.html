@@ -1601,7 +1601,12 @@ function confetti(){
 /* ================= DATA & HELPERS ================= */
 const D = 864e5, now = Date.now();
 const pref = u => P.db.prefs[u] || (P.db.prefs[u] = {});
-const bandOf = u => pref(u).band || (/\b(9|10)\b/.test(P.userOf(u).pos || '') ? '910' : '78');
+// a learner's grade comes from their account (e.g. "Grade 8 – Rizal") or from the one-time grade picker
+const gradeOf = u => { const g = +pref(u).grade || +((String((P.userOf(u) || {}).pos || '').match(/\b(?:Grade|G)\s*(7|8|9|10)\b/i) || [])[1]); return g || null; };
+const isStudentU = u => ((P.userOf(u) || {}).role) === 'student';
+// learners are locked to their grade's book (Grades 7–8 or 9–10); teachers can switch freely
+const bandOf = u => { const g = gradeOf(u); if (isStudentU(u) && g) return g <= 8 ? '78' : '910';
+  return pref(u).band || (/\b(9|10)\b/.test((P.userOf(u) || {}).pos || '') ? '910' : '78'); };
 const myAttempts = (u, id) => P.db.attempts.filter(a => a.u === u && (!id || a.skill === id));
 const bestOf = (u, id) => { const a = myAttempts(u, id); return a.length ? Math.max(...a.map(x => x.score)) : null; };
 const starsOf = s => s == null ? 0 : s >= 10 ? 3 : s >= MASTER ? 2 : s >= 5 ? 1 : 0;
@@ -1657,9 +1662,10 @@ const CFG = {
 /* ================= PLAY: MAP, PRACTICE, MONSTER FRIENDS, SHOP ================= */
 let S = null, screen = 'map';
 function bandSwitch(b, fn){
+  if (fn === 'setBand' && isStudent()) { const g = gradeOf(P.me.u); return `<span class="chip" title="Your lessons follow your grade">${g ? 'Grade ' + g + ' · ' : ''}${BANDS[b].label} book</span>`; } // learners can't switch
   return `<div class="bandsw">${Object.entries(BANDS).map(([k, v]) => `<button class="${k === b ? 'on' : ''}" onclick="${fn}('${k}')">${v.label}</button>`).join('')}</div>`;
 }
-function setBand(b){ pref(P.me.u).band = b; P.save(); P.refresh(); }
+function setBand(b){ if (isStudent()) return; pref(P.me.u).band = b; P.save(); P.refresh(); }
 function go(s){ screen = s; P.refresh(); window.scrollTo(0, 0); }
 
 function learn(el){
@@ -1667,6 +1673,7 @@ function learn(el){
   if (LS) return lessonView(el);
   if (S) return battle(el);
   if (WELCOME || welcomeDue()) return welcomeView(el);
+  if (isStudent() && !gradeOf(P.me.u)) { WELCOME = 'grade'; return welcomeView(el); } // ask the grade once, then it's locked
   if (isStudent() && !pref(P.me.u).buddy) { WELCOME = 'maker'; return welcomeView(el); }
   if (screen === 'dex') return dex(el);
   if (screen === 'shop') return shop(el);
@@ -2466,8 +2473,8 @@ const welcomeDue = () => false; // the welcome hallway is turned off: learners g
 /* ---------- first-visit journey (after "Who is here?") ----------
    Student → Let's continue / get my parent → pick your grade → "Get it wrong!" first try →
    Monster Maker → map room (your monster jumps into your grade's map) → story → map */
-const ONB_ORDER = ['maker']; // only the Monster Maker remains (for learners without a buddy yet)
-function onbNeed(step){ const p = pref(P.me.u); return step === 'grade' ? !p.gradeSet : step === 'tryit' ? !p.tried : step === 'maker' ? !p.buddy : !p.mapIntro; }
+const ONB_ORDER = ['grade', 'maker']; // only the Monster Maker remains (for learners without a buddy yet)
+function onbNeed(step){ const p = pref(P.me.u); return step === 'grade' ? !gradeOf(P.me.u) : step === 'tryit' ? !p.tried : step === 'maker' ? !p.buddy : !p.mapIntro; }
 function nextOnboard(){ const s = ONB_ORDER.find(onbNeed); if (s) { WELCOME = s; if (s === 'tryit') TRY = null; if (s === 'maker') MK = null; P.refresh(); } else welcomeDone(); }
 function kidChoice(){
   const cloud = `<div class="wthink"><i class="b1"></i><i class="b2"></i><div class="wcloud">${monsterSVG('friend-kaibigan', 'happy', [], 'wfriend')}${monsterSVG('friend-magulang', 'idle', [], 'wfriend')}</div></div>`;
