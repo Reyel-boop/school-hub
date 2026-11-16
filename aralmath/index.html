@@ -186,9 +186,6 @@
   .sky{position:absolute;inset:0;background:linear-gradient(#38bdf8,#bae6fd 55%,#e0f2fe 62%);transition:opacity 1s}
   .sky.n{background:linear-gradient(#0b0820,#2e1065 50%,#5b21b6 62%);opacity:0}
   .scene.night .sky.n{opacity:1}
-  .stars{position:absolute;inset:0 0 40% 0;opacity:0;transition:opacity 1s}
-  .scene.night .stars{opacity:1}
-  .stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:twinkle 2.4s ease-in-out infinite}
   @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.2)}}
   .orb{position:absolute;right:2.2rem;top:1.3rem;width:3.4rem;height:3.4rem;border-radius:50%;background:#fde047;box-shadow:0 0 40px 8px rgba(253,224,71,.7);transition:background 1s,box-shadow 1s}
   .orb::before{content:"";position:absolute;inset:-1.2rem;border-radius:50%;background:repeating-conic-gradient(rgba(253,224,71,.55) 0 10deg,transparent 10deg 30deg);animation:spin 24s linear infinite;z-index:-1}
@@ -540,7 +537,7 @@
   @keyframes narrbob{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-3px) scale(1.04,.97) rotate(2deg)}}
   .lbub .whorow{gap:.7rem}
   @media (prefers-reduced-motion:reduce){.narr.talking{animation:none}}
-  .cls .board{left:14%}.nlscls .board.nlsboard{left:14%}.cls .nlsans{left:14%}.cls .kids{padding-left:15%}
+  .cls .board{left:14%;right:calc(4% + 4.4rem)}.cls .teacher{display:none}.nlscls .board.nlsboard{left:14%;right:calc(4% + 4.4rem)}.cls .nlsans{left:14%;right:calc(4% + 4.4rem)}.cls .kids{padding-left:15%}
   .lsobo{position:absolute;left:-1.5%;bottom:.2rem;width:clamp(8rem,16vw,12rem);max-height:calc(100% - 3rem);aspect-ratio:1;z-index:5;pointer-events:none}
   @media (max-width:640px){.cls .board,.nlscls .board.nlsboard,.cls .nlsans{left:3%}.cls .kids{padding-left:2%}.lsobo{width:6.5rem;opacity:.95}.hudsobo{width:12rem;height:12rem;margin:0 auto}}
   /* "123" printed on Sobo's tummy */
@@ -625,7 +622,7 @@
   .wacts .wbtn{font-family:'Lilita One',Poppins,sans-serif;font-size:22px}
   @media (max-width:560px){.wstats{grid-template-columns:repeat(2,1fr)}.wstar{width:min(60vw,46vh + 40px);bottom:-6%}.glove{display:none}}
 
-  .welcome.plain{background:linear-gradient(160deg,#0ea5e9,#6366f1);overflow-y:auto}
+  .welcome.plain{position:relative;inset:auto;z-index:1;min-height:calc(100vh - 13rem);border-radius:1rem;background:linear-gradient(160deg,#0ea5e9,#6366f1);overflow-y:auto} /* sits below the tabs so they stay clickable */
   .welcome.plain .wfront{padding-top:5vh}
   /* --- after "Student": thought cloud + two choices --- */
   .wstar.think{animation:none;transform:translateX(-50%)}
@@ -1714,7 +1711,7 @@ function map(el){
         <div class="card"><h2>How to play</h2><ol style="padding-left:1.1rem;font-size:.85rem;line-height:1.7;color:var(--muted)">
           <li>Tap a monster on the map.</li><li>Answer ${ITEMS} questions. Every right answer adds a ⭐ to its friendship meter.</li>
           <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
-          <li>Stuck? Tap <b>🎬 Watch the lesson</b> and Lolo Pawikan will show you how.</li><li>Spend coins on gear for your buddy.</li></ol></div>
+          <li>Stuck? Tap <b>🎬 Watch the lesson</b> to see how it's done.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div>
     <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
   soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400});
@@ -2200,7 +2197,7 @@ function nlsView(el){
           <div class="nlssh" id="nlsM1S"></div><div class="nlssh" id="nlsM2S"></div>
           <div class="nlsm idle-sway" id="nlsM1">${monsterSVG('mon-' + N.id, 'idle', [], 'nlsmon')}</div><div class="nlsm two idle-sway" id="nlsM2">${monsterSVG('mon-hop-' + N.id, 'idle', [], 'nlsmon')}</div></div></div>
       <div class="nlsans" id="nlsAns"></div>
-      <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
+      <div class="teacher" id="teacher" hidden></div>
       <div class="kids" id="kids">${kids}</div><div class="lsobo" id="soboLesson"></div></div>
     <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="nlsSay"></span></p>
@@ -2366,12 +2363,12 @@ function playLesson(id, after){
 function stopLesson(){ if (!LS) return; LS.timers.forEach(j => clearTimeout(j.id)); LS.timers = []; clearTimeout(LS.adv); if (LS.typer) clearInterval(LS.typer); try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {} }
 function lessonView(el){
   const kids = ['f-add-sim', 'i-add', 'e-eval'].map(k => `<div class="kid">${monsterSVG('mon-' + k, 'idle', [], 'k')}<div class="desk"></div></div>`).join('');
-  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="closeLesson()">✕ Close</button><div class="grow"><b style="font-weight:600">${LS.mode === 'solve' ? '🪄 Step by step' : '🎬 Lesson'}: ${SK[LS.id].title}</b><br><small style="color:var(--muted)">${LS.mode === 'solve' ? 'Lolo Pawikan solves your question one step at a time' : 'Watch Lolo Pawikan, then try one yourself'}</small></div></div>
+  el.innerHTML = `<div class="stack"><div class="ptop"><button class="btn ghost sm" onclick="closeLesson()">✕ Close</button><div class="grow"><b style="font-weight:600">${LS.mode === 'solve' ? '🪄 Step by step' : '🎬 Lesson'}: ${SK[LS.id].title}</b><br><small style="color:var(--muted)">${LS.mode === 'solve' ? 'Solving your question one step at a time' : 'Watch the lesson, then try one yourself'}</small></div></div>
     <div class="lwrap"><div class="lshow"><div class="cls">
       <div class="bunting">${['1', '+', '2', '−', '3', '×', '4', '÷', '5', '='].map((s, k) => `<span style="background:${['#f43f5e', '#facc15', '#22c55e', '#a855f7', '#3b82f6'][k % 5]}">${s}</span>`).join('')}</div>
       <div class="clock"><i class="h"></i><i class="m"></i></div>
       <div class="board" id="board"><div class="bt">${SK[LS.id].title}</div><div class="blines" id="bLines"></div><div class="viz" id="viz"></div><div id="tryBox"></div></div>
-      <div class="teacher" id="teacher"><span class="stick"></span>${turtleSVG('happy', 't')}</div>
+      <div class="teacher" id="teacher" hidden></div>
       <div class="kids" id="kids">${kids}</div><div class="lsobo" id="soboLesson"></div></div>
     <div class="lbub"><div class="whorow"><span class="narr" id="narr"><canvas></canvas></span><b class="who-n">Narrator</b></div>
       <p class="say"><span id="lsay"></span><i class="caret" id="lcaret"></i></p>
