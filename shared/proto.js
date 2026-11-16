@@ -102,7 +102,7 @@ const P = {
         P.users.push(acc); P.save(); f.reset(); syncPos(); $('signupErr').hidden = true; showSu(false); P.start(acc);
       };
     }
-    $('logoutBtn').onclick = P.logout;
+    $('logoutBtn').onclick = () => { P.tellHub(); P.logout(); };
     $('resetBtn').onclick = P.reset;
     $('shade').onclick = e => { if (e.target.id === 'shade') P.close(); };
     document.addEventListener('keydown', e => { if (e.key === 'Escape') P.close(); });
@@ -144,6 +144,8 @@ const P = {
   setCount(id, n){ const el = $(id); if (el) el.textContent = n ? n : ''; },
   open(html){ $('drawer').innerHTML = html; $('shade').classList.add('on'); },
   close(){ $('shade').classList.remove('on'); },
+  // inside the School Hub: tell it this person signed out, so it returns to Reyel
+  tellHub(){ try { if (window.parent !== window) window.parent.postMessage({hub: 'signout'}, '*'); } catch(e) {} },
   logout(){
     P.me = null; try { sessionStorage.removeItem(P.cfg.key + '-session'); } catch(e) {}
     P.close(); $('app').hidden = true; $('login').hidden = false; P.showSignin?.();

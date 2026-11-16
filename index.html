@@ -371,7 +371,7 @@
       <div class="av" id="whoAv"></div>
       <button class="out" id="adminBtn" onclick="openAdmin()" hidden>Accounts</button>
       <button class="out" id="pwBtn" onclick="changePw()" hidden>Change password</button>
-      <button class="out" onclick="logout()">Sign out</button>
+      <button class="out" onclick="reyelLogout()">Sign out</button>
     </div>
   </header>
   <main class="stage">
@@ -403,7 +403,7 @@
     <div class="spacer"></div>
     <div class="switch" id="switch"></div>
     <a class="ext" id="ext" target="_blank" rel="noopener">↗ <span>Open in new tab</span></a>
-    <button class="out" onclick="logout()" title="Sign out of the Hub">Sign out</button>
+    <button class="out" onclick="reyelLogout()" title="Sign out of the Hub">Sign out</button>
   </div>
   <div class="view" id="view"></div>
 </section>
@@ -1066,9 +1066,13 @@ function reyelMenu(){
 // erase what Reyel said, letter by letter (like backspacing), then go on
 function reyelErase(done){ const el = document.getElementById('rSay'); clearInterval(RTYPE);
   RTYPE = setInterval(() => { el.textContent = el.textContent.slice(0, -2); if (!el.textContent) { clearInterval(RTYPE); done && done(); } }, 28); }
-function reyelLogout(){ const nm = callName(); logout(); REYEL_ROLE = null; try { sessionStorage.removeItem('hub-reyel-role'); } catch (e) {}
+function reyelLogout(){ if (!me) return; const nm = callName(); logout();
+  const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar')); REYEL_ROLE = null; try { sessionStorage.removeItem('hub-reyel-role'); } catch (e) {}
   reyelSay(`Goodbye${nm ? ', ' + nm : ''}!`, () => setTimeout(() => reyelErase(() => reyelSay('Want to sign in?', () => reyelChoices([
     ["Yes, I'm a student", () => reyelRole('student'), true], ["Yes, I'm a teacher", () => reyelRole('staff')], ['Not now', () => reyelClose()]]))), 1300)); }
+// a system inside the Hub was signed out: sign out of the Hub too and come back to Reyel
+const SYS_ORIGINS = new Set(SYSTEMS.filter(x => x.url && /^https?:/.test(x.url)).map(x => new URL(x.url).origin).concat(location.origin));
+window.addEventListener('message', e => { if (e.data && e.data.hub === 'signout' && SYS_ORIGINS.has(e.origin)) reyelLogout(); });
 function reyelClose(){ clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
   const b = document.getElementById('reyelBtn'); b.hidden = false; reyelDraw(b); }
 // show Reyel full screen the first time the Hub opens in this browser tab

@@ -218,7 +218,7 @@
     <div class="who">
       <div class="nm"><span id="whoName"></span><small id="whoPos"></small></div>
       <div class="av" id="whoAv"></div>
-      <button class="out" onclick="logout()">Sign out</button>
+      <button class="out" onclick="try{if(window.parent!==window)window.parent.postMessage({hub:'signout'},'*')}catch(e){};logout()">Sign out</button>
     </div>
   </div>
   <nav class="tabs" id="tabs"></nav>
