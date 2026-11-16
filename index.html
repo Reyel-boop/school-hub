@@ -66,6 +66,8 @@
   .rerr{background:#fee2e2;color:#991b1b;border-radius:.7rem;padding:.55rem .8rem;font-weight:600;font-size:.9rem}
   .rrow{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
   .rchoices .rlink{background:none!important;border:0!important;box-shadow:none!important;text-decoration:underline;color:#334155!important;padding:.4rem .3rem!important}
+  .rout{position:absolute;top:1rem;right:6rem;display:none;background:#fff;border:2px solid #0f172a;border-radius:2rem;padding:.45rem 1.1rem;font:600 .9rem Poppins,sans-serif;color:#0f172a;box-shadow:0 3px 0 #0f172a;cursor:pointer}
+  body.authed .rout{display:block}.rout:hover{background:#fee2e2}
   .rskip{position:absolute;top:1.2rem;right:1.4rem;background:none;border:0;color:#64748b;font-size:.9rem;font-weight:600;cursor:pointer}
   .rcredit{position:absolute;left:0;right:0;bottom:.8rem;text-align:center;font-size:.72rem;color:#94a3b8}.rcredit a{color:inherit}
   #reyelBtn{position:fixed;right:1.2rem;bottom:1.2rem;z-index:150;width:7rem;height:7rem;border-radius:50%;overflow:hidden;background:#fff;border:3px solid #f5b301;box-shadow:0 8px 20px -6px rgba(0,0,0,.5);padding:0}
@@ -265,6 +267,7 @@
 </head>
 <body>
 <div id="reyel" hidden role="dialog" aria-label="Reyel, your AI-Companion">
+  <button class="rout" onclick="reyelLogout()">Sign out</button>
   <button class="rskip" onclick="reyelClose()">Skip ✕</button>
   <div class="rchar" id="rChar"></div>
   <div class="rside"><span class="rname"><i></i>Reyel · AI-Companion</span>
@@ -1059,6 +1062,8 @@ function reyelMenu(){
   return [...extra, ...pick.map((s, k) => [`Open ${s.name}`, () => { reyelClose(); openSys(s.id); }, !extra.length && k === 0]),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain], ['Show me all my systems', () => reyelClose()]];
 }
+function reyelLogout(){ const nm = callName(); logout(); REYEL_ROLE = null; try { sessionStorage.removeItem('hub-reyel-role'); } catch (e) {}
+  reyelSay(`Goodbye${nm ? ', ' + nm : ''}! You are signed out. Are you a student?`, () => reyelChoices([["Yes, I'm a student", () => reyelRole('student'), true], ["No, I'm not a student", () => reyelRole('staff')]])); }
 function reyelClose(){ clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
   const b = document.getElementById('reyelBtn'); b.hidden = false; reyelDraw(b); }
 // show Reyel full screen the first time the Hub opens in this browser tab
