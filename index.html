@@ -825,20 +825,23 @@ function riveLib(){ return RIVE_P || (RIVE_P = new Promise((ok, no) => { if (win
   const sc = document.createElement('script'); sc.src = 'aralmath/rive/rive.js'; sc.onload = () => { rive.RuntimeLoader.setWasmUrl('aralmath/rive/rive.wasm'); ok(); }; sc.onerror = no; document.head.appendChild(sc); })); }
 // Reyel, drawn in code: wavy hair, boxed (rectangular) glasses; eyes and head follow the pointer, he blinks and talks
 const REYEL_SVG = `<svg class="rsvg" viewBox="0 0 400 400" aria-hidden="true"><g class="rhead">
-  <path d="M168 318 L156 404 M244 312 L264 404" stroke="#111" stroke-width="9" stroke-linecap="round" fill="none"/>
-  <path d="M160 322 C200 345 248 336 262 300 C250 330 205 340 160 322 Z" fill="#d6d6d6"/>
-  <path d="M276 228 C300 214 316 236 302 254 C294 266 280 264 274 258" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round"/>
-  <path d="M120 168 C116 250 128 300 168 320 C200 336 244 330 264 302 C286 274 290 226 286 168" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-  <g fill="#111"><circle cx="146" cy="128" r="44"/><circle cx="200" cy="104" r="46"/><circle cx="200" cy="138" r="42"/><circle cx="160" cy="146" r="30"/><circle cx="256" cy="112" r="46"/><circle cx="296" cy="150" r="38"/>
-    <circle cx="300" cy="198" r="30"/><circle cx="118" cy="168" r="34"/><circle cx="112" cy="204" r="18"/><circle cx="172" cy="160" r="22"/><circle cx="214" cy="158" r="22"/><circle cx="254" cy="162" r="22"/>
-    <path d="M118 150 L300 150 L304 236 L280 236 L280 172 L130 178 Z"/></g>
-  <g class="rbrow"><path d="M134 196 Q160 188 184 194 M216 194 Q240 188 266 196" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/></g>
-  <g fill="none" stroke="#111" stroke-width="8" stroke-linejoin="round"><rect x="124" y="206" width="66" height="48" rx="9"/><rect x="210" y="206" width="66" height="48" rx="9"/>
-    <path d="M190 224 Q200 216 210 224 M276 222 L294 218 M124 222 L112 220" stroke-linecap="round"/></g>
-  <g class="reyes"><g class="rblink"><circle cx="160" cy="231" r="7" fill="#111"/><circle cx="244" cy="231" r="7" fill="#111"/></g></g>
-  <path d="M206 244 C190 244 188 266 204 266" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <path class="rmouth" d="M176 288 Q200 306 226 286" stroke="#111" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <g class="rmouth2"><path d="M180 284 Q201 312 224 284 Z" fill="#1f2937" stroke="#111" stroke-width="6" stroke-linejoin="round"/><path d="M190 296 Q201 304 212 296" stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"/></g>
+  <path d="M92 262 L66 404 M190 302 L206 404" stroke="#111" stroke-width="9" stroke-linecap="round" fill="none"/>
+  <path d="M106 262 C118 292 150 306 192 302 C158 316 118 304 102 276 Z" fill="#d6d6d6"/>
+  <g fill="#111"><circle cx="106" cy="150" r="30"/><circle cx="100" cy="182" r="18"/><circle cx="286" cy="132" r="28"/><circle cx="278" cy="160" r="20"/></g>
+  <path d="M106 176 C88 166 74 184 84 202 C90 214 104 216 112 208" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M124 128 C110 168 104 216 112 248 C122 284 158 302 194 298 C228 294 252 278 264 254 L270 120" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="#111"><circle cx="128" cy="88" r="40"/><circle cx="180" cy="66" r="42"/><circle cx="232" cy="68" r="40"/><circle cx="274" cy="100" r="34"/>
+    <circle cx="160" cy="104" r="36"/><circle cx="214" cy="100" r="36"/><circle cx="114" cy="122" r="28"/>
+    <circle cx="136" cy="132" r="20"/><circle cx="172" cy="128" r="21"/><circle cx="210" cy="126" r="21"/><circle cx="248" cy="128" r="20"/><circle cx="276" cy="124" r="18"/></g>
+  <g class="rbrow"><path d="M134 166 Q154 158 176 164 M218 170 Q236 164 254 170" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/></g>
+  <g fill="none" stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="120" y="178" width="66" height="50" rx="10"/><rect x="206" y="186" width="54" height="46" rx="9"/>
+    <path d="M186 200 Q196 192 206 200 M120 196 L102 192"/></g>
+  <path d="M268 184 L266 236" stroke="#111" stroke-width="9" stroke-linecap="round"/>
+  <g class="reyes"><g class="rblink"><circle cx="156" cy="204" r="7" fill="#111"/><circle cx="236" cy="210" r="6.5" fill="#111"/></g></g>
+  <path d="M206 216 C190 214 186 240 204 240" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path class="rmouth" d="M158 262 Q178 276 202 258" stroke="#111" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <g class="rmouth2"><path d="M158 258 Q180 290 204 256 Z" fill="#1f2937" stroke="#111" stroke-width="6" stroke-linejoin="round"/><path d="M170 272 Q181 279 192 271" stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"/></g>
 </g></svg>`;
 function reyelDraw(box){
   if (box.querySelector('.rsvg')) return; box.innerHTML = REYEL_SVG; box.classList.add('on');
