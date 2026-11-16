@@ -723,6 +723,15 @@
   .paint{width:72%;aspect-ratio:1;border-radius:6px 6px 40% 40%;background:linear-gradient(var(--pc) 0 34%,#64748b 34%);position:relative;box-shadow:inset 0 -4px 0 rgba(0,0,0,.2)}
   .paint:after{content:"";position:absolute;left:18%;top:28%;width:16%;height:30%;border-radius:0 0 6px 6px;background:var(--pc)}
   @media (max-width:640px){.mkwrap{flex-direction:column;align-items:stretch}.mkprev{flex-direction:row;flex-wrap:wrap;justify-content:center}.mkprev .mkbig{width:34%}.mkname{width:52%}.mkopts{grid-template-columns:repeat(5,1fr)}}
+  .mkhero{position:relative;width:100%;aspect-ratio:1}
+  .mkhero .soboin{position:absolute;inset:0}.mkhero .herofr{width:92%;bottom:2%}
+  .mkheroname{font:400 22px 'Lilita One',sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+  .mkheroes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .mkopt.mkh{display:flex;flex-direction:column;align-items:center;padding:4px;gap:2px;aspect-ratio:auto;min-width:0}.mkh img{width:100%;aspect-ratio:1;border-radius:8px;display:block}
+  .mkh span{font:700 10.5px Poppins,sans-serif;color:#0c4a6e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .mkcredit{margin:8px 2px 0;font:500 11px Poppins,sans-serif;color:#0369a1}.mkcredit a{color:inherit}
+  img.heroimg{width:100%;height:auto;max-width:100%;border-radius:22%;object-fit:cover;aspect-ratio:1;display:block}
+  @media (max-width:640px){.mkheroes{grid-template-columns:repeat(5,1fr);gap:5px}.mkh span{font-size:9px}.mkhero{width:40%}}
   /* --- map room with banga jars --- */
   .welcome.w-maproom{background:#b91c1c}
   .mroom{position:absolute;inset:0;overflow:hidden}
@@ -1533,6 +1542,8 @@ const PAL = [['#22c55e','#15803d','#dcfce7'],['#a855f7','#6b21a8','#f3e8ff'],['#
   ['#eab308','#a16207','#fef9c3'],['#3b82f6','#1d4ed8','#dbeafe'],['#ef4444','#b91c1c','#fee2e2'],['#14b8a6','#0f766e','#ccfbf1'],['#8b5cf6','#5b21b6','#ede9fe'],['#84cc16','#4d7c0f','#ecfccb']];
 const SYL1 = ['Bo','Ka','Mi','Lu','Ta','Pi','Zo','Ri','Nu','Ga','Do','Bi','Ki','Ya','Tu','Mo'], SYL2 = ['lag','mo','kis','ru','tot','nyo','bit','pay','ling','gon','bun','tik','ray','sing'];
 const monsterOf = seed => {
+  const hr = String(seed).match(/^hero:(\d):(.*)$/); // a StudioRun hero chosen in "Choose your hero"
+  if (hr) return {pal: PAL[3], body: 0, top: 0, eyes: 2, mouth: 0, pat: 0, name: hr[2] || HEROES[+hr[1]], hero: +hr[1]};
   const mk = String(seed).match(/^mk:(\d),(\d+),(\d),(\d),(\d),(\d):(.*)$/); // made in the Monster Maker
   if (mk) { const e = +mk[3]; return {pal: PAL[+mk[2]] || PAL[0], body: +mk[1], top: +mk[5], eyes: [1, 2, 3, 2, 2][e] || 2, eyeStyle: e, mouth: +mk[4], pat: +mk[6], name: mk[7] || 'Buddy'}; }
   const r = rngOf(hashS(seed)), f = n => Math.floor(r() * n);
@@ -1553,6 +1564,7 @@ let SVGN = 0; // unique gradient ids
 const mixHex = (h, w, t) => { const a = parseInt(h.slice(1), 16), b = parseInt(w.slice(1), 16), ch = (x, y, s) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t);
   return '#' + ((1 << 24) | (ch(a, b, 16) << 16) | (ch(a, b, 8) << 8) | ch(a, b, 0)).toString(16).slice(1); };
 function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
+  { const hr = String(seed).match(/^hero:(\d):/); if (hr) return `<img class="${cls} heroimg" src="rive/heroes/${hr[1]}.jpg" alt="">`; }
   const M = monsterOf(seed), [c, dk, bl] = M.pal, gid = 'mg' + (++SVGN), st = `stroke="${dk}" stroke-width="3" stroke-linejoin="round"`;
   const fillB = `url(#${gid})`;
   const top = [
@@ -1882,7 +1894,7 @@ function loadRive(){
 // Rive's layout bounds draw only the hero's 380-unit square of the 1920x1080 game artboard into a small canvas.
 const HEROES = ['Painter', 'Planner', 'Coder', 'Designer', '3D Maker', 'Dreamweaver', 'Builder', 'Writer', 'Chef', 'Santa'];
 const HERO_CROP = {x: 370, y: 630, size: 380, w: 1920, h: 1080};
-function heroNo(){ try { const v = localStorage.getItem('hub-hero'); if (v !== null && +v >= 0 && +v < 10) return +v; } catch (e) {} return 5; }
+function heroNo(){ const b = window.P && P.me && pref(P.me.u).buddy, hm = b && String(b).match(/^hero:(\d):/); if (hm) return +hm[1]; try { const v = localStorage.getItem('hub-hero'); if (v !== null && +v >= 0 && +v < 10) return +v; } catch (e) {} return 5; }
 function heroSet(n){ try { localStorage.setItem('hub-hero', String(n)); } catch (e) {} heroPick(); const t = SOBO_EL && SOBO_EL.querySelector('img'); if (t) t.src = 'rive/heroes/' + n + '.jpg'; }
 function heroPick(){ try { const i = SOBO && SOBO.stateMachineInputs('STATE MACHINE').find(x => x.name === 'CHHH Selected'); if (i) i.value = heroNo(); } catch (e) {} }
 function heroFit(){ if (!SOBO || !SOBO_EL) return; const cv = SOBO_EL.querySelector('canvas'), n = cv.clientWidth; if (!n) return;
@@ -2013,7 +2025,7 @@ function shop(el){
     <div class="shop">${SHOP.map(([id, name, price]) => { const has = owned.includes(id), on = wear.includes(id);
       return `<div class="shopitem ${on ? 'on' : ''}">${monsterSVG(buddyOf(u), 'idle', [id], 's')}<b>${name}</b>
         ${has ? `<button class="btn ${on ? 'ghost' : ''} sm" onclick="wearItem('${id}')">${on ? 'Take off' : 'Wear'}</button>` : `<button class="btn sm" ${coins < price ? 'disabled style="opacity:.45"' : ''} onclick="buyItem('${id}',${price})">${COIN} ${price}</button>`}</div>`; }).join('')}</div>
-    <div class="card"><div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><h2 style="flex:1">Change buddy</h2><button class="btn" onclick="WELCOME='maker';MK=null;P.refresh()">🎨 Open the Monster Maker</button></div><div class="pickrow" style="margin-top:.8rem">${BUDDIES.map(b => `<button class="pick" style="${b === buddyOf(u) ? 'border-color:var(--brand)' : ''}" onclick="chooseBuddy('${b}')">${monsterSVG(b, 'idle', wear, 'p')}<b>${monsterOf(b).name}</b></button>`).join('')}</div></div></div>`;
+    <div class="card"><div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><h2 style="flex:1">Change buddy</h2><button class="btn" onclick="WELCOME='maker';MK=null;P.refresh()">🦸 Choose your hero</button></div><div class="pickrow" style="margin-top:.8rem">${BUDDIES.map(b => `<button class="pick" style="${b === buddyOf(u) ? 'border-color:var(--brand)' : ''}" onclick="chooseBuddy('${b}')">${monsterSVG(b, 'idle', wear, 'p')}<b>${monsterOf(b).name}</b></button>`).join('')}</div></div></div>`;
 }
 function buyItem(id, price){ const p = pref(P.me.u); if (coinsOf(P.me.u) < price) return;
   p.owned = (p.owned || []).concat(id); p.spent = (p.spent || 0) + price; p.wear = (p.wear || []).concat(id); P.save(); sfx('buy'); P.refresh(); }
@@ -2682,28 +2694,26 @@ function tryAnswer(n){
   const t = document.createElement('div'); t.innerHTML = tryView();
   host.querySelector('.tfront').replaceWith(t.querySelector('.tfront')); host.querySelector('.tbuddy').replaceWith(t.querySelector('.tbuddy'));
 }
-// Monster Maker: build your own buddy
-const MK_PARTS = [['body', 'Body', 5], ['color', 'Color', 8], ['eyes', 'Eyes', 5], ['mouth', 'Mouth', 5], ['top', 'Head', 5], ['pat', 'Pattern', 5]];
-const MK_COLORS = [1, 2, 3, 4, 0, 5, 6, 7]; // index into PAL
+// "Choose your hero" (it was the Monster Maker): pick one of the ten StudioRun characters from rive/studiorun.riv and name it.
+// The choice is saved on the learner's account as buddy "hero:N:Name" and shown live everywhere the buddy appears.
 let MK = null;
-const mkSeed = (p, name) => `mk:${p.body},${MK_COLORS[p.color]},${p.eyes},${p.mouth},${p.top},${p.pat}:${(name || 'Buddy').replace(/[:<>"&]/g, '').slice(0, 14)}`;
 function makerView(){
-  if (!MK) { const cur = pref(P.me.u).buddy || ''; const mm = cur.match(/^mk:(\d),(\d+),(\d),(\d),(\d),(\d):(.*)$/);
-    MK = mm ? {body:+mm[1], color: Math.max(0, MK_COLORS.indexOf(+mm[2])), eyes:+mm[3], mouth:+mm[4], top:+mm[5], pat:+mm[6], name: mm[7]} : {body:0, color:0, eyes:1, mouth:1, top:1, pat:1, name: SYL1[Math.floor(Math.random() * SYL1.length)] + SYL2[Math.floor(Math.random() * SYL2.length)]}; }
-  const opt = (k, n) => Array.from({length: n}, (_, v) => { const t = Object.assign({}, MK, {[k]: v});
-    return `<button class="mkopt ${MK[k] === v ? 'on' : ''}" onclick="mkSet('${k}',${v})" aria-label="${k} ${v + 1}">${k === 'color' ? `<i class="paint" style="--pc:${PAL[MK_COLORS[v]][0]}"></i>` : monsterSVG(mkSeed(t, MK.name), 'idle', [], 'mkmini')}</button>`; }).join('');
-  return `<div class="wpanel wide maker"><div class="wtab">Monster Maker</div>
-    <div class="mkwrap"><div class="mkprev">${monsterSVG(mkSeed(MK, MK.name), 'happy', pref(P.me.u).wear || [], 'mkbig')}
+  if (!MK) { const cur = pref(P.me.u).buddy || '', hm = cur.match(/^hero:(\d):(.*)$/);
+    MK = {hero: hm ? +hm[1] : heroNo(), name: hm ? hm[2] : SYL1[Math.floor(Math.random() * SYL1.length)] + SYL2[Math.floor(Math.random() * SYL2.length)]}; }
+  setTimeout(() => soboAttach('mkHero'), 0);
+  return `<div class="wpanel wide maker"><div class="wtab">Choose your hero</div>
+    <div class="mkwrap"><div class="mkprev"><div class="mkhero" id="mkHero"></div><b class="mkheroname">${HEROES[MK.hero]}</b>
         <label class="mkname">Name<input id="mkName" maxlength="14" value="${esc(MK.name)}" oninput="MK.name=this.value"></label>
         <button class="wbtn ghost sm" onclick="mkRandom()">🎲 Surprise me</button></div>
-      <div class="mkgrid">${MK_PARTS.map(([k, label, n]) => `<div class="mkrow"><b>${label}</b><div class="mkopts" style="--n:${n}">${opt(k, n)}</div></div>`).join('')}</div></div>
+      <div class="mkgrid"><div class="mkheroes">${HEROES.map((nm, n) => `<button class="mkopt mkh ${MK.hero === n ? 'on' : ''}" onclick="mkSet(${n})" aria-label="${nm}"><img src="rive/heroes/${n}.jpg" alt=""><span>${nm}</span></button>`).join('')}</div>
+        <p class="mkcredit">Characters from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> (CC BY 4.0)</p></div></div>
     <button class="wbtn" onclick="mkDone()">Done</button></div>`;
 }
 // update only the inside of the panel, so the panel itself stays steady (no drop-in animation again)
 function mkRender(){ const w = document.querySelector('.wpanel.maker'); if (!w) return P.refresh(); const t = document.createElement('div'); t.innerHTML = makerView(); w.innerHTML = t.firstElementChild.innerHTML; }
-function mkSet(k, v){ MK[k] = v; sfx('buy'); mkRender(); }
-function mkRandom(){ for (const [k, , n] of MK_PARTS) MK[k] = Math.floor(Math.random() * n); sfx('ok'); mkRender(); }
-function mkDone(){ const nm = (MK.name || '').trim() || 'Buddy'; MK.name = nm; pref(P.me.u).buddy = mkSeed(MK, nm); P.save(); sfx('win'); confetti(); MK = null; nextOnboard(); }
+function mkSet(n){ MK.hero = n; heroSet(n); sfx('buy'); mkRender(); }
+function mkRandom(){ let n; do n = Math.floor(Math.random() * HEROES.length); while (n === MK.hero); mkSet(n); }
+function mkDone(){ const nm = (MK.name || '').trim().replace(/[:<>"&]/g, '').slice(0, 14) || HEROES[MK.hero]; pref(P.me.u).buddy = `hero:${MK.hero}:${nm}`; P.save(); heroSet(MK.hero); sfx('win'); confetti(); MK = null; nextOnboard(); }
 // map room: your monster jumps into your grade's island map
 function islandArt(b){
   const isl = BANDS[b].units.slice(0, 6);
