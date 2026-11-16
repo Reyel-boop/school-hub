@@ -1052,7 +1052,7 @@ function reyelLoginAs(u){ reyelLogin('Type your new password to sign in.', u); }
 function reyelMenu(){
   const R = reyelWho();
   if (!me) return [['Sign in', () => reyelLogin(), true],
-    ...(CLOUD && R !== 'admin' ? [[R === 'teacher' ? 'Create a teacher account' : 'Create a student account', () => reyelSignup(R === 'teacher' ? 'teacher' : 'student')]] : []),
+    ["I am a student", () => reyelRole('student')], ["I am a teacher", () => reyelRole('staff')],
     ...(CLOUD ? [['I forgot my password', () => reyelForgot()]] : []),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain],
     ['What is the School Hub?', () => reyelSay('The School Hub keeps all your school systems in one place: lessons, grades, the clinic, payments and more. Sign in to start!', () => reyelChoices(reyelMenu()))]];
