@@ -736,6 +736,26 @@
   .mkcredit{margin:8px 2px 0;font:500 11px Poppins,sans-serif;color:#0369a1}.mkcredit a{color:inherit}
   img.heroimg{width:100%;height:auto;max-width:100%;border-radius:22%;object-fit:cover;aspect-ratio:1;display:block}
   @media (max-width:640px){.mkheroes{grid-template-columns:repeat(5,1fr);gap:5px}.mkh span{font-size:9px}.mkhero{width:40%}}
+  /* --- welcome greeting (Rive: learning path + croc) --- */
+  .wpanel.wide.hello{width:min(96vw,820px);gap:14px}
+  .hwrap{display:flex;gap:18px;align-items:center}
+  .hpath{flex:0 0 40%;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 0 rgba(2,132,199,.35)}
+  .hpath canvas,.hcroc canvas{display:block;width:100%;opacity:0;transition:opacity .5s}.hpath canvas{aspect-ratio:393/310}.hpath canvas.on,.hcroc canvas.on{opacity:1}
+  .htext{flex:1;min-width:0}.htext h2{font:400 clamp(24px,3.2vw,34px)/1.15 'Lilita One',Poppins,sans-serif;margin:0 0 6px;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .htext p{margin:0 0 10px;font-weight:600}
+  .hsteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .hsteps li{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.18);border-radius:14px;padding:8px 12px;font-weight:500}
+  .hsteps li span{font-size:22px}.hsteps li b{font-weight:800}
+  .hbtns{display:flex;gap:12px;justify-content:space-between}.hbtns .wbtn{width:auto;min-width:0;flex:1}
+  .wbtn.pulse{animation:wpulse 1.4s ease-in-out infinite}
+  .hq{margin:0;text-align:center;font-weight:700;font-size:clamp(18px,2.4vw,24px)}.hq b{font-size:1.15em;background:#fff;color:#0369a1;border-radius:10px;padding:0 .35em}
+  .hcroc{position:relative;width:100%;max-width:min(100%,500px);margin:0 auto;border-radius:18px;overflow:hidden;background:#6ac315;box-shadow:0 8px 0 rgba(2,132,199,.35)}
+  .hcroc canvas{aspect-ratio:794/500}
+  .happle{position:absolute;width:13%;aspect-ratio:1;transform:translate(-50%,-50%);border:0;border-radius:50%;background:transparent;cursor:pointer}
+  .happle:focus-visible{outline:4px solid #fde047}.happle.a1{left:34.8%;top:17%}.happle.a2{left:50.8%;top:17%}.happle.a3{left:68%;top:17%}
+  .happle.no{animation:hshake .45s}@keyframes hshake{25%{transform:translate(-62%,-50%)}75%{transform:translate(-38%,-50%)}}
+  .hcredit{margin:0;font:500 11px Poppins,sans-serif;color:#e0f2fe;text-align:center}.hcredit a{color:inherit}
+  @media (max-width:640px){.hwrap{flex-direction:column}.hpath{width:70%;flex:none}.htext{text-align:center}.hsteps li{text-align:left}}
   /* --- map room with banga jars --- */
   .welcome.w-maproom{background:#b91c1c}
   .mroom{position:absolute;inset:0;overflow:hidden}
@@ -1822,6 +1842,7 @@ function learn(el){
   if (LS) return lessonView(el);
   if (S) return battle(el);
   if (WELCOME || welcomeDue()) return welcomeView(el);
+  if (isStudent() && !helloSeen()) { WELCOME = 'hello'; return welcomeView(el); } // the welcome greeting comes before lessons and practice
   if (isStudent() && !gradeOf(P.me.u)) { WELCOME = 'grade'; return welcomeView(el); } // ask the grade once, then it's locked
   if (isStudent() && !pref(P.me.u).buddy) { WELCOME = 'maker'; return welcomeView(el); }
   if (screen === 'dex') return dex(el);
@@ -2736,6 +2757,60 @@ function mapRoomView(){
 let WELCOME_JUMP = false;
 function mapJump(){ WELCOME_JUMP = true; sfx('lvl'); P.refresh(); setTimeout(() => { WELCOME_JUMP = false; pref(P.me.u).mapIntro = true; P.save(); nextOnboard(); }, 1500); }
 
+/* ---- Welcome greeting: shown each time a learner opens Aral Math, before lessons and practice ----
+   Rive art (CC BY 4.0): "Learning Path System animation" by aristote (rive/learnpath.riv, green Math theme)
+   and "Math is a croc" by Jared_Freitag (rive/croc.riv). Spoken lines use only the admin's own recordings. */
+let HELLO = {step: 'path'}, HELLO_R = [];
+const helloSeen = () => { try { return sessionStorage.getItem('aralmath-hello') === '1'; } catch (e) { return true; } };
+const HELLO_CREDIT = `Animations: <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path</a> by aristote · <a href="https://rive.app/community/files/18443-34862-math-is-a-croc/" target="_blank" rel="noopener">Math is a croc</a> by Jared_Freitag · CC BY 4.0 · made with Rive`;
+function helloView(){
+  const nm = esc(P.me.name.split(' ')[0]); setTimeout(helloMount, 0);
+  if (HELLO.step === 'path') return `<div class="wpanel wide hello"><div class="wtab">Welcome!</div>
+    <div class="hwrap"><div class="hpath"><canvas id="helloPath"></canvas></div>
+      <div class="htext"><h2 id="helloSay">Hi, ${nm}! Welcome to Aral Math!</h2><p>Here's how your math adventure works:</p>
+        <ol class="hsteps"><li><span>🎬</span><b>Watch</b> the lesson</li><li><span>✏️</span><b>Practice</b> 10 questions</li><li><span>⭐</span><b>Get 8 right</b> to make a monster friend</li></ol></div></div>
+    <div class="hbtns"><button class="wbtn ghost" onclick="helloDone()">Skip</button><button class="wbtn" onclick="helloStep('croc')">Warm up first ▶</button></div>
+    <p class="hcredit">${HELLO_CREDIT}</p></div>`;
+  return `<div class="wpanel wide hello"><div class="wtab">Warm-up</div>
+    <p class="hq" id="helloSay">Help the croc eat the right apple! <b>1 + 1 = ?</b></p>
+    <div class="hcroc"><canvas id="helloCroc"></canvas>${[1, 2, 3].map(n => `<button class="happle a${n}" onclick="helloApple(${n}, this)" aria-label="Apple ${n}"></button>`).join('')}</div>
+    <div class="hbtns"><button class="wbtn ghost" onclick="helloStep('path')">◀ Back</button><button class="wbtn" id="helloGo" onclick="helloDone()">${HELLO.ok ? "Let's start! ▶" : 'Skip ▶'}</button></div>
+    <p class="hcredit">${HELLO_CREDIT}</p></div>`;
+}
+function helloStop(){ HELLO_R.forEach(r => { try { r.cleanup(); } catch (e) {} }); HELLO_R = []; }
+function helloMount(){
+  helloStop(); const say = $('helloSay'); if (say && ttsOn()) speak(say.textContent, 'nar');
+  loadRive().then(() => {
+    const px = Math.min(2, window.devicePixelRatio || 1), pc = $('helloPath'), cc = $('helloCroc');
+    if (pc && pc.isConnected) { // only the monster on its path: skip the phone's clock, card and buttons
+      const W = Math.round(pc.clientWidth * px), k = W / 393; pc.width = W; pc.height = Math.round(310 * k);
+      const r = new rive.Rive({src: 'rive/learnpath.riv', canvas: pc, stateMachines: 'State Machine 1', autoplay: true,
+        layout: new rive.Layout({fit: rive.Fit.Fill, minX: 0, minY: -410 * k, maxX: W, maxY: (1084 - 410) * k}),
+        onLoad: () => { try { const t = r.stateMachineInputs('State Machine 1').find(i => i.name === 'theme'); if (t) t.value = 2; } catch (e) {} pc.classList.add('on'); }});
+      HELLO_R.push(r);
+    }
+    if (cc && cc.isConnected) {
+      cc.width = Math.round(cc.clientWidth * px); cc.height = Math.round(cc.width * 500 / 794);
+      const r = new rive.Rive({src: 'rive/croc.riv', canvas: cc, stateMachines: 'State Machine 2', autoplay: true, layout: new rive.Layout({fit: rive.Fit.Contain}),
+        onLoad: () => { cc.classList.add('on'); if (HELLO.ok) helloEat(); }});
+      HELLO_R.push(r); HELLO.croc = r;
+    }
+  }).catch(() => {});
+}
+function helloStep(s){ HELLO.step = s; if (s === 'croc') HELLO.ok = false; sfx('ok'); P.refresh(); }
+// apple 2 is the croc's right answer (1 + 1 = 2); its inputs: Boolean 2/1/3 light apples 1/2/3, "Is Correct" eats apple 2
+function helloIn(name, v){ try { const i = HELLO.croc.stateMachineInputs('State Machine 2').find(x => x.name === name); if (i) i.value = v; } catch (e) {} }
+function helloEat(){ helloIn('Boolean 1', true); helloIn('Is Correct', true); }
+function helloApple(n, btn){
+  if (HELLO.ok) return;
+  if (n === 2) { HELLO.ok = true; helloEat(); sfx('win'); confetti();
+    const q = $('helloSay'); if (q) { q.innerHTML = `Perfect, ${esc(P.me.name.split(' ')[0])}! 1 + 1 = 2. You're ready!`; if (ttsOn()) speak(q.textContent, 'nar'); }
+    const g = $('helloGo'); if (g) { g.textContent = "Let's start! ▶"; g.classList.add('pulse'); } return; }
+  sfx('no'); const key = n === 1 ? 'Boolean 2' : 'Boolean 3'; helloIn(key, true); setTimeout(() => helloIn(key, false), 700);
+  btn.classList.remove('no'); void btn.offsetWidth; btn.classList.add('no');
+  const q = $('helloSay'); if (q) { q.innerHTML = `Not ${n}. Try again! <b>1 + 1 = ?</b>`; if (ttsOn()) speak(q.textContent, 'nar'); }
+}
+function helloDone(){ try { sessionStorage.setItem('aralmath-hello', '1'); } catch (e) {} helloStop(); HELLO = {step: 'path'}; WELCOME = null; sfx('ok'); P.refresh(); }
 function welcomeDone(){ try { sessionStorage.setItem('aralmath-welcome', '1'); } catch (e) {} WELCOME = null; P.refresh(); }
 function welcomeGo(step){ sfx(step === 'who' ? 'buy' : 'ok'); WELCOME = step; P.refresh(); }
 const GLOVE = `<svg class="glove" viewBox="0 0 120 80" aria-hidden="true"><g stroke="#1e293b" stroke-width="3.5" stroke-linejoin="round" fill="#fff">
@@ -2779,6 +2854,7 @@ function welcomeView(el){
   else if (WELCOME === 'pemail') panel = parentEmailPanel();
   else if (WELCOME === 'grade') panel = gradePanel();
   else if (WELCOME === 'maker') panel = makerView();
+  else if (WELCOME === 'hello') panel = helloView();
   else panel = parentReport(u, WELCOME === 'both');
   if (WELCOME === 'tryit') { el.innerHTML = `<div class="welcome w-tryit">${tryView()}</div>`; return; }
   if (WELCOME === 'maproom') { el.innerHTML = `<div class="welcome w-maproom">${mapRoomView()}</div>`; return; }
