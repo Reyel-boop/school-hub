@@ -25,6 +25,18 @@
   .rchar{position:relative;flex:0 0 auto;width:min(46vw,72vh);aspect-ratio:1;border-radius:50%;overflow:hidden;background:#fff;box-shadow:0 30px 80px -30px rgba(15,23,42,.35),inset 0 0 0 10px #fff,inset 0 0 0 12px #e2e8f0}
   .rchar canvas{position:absolute;width:190%;height:190%;left:-45%;top:-30%;opacity:0;transition:opacity .5s} /* zoom past the artboard's margins */
   .rchar.on canvas{opacity:1}
+  .rsvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .rsvg .rhead{transform-box:fill-box;transform-origin:50% 90%;transform:translate(var(--hx,0),var(--hy,0)) rotate(var(--hr,0));transition:transform .25s ease-out}
+  .rsvg .reyes{transform:translate(var(--ex,0),var(--ey,0));transition:transform .12s ease-out}
+  .rsvg .rblink{transform-box:fill-box;transform-origin:center;animation:rblink2 4.5s infinite}
+  @keyframes rblink2{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+  .rsvg .rmouth2{opacity:0;transform-box:fill-box;transform-origin:50% 0}
+  .talking .rsvg .rmouth{opacity:0}
+  .talking .rsvg .rmouth2{opacity:1;animation:rtalk2 .2s ease-in-out infinite alternate}
+  @keyframes rtalk2{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+  .talking .rsvg .rbrow{animation:rbrow .6s ease-in-out infinite alternate}
+  @keyframes rbrow{to{transform:translateY(-4px)}}
+
   .rchar.talking{animation:rtalk .32s ease-in-out infinite alternate}
   @keyframes rtalk{to{transform:translateY(-6px) scale(1.012,.99)}}
   .rside{flex:1;max-width:38rem;display:flex;flex-direction:column;gap:1.4rem}
@@ -244,13 +256,12 @@
 <body>
 <div id="reyel" hidden role="dialog" aria-label="Reyel, your AI-Companion">
   <button class="rskip" onclick="reyelClose()">Skip ✕</button>
-  <div class="rchar" id="rChar"><canvas></canvas></div>
+  <div class="rchar" id="rChar"></div>
   <div class="rside"><span class="rname"><i></i>Reyel · AI-Companion</span>
     <div class="rbubble" aria-live="polite"><span id="rSay"></span><span class="caret"></span></div>
     <div class="rchoices" id="rChoices"></div></div>
-  <p class="rcredit">Reyel character by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, CC BY 4.0 · made with Rive</p>
 </div>
-<button id="reyelBtn" hidden title="Ask Reyel" aria-label="Ask Reyel" onclick="reyelOpen('help')"><canvas></canvas></button>
+<button id="reyelBtn" hidden title="Ask Reyel" aria-label="Ask Reyel" onclick="reyelOpen('help')"></button>
 
 <!-- ================= LOGIN ================= -->
 <section id="login">
@@ -812,12 +823,35 @@ document.addEventListener('keydown', e => {
 let RIVE_P = null, REYEL = [];
 function riveLib(){ return RIVE_P || (RIVE_P = new Promise((ok, no) => { if (window.rive) return ok();
   const sc = document.createElement('script'); sc.src = 'aralmath/rive/rive.js'; sc.onload = () => { rive.RuntimeLoader.setWasmUrl('aralmath/rive/rive.wasm'); ok(); }; sc.onerror = no; document.head.appendChild(sc); })); }
+// Reyel, drawn in code: wavy hair, boxed (rectangular) glasses; eyes and head follow the pointer, he blinks and talks
+const REYEL_SVG = `<svg class="rsvg" viewBox="0 0 400 400" aria-hidden="true"><g class="rhead">
+  <path d="M168 318 L156 404 M244 312 L264 404" stroke="#111" stroke-width="9" stroke-linecap="round" fill="none"/>
+  <path d="M160 322 C200 345 248 336 262 300 C250 330 205 340 160 322 Z" fill="#d6d6d6"/>
+  <path d="M276 228 C300 214 316 236 302 254 C294 266 280 264 274 258" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M120 168 C116 250 128 300 168 320 C200 336 244 330 264 302 C286 274 290 226 286 168" fill="#fff" stroke="#111" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M104 216 C90 168 96 118 128 92 C146 70 168 76 184 66 C204 54 226 66 246 60 C270 54 292 74 302 94 C318 118 326 164 312 216 C306 196 298 182 286 172 C272 160 254 166 236 160 C214 152 200 170 176 176 C152 182 136 178 124 188 C114 196 108 206 104 216 Z" fill="#111"/>
+  <path d="M140 104 C158 92 176 112 198 100 C218 90 238 104 262 94" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>
+  <path d="M126 138 C146 124 166 144 190 130 C212 118 234 132 256 122 C272 116 286 124 296 136" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>
+  <g class="rbrow"><path d="M134 196 Q160 188 184 194 M216 194 Q240 188 266 196" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/></g>
+  <g fill="none" stroke="#111" stroke-width="8" stroke-linejoin="round"><rect x="124" y="206" width="66" height="48" rx="9"/><rect x="210" y="206" width="66" height="48" rx="9"/>
+    <path d="M190 224 Q200 216 210 224 M276 222 L294 218 M124 222 L112 220" stroke-linecap="round"/></g>
+  <g class="reyes"><g class="rblink"><circle cx="160" cy="231" r="7" fill="#111"/><circle cx="244" cy="231" r="7" fill="#111"/></g></g>
+  <path d="M206 244 C190 244 188 266 204 266" stroke="#111" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path class="rmouth" d="M176 288 Q200 306 226 286" stroke="#111" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <g class="rmouth2"><path d="M180 284 Q201 312 224 284 Z" fill="#1f2937" stroke="#111" stroke-width="6" stroke-linejoin="round"/><path d="M190 296 Q201 304 212 296" stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"/></g>
+</g></svg>`;
 function reyelDraw(box){
-  const cv = box.querySelector('canvas'); if (cv.dataset.on) return; cv.dataset.on = 1;
-  riveLib().then(() => { const px = Math.max(2, devicePixelRatio || 1); cv.width = cv.clientWidth * px; cv.height = cv.clientHeight * px;
-    REYEL.push(new rive.Rive({src: 'aralmath/rive/narrator.riv', canvas: cv, artboard: 'Artboard', stateMachines: 'State Machine 1', autoplay: true,
-      layout: new rive.Layout({fit: rive.Fit.Cover, alignment: rive.Alignment.Center}), onLoad: () => box.classList.add('on')})); }).catch(() => {});
+  if (box.querySelector('.rsvg')) return; box.innerHTML = REYEL_SVG; box.classList.add('on');
 }
+// eyes look at the pointer; the head turns a little toward it
+let REYEL_LOOK = 0;
+document.addEventListener('pointermove', e => { cancelAnimationFrame(REYEL_LOOK); REYEL_LOOK = requestAnimationFrame(() => {
+  document.querySelectorAll('.rsvg').forEach(svg => { const b = svg.getBoundingClientRect(); if (!b.width) return;
+    const dx = (e.clientX - (b.left + b.width / 2)) / (window.innerWidth / 2), dy = (e.clientY - (b.top + b.height * .55)) / (window.innerHeight / 2);
+    const cx = Math.max(-1, Math.min(1, dx)), cy = Math.max(-1, Math.min(1, dy));
+    svg.style.setProperty('--ex', (cx * 9).toFixed(1) + 'px'); svg.style.setProperty('--ey', (cy * 6).toFixed(1) + 'px');
+    svg.style.setProperty('--hr', (cx * 4).toFixed(2) + 'deg'); svg.style.setProperty('--hx', (cx * 6).toFixed(1) + 'px'); svg.style.setProperty('--hy', (cy * 4).toFixed(1) + 'px'); }); }); });
+
 let RTYPE = null;
 function reyelSay(text, done){
   const el = document.getElementById('rSay'), ch = document.getElementById('rChar'), cc = document.getElementById('rChoices'); clearInterval(RTYPE); cc.classList.remove('on'); cc.innerHTML = ''; let n = 0; el.textContent = ''; ch.classList.add('talking');
