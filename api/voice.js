@@ -3,7 +3,7 @@
 // GET  /api/voice?id=X      -> the audio file (WAV)
 // POST /api/voice {id, b64} -> save a recording;  {id, delete:true} -> remove   (teacher, principal, admin)
 import {getSession, getUser, send, body, wrap, voiceList, voiceGet, voicePut, voiceDel} from './_lib.js';
-const CAN_RECORD = new Set(['teacher', 'principal', 'admin']);
+const CAN_RECORD = new Set(['admin']); // only the admin account records the voice-over
 const ID = /^[a-z0-9' ?!.,:-]{1,140}$/;
 export default wrap(async (req, res) => {
   const s = getSession(req); if (!s) return send(res, 401, {error: 'Not signed in'});
@@ -14,7 +14,7 @@ export default wrap(async (req, res) => {
     res.statusCode = 200; res.setHeader('Content-Type', clip.mime); res.setHeader('Cache-Control', 'private, max-age=86400'); return res.end(clip.buf);
   }
   if (req.method !== 'POST') return send(res, 405, {error: 'GET or POST'});
-  const me = await getUser(s.u); if (!me || me.status !== 'active' || !CAN_RECORD.has(me.role)) return send(res, 403, {error: 'Only teachers can record the voice-over.'});
+  const me = await getUser(s.u); if (!me || me.status !== 'active' || !CAN_RECORD.has(me.role)) return send(res, 403, {error: 'Only the admin account can record the voice-over.'});
   const b = await body(req), id = String(b.id || '');
   if (!ID.test(id)) return send(res, 400, {error: 'Bad clip id'});
   if (b.delete) { await voiceDel(id); return send(res, 200, {ok: true}); }

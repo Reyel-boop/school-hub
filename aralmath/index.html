@@ -1707,6 +1707,7 @@ voiceLoad();
 /* ---- the Voice-over tab: teachers record each line ---- */
 let VREC = null;
 function voiceView(el){
+  if (!isHubAdmin()) { el.innerHTML = '<div class="card"><h2>Voice-over</h2><p class="hint">Only the admin account can record the voice-over.</p></div>'; return; }
   if (!VCLIPS) { el.innerHTML = '<div class="card"><p class="hint">Loading recordings…</p></div>'; voiceLoad().then(() => P.current === 'voice' && P.refresh()); return; }
   if (VCLIPS.__offline) { el.innerHTML = `<div class="card"><h2>Voice-over</h2><p class="hint">Recording needs the school server. Open the School Hub at its Vercel address and sign in as a teacher.</p></div>`; return; }
   const groups = vphrases(), all = groups.flatMap(([, l]) => l), done = all.filter(t => VCLIPS[vkey(t)]).length;
@@ -1757,11 +1758,13 @@ function voiceTry(){ const t = $('vTest').value.trim(), m = $('vTestMsg'); if (!
   if (plan) { vplay(plan); m.textContent = '✓ Played with your recordings.'; return; }
   const missing = vkey(spoken(t)).split(' ').filter(w => !VCLIPS[w]); m.textContent = 'Not fully recorded yet' + (missing.length ? ' (missing: ' + [...new Set(missing)].slice(0, 6).join(', ') + ')' : '') + '. Students would hear the device voice for this line.'; }
 
+// the Voice-over studio is only for the School Hub's admin account
+function isHubAdmin(){ return ((window.HUB_ACCOUNT || {}).role) === 'admin'; }
 /* ================= CONFIG ================= */
 const CFG = {
   key:'svnhs-aralmath', title:'Aral Math', subtitle:'ARAL Program · Mathematics', icon:ICON,
   roles:{
-    teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets'],['voice','Voice-over']]},
+    teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets']].concat(isHubAdmin() ? [['voice','Voice-over']] : [])},
     student:{tagline:'Help the Bilang Monsters by mastering ARAL Math!', tabs:[['learn','Play'],['progress','My Progress']]},
   },
   signup:{roles:[['student','Learner']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 8 – Rizal'}},
