@@ -529,6 +529,8 @@ const ACCESS = {
   rpms:       {admin:'principal',  principal:'principal', teacher:'teacher', staff:null,        student:null},
   tools:      {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:null},
 };
+// everyone who is not a student may use every system: fill any gap with the admin's account for that system
+for (const sys of Object.values(ACCESS)) for (const role of ['admin', 'principal', 'teacher', 'staff']) if (!sys[role]) sys[role] = sys.admin;
 // Online systems (they have no row above) that a Hub account may not open.
 const BLOCKED_ONLINE = {
   student: ['bless', 'inventory', 'campus'],   // students use only: Momo Smart, JHS Lab Kiosk, Tuon, Aral Reading, Aral Math, E-Guidance, E-Clinic, Cashiering, Registrar
@@ -831,16 +833,14 @@ const callName = () => { if (!me) return ''; const n = me.name.trim(); return /^
 function reyelOpen(mode){
   const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
   if (mode === 'help') { const nm = callName(); return reyelSay(`Hi${nm ? ', ' + nm : ''}! I'm still here. How can I help you?`, () => reyelChoices(reyelMenu())); }
-  // the welcome: greet, then ask who is using the Hub
-  reyelSay('Welcome to the School Hub! I am Reyel, your AI-Companion. Who is using the School Hub today?', () => {
-    const mine = me ? (me.role === 'admin' || me.role === 'principal' ? 'admin' : me.role === 'student' ? 'student' : 'teacher') : null;
-    reyelChoices(['student', 'teacher', 'admin'].map(k => [ROLE_LABEL[k], () => reyelRole(k), k === mine]));
-  });
+  // the welcome: already signed in? greet back. Otherwise ask if they're a student, then sign in.
+  if (me) { const nm = callName(); return reyelSay(`Welcome back to the School Hub, ${nm}! I am Reyel, your AI-Companion. How can I help you today?`, () => reyelChoices(reyelMenu())); }
+  reyelSay('Welcome to the School Hub! I am Reyel, your AI-Companion. Are you a student?', () => reyelChoices([
+    ["Yes, I'm a student", () => reyelRole('student'), true], ["No, I'm not a student", () => reyelRole('staff')]]));
 }
 function reyelRole(k){
   REYEL_ROLE = k; try { sessionStorage.setItem('hub-reyel-role', k); } catch (e) {}
-  const nm = callName();
-  reyelSay(`Hi${nm ? ', ' + nm : ', ' + ROLE_LABEL[k]}! How can I help you today?`, () => reyelChoices(reyelMenu()));
+  reyelLogin(k === 'student' ? 'Great! Please sign in with your student account.' : 'Welcome! Please sign in with your school account (teacher, staff or admin).');
 }
 
 // the systems a student may use, with what each one is for (in a student's words)
@@ -852,7 +852,7 @@ const STUDENT_DESC = {
   clinic: 'Visit the school clinic when you feel sick, and see your health records.',
 };
 // who Reyel is talking to: the signed-in account, or the role picked in the welcome
-const reyelWho = () => me ? (me.role === 'student' ? 'student' : me.role === 'admin' || me.role === 'principal' ? 'admin' : 'teacher') : (REYEL_ROLE || 'student');
+const reyelWho = () => me ? (me.role === 'student' ? 'student' : me.role === 'admin' || me.role === 'principal' ? 'admin' : 'teacher') : (REYEL_ROLE === 'student' ? 'student' : REYEL_ROLE ? 'teacher' : 'student');
 // Reyel's guide: what each need maps to
 const REYEL_NEEDS = [
   ['📚 Learn & practice lessons', ['aralmath', 'tuon', 'aralread', 'momo'], 'For lessons and practice, these will help you.'],
@@ -901,10 +901,11 @@ function reyelLogin(msg){
       <input name="u" placeholder="Username or email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
       <div class="rpw"><input name="p" type="password" placeholder="Password" autocomplete="current-password" required><button type="button" class="rshow">Show</button></div>
       <div class="rerr" id="rErr" hidden></div>
-      <div class="rrow"><button type="submit" class="main">Sign in</button>${CLOUD ? '<button type="button" class="rlink" id="rForgot">I forgot my password</button>' : ''}<button type="button" class="rlink" id="rBack">Back</button></div></form>`;
+      <div class="rrow"><button type="submit" class="main">Sign in</button>${CLOUD ? '<button type="button" class="rlink" id="rForgot">I forgot my password</button>' : ''}${CLOUD ? `<button type="button" class="rlink" id="rNew">${REYEL_ROLE === 'student' ? 'No account yet? Create one' : 'New teacher? Create an account'}</button>` : ''}<button type="button" class="rlink" id="rBack">Back</button></div></form>`;
     const f = document.getElementById('rLogin'); setTimeout(() => { c.classList.add('on'); f.u.focus(); }, 60);
     f.querySelector('.rshow').onclick = e => { const i = f.p, sh = i.type === 'password'; i.type = sh ? 'text' : 'password'; e.target.textContent = sh ? 'Hide' : 'Show'; };
-    document.getElementById('rBack').onclick = () => reyelChoices(reyelMenu());
+    document.getElementById('rBack').onclick = () => me ? reyelChoices(reyelMenu()) : reyelOpen('hello');
+    const nw = document.getElementById('rNew'); if (nw) nw.onclick = () => reyelSignup(REYEL_ROLE === 'student' ? 'student' : 'teacher');
     const fg = document.getElementById('rForgot'); if (fg) fg.onclick = () => { reyelClose(); showPane('forgot'); };
     f.onsubmit = async e => { e.preventDefault(); const err = document.getElementById('rErr'), btn = f.querySelector('button[type=submit]'), u = f.u.value.trim().toLowerCase(), pw = f.p.value;
       const fail = m => { err.textContent = m; err.hidden = false; f.p.select(); };
@@ -922,7 +923,7 @@ function reyelLogin(msg){
 }
 function reyelSignup(role){ reyelClose(); showPane('up'); const i = document.querySelector(`#signupForm input[name=role][value=${role}]`); if (i) { i.checked = true; i.dispatchEvent(new Event('change', {bubbles: true})); } }
 function reyelMenu(){
-  const R = REYEL_ROLE || 'student';
+  const R = reyelWho();
   if (!me) return [['Sign in', () => reyelLogin(), true],
     ...(CLOUD && R !== 'admin' ? [[R === 'teacher' ? 'Create a teacher account' : 'Create a student account', () => reyelSignup(R === 'teacher' ? 'teacher' : 'student')]] : []),
     ...(CLOUD ? [['I forgot my password', () => { reyelClose(); showPane('forgot'); }]] : []),

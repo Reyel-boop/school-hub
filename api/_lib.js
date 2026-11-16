@@ -160,6 +160,8 @@ export const ACCESS = {
 export const PREFIX = {aralmath:'svnhs-aralmath-', accounting:'svnhs-acct-', cashier:'svnhs-cash-', clinic:'svnhs-cl-', enroll:'svnhs-en-', guidance:'svnhs-go-',
   hr:'svnhs-hr-', ict:'svnhs-ict-', idsys:'svnhs-id-', registrar:'svnhs-reg-', rpms:'svnhs-rpms-', tools:'svnhs-tt-'};
 export const modOfKey = key => Object.keys(PREFIX).find(m => key.startsWith(PREFIX[m]) && !key.endsWith('-session')) || null;
+// everyone who is not a student may use every system: fill any gap with the admin's account for that system
+for (const sys of Object.values(ACCESS)) for (const role of ['admin', 'principal', 'teacher', 'staff']) if (!sys[role]) sys[role] = sys.admin;
 export const canUse = (sess, mod) => !!(sess && ACCESS[mod] && ACCESS[mod][sess.role]);
 const SEEDED = new Set(SEED.map(x => x.u));
 // which account a Hub user opens inside each system: the demo accounts use the shared demo account;
