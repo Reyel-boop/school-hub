@@ -1738,7 +1738,6 @@ function soboAttach(slotId, move){
   const slot = $(slotId); if (!slot) return;
   if (!SOBO_EL) {
     SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin'; const cv = document.createElement('canvas'); SOBO_EL.appendChild(cv);
-    SOBO_EL.insertAdjacentHTML('beforeend', '<span class="sobo123" aria-hidden="true"><b>1</b><b>2</b><b>3</b></span><span class="bulbn" aria-hidden="true"><i style="left:78%;top:38.7%">1</i><i style="left:72%;top:42.9%">2</i><i style="left:78.5%;top:51.5%">3</i></span>'); // "123" on Sobo's tummy + numbers in the stick's light bulbs
     slot.appendChild(SOBO_EL);
     loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
       const px = Math.max(2, window.devicePixelRatio || 1); cv.width = 340 * px; cv.height = 340 * px; // big enough to stay sharp in every spot
