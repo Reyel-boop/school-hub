@@ -543,6 +543,15 @@
   .cls .board{left:14%}.nlscls .board.nlsboard{left:14%}.cls .nlsans{left:14%}.cls .kids{padding-left:15%}
   .lsobo{position:absolute;left:-1.5%;bottom:.2rem;width:clamp(8rem,16vw,12rem);max-height:calc(100% - 3rem);aspect-ratio:1;z-index:5;pointer-events:none}
   @media (max-width:640px){.cls .board,.nlscls .board.nlsboard,.cls .nlsans{left:3%}.cls .kids{padding-left:2%}.lsobo{width:6.5rem;opacity:.95}.hudsobo{width:12rem;height:12rem;margin:0 auto}}
+  /* the "1 2 3" sign Sobo holds up */
+  .sobo123{position:absolute;left:var(--sx,24%);top:var(--sy,56%);width:34%;display:flex;gap:4%;transform:rotate(-6deg);animation:holdbob 2.4s ease-in-out infinite;z-index:2;pointer-events:none}
+  .sobo123 b{flex:1;aspect-ratio:.82;display:grid;place-items:center;border-radius:14%;font:400 clamp(.9rem,2.6cqw,2rem)/1 'Lilita One',Poppins,sans-serif;color:#fff;box-shadow:0 .2em 0 rgba(0,0,0,.18);text-shadow:0 .08em 0 rgba(0,0,0,.25)}
+  .sobo123 b:nth-child(1){background:#ef4444;transform:translateY(6%) rotate(-4deg)}
+  .sobo123 b:nth-child(2){background:#f59e0b;transform:translateY(-4%)}
+  .sobo123 b:nth-child(3){background:#3b82f6;transform:translateY(6%) rotate(4deg)}
+  .soboin{container-type:inline-size}
+  @keyframes holdbob{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-4deg) translateY(-4%)}}
+  .soboin:not(.on) .sobo123{opacity:0}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
   .soboslot{flex:none;width:17rem;height:17rem;margin:0 -1rem 0 -.5rem}
@@ -1727,6 +1736,7 @@ function soboAttach(slotId, move){
   const slot = $(slotId); if (!slot) return;
   if (!SOBO_EL) {
     SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin'; const cv = document.createElement('canvas'); SOBO_EL.appendChild(cv);
+    SOBO_EL.insertAdjacentHTML('beforeend', '<span class="sobo123" aria-hidden="true"><b>1</b><b>2</b><b>3</b></span>'); // the number sign Sobo holds
     slot.appendChild(SOBO_EL);
     loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
       const px = Math.max(2, window.devicePixelRatio || 1); cv.width = 340 * px; cv.height = 340 * px; // big enough to stay sharp in every spot
