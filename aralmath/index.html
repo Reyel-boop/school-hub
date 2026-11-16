@@ -543,14 +543,12 @@
   .cls .board{left:14%}.nlscls .board.nlsboard{left:14%}.cls .nlsans{left:14%}.cls .kids{padding-left:15%}
   .lsobo{position:absolute;left:-1.5%;bottom:.2rem;width:clamp(8rem,16vw,12rem);max-height:calc(100% - 3rem);aspect-ratio:1;z-index:5;pointer-events:none}
   @media (max-width:640px){.cls .board,.nlscls .board.nlsboard,.cls .nlsans{left:3%}.cls .kids{padding-left:2%}.lsobo{width:6.5rem;opacity:.95}.hudsobo{width:12rem;height:12rem;margin:0 auto}}
-  /* the "1 2 3" sign Sobo holds up */
-  .sobo123{position:absolute;left:var(--sx,24%);top:var(--sy,56%);width:34%;display:flex;gap:4%;transform:rotate(-6deg);animation:holdbob 2.4s ease-in-out infinite;z-index:2;pointer-events:none}
-  .sobo123 b{flex:1;aspect-ratio:.82;display:grid;place-items:center;border-radius:14%;font:400 clamp(.9rem,2.6cqw,2rem)/1 'Lilita One',Poppins,sans-serif;color:#fff;box-shadow:0 .2em 0 rgba(0,0,0,.18);text-shadow:0 .08em 0 rgba(0,0,0,.25)}
-  .sobo123 b:nth-child(1){background:#ef4444;transform:translateY(6%) rotate(-4deg)}
-  .sobo123 b:nth-child(2){background:#f59e0b;transform:translateY(-4%)}
-  .sobo123 b:nth-child(3){background:#3b82f6;transform:translateY(6%) rotate(4deg)}
+  /* "123" printed on Sobo's tummy */
   .soboin{container-type:inline-size}
-  @keyframes holdbob{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-4deg) translateY(-4%)}}
+  .sobo123{position:absolute;left:49%;top:64%;transform:translate(-50%,-50%) rotate(-4deg);display:flex;gap:.04em;z-index:2;pointer-events:none;
+    font:400 9.5cqw/1 'Lilita One',Poppins,sans-serif;color:rgba(255,255,255,.8);text-shadow:0 .04em 0 rgba(0,0,0,.12);letter-spacing:.02em;mix-blend-mode:soft-light}
+  .sobo123 b{font-weight:400;display:inline-block}
+  .sobo123 b:nth-child(2){transform:translateY(-.06em)}
   .soboin:not(.on) .sobo123{opacity:0}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
