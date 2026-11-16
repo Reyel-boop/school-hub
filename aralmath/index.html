@@ -564,6 +564,18 @@
   .vrow.rec{border-color:#ef4444;background:#fef2f2;animation:recpulse 1s ease-in-out infinite}
   .vrow .btn.stop{background:#ef4444}
   @keyframes recpulse{50%{box-shadow:0 0 0 4px rgba(239,68,68,.25)}}
+  /* hero buddy (StudioRun, Rive) */
+  .herofr{position:absolute;left:50%;bottom:4%;width:78%;aspect-ratio:1;transform:translateX(-50%);border-radius:22%;overflow:hidden;background:#3d46c6;box-shadow:0 0 0 4px #fff,0 10px 22px -8px rgba(15,23,42,.5);cursor:pointer;pointer-events:auto}
+  .herofr img,.herofr canvas{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+  .herofr canvas{opacity:0;transition:opacity .5s}.soboin.live .herofr canvas{opacity:1}
+  .herofr.hop{animation:herohop .7s cubic-bezier(.3,1.6,.5,1) 2}.herofr.wob{animation:herowob .5s ease-in-out}
+  @keyframes herohop{40%{transform:translateX(-50%) translateY(-18%) rotate(-4deg)}}@keyframes herowob{25%{transform:translateX(-56%) rotate(-5deg)}75%{transform:translateX(-44%) rotate(5deg)}}
+  .heropick{position:fixed;inset:0;z-index:300;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:1rem}
+  .heropickin{background:#fff;border-radius:1.2rem;padding:1.2rem;max-width:34rem;width:100%;text-align:center}
+  .heropickgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin:.8rem 0}
+  .heropickgrid button{border:0;background:#f1f5f9;border-radius:.9rem;padding:.3rem;font:600 .72rem inherit;cursor:pointer}
+  .heropickgrid button.on{background:#facc15}.heropickgrid img{width:100%;aspect-ratio:1;border-radius:.6rem;display:block}
+  .heropickgrid span{display:block;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
   .soboslot{flex:none;width:17rem;height:17rem;margin:0 -1rem 0 -.5rem}
@@ -1838,7 +1850,7 @@ function map(el){
           <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
           <li>Stuck? Tap <b>🎬 Watch the lesson</b> to see how it's done.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div>
-    <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
+    <p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
   soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400});
   { const say = document.querySelector('.hudsay, .mapsobo .sobosay'); let seen = false; try { seen = !!sessionStorage.getItem('aralmath-greeted'); sessionStorage.setItem('aralmath-greeted', '1'); } catch (e) {}
     if (say && ttsOn() && !seen) setTimeout(() => speak(say.textContent, 'buddy'), 600); }
@@ -1856,7 +1868,7 @@ function startPractice(id, skipStory, skipLesson){
   S = {id, items: Array.from({length: ITEMS}, () => toChoices(SK[id].gen())), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
   screen = 'map'; P.tab('learn'); window.scrollTo(0, 0);
 }
-/* ---- Sobo, a Rive character (rive/sobo.riv, CC BY 4.0 by Patgrivet, Rive Marketplace), cheers the learner on during practice.
+/* ---- The buddy slot (it held Sobo, rive/sobo.riv by Patgrivet, before), cheers the learner on during practice.
    One Sobo is kept alive and moved into each redrawn practice screen, so it never reloads or flickers.
    The Rive player (rive/rive.js + rive.wasm) loads only when practice opens; if anything fails, Sobo stays hidden. ---- */
 let SOBO = null, SOBO_EL = null, SOBO_T = null, SOBO_KEY = '', riveLoading = null;
@@ -1865,27 +1877,43 @@ function loadRive(){
   return riveLoading || (riveLoading = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'rive/rive.js';
     sc.onload = () => { try { rive.RuntimeLoader.setWasmUrl('rive/rive.wasm'); ok(); } catch (e) { no(e); } }; sc.onerror = no; document.head.appendChild(sc); }));
 }
+// The buddy is now the learner's hero: a character from "StudioRun" by thelittlelabs (rive/studiorun.riv, Rive Marketplace, CC BY 4.0).
+// The file draws its ten characters inside its own night-sky scene, so the hero is a framed portrait:
+// Rive's layout bounds draw only the hero's 380-unit square of the 1920x1080 game artboard into a small canvas.
+const HEROES = ['Painter', 'Planner', 'Coder', 'Designer', '3D Maker', 'Dreamweaver', 'Builder', 'Writer', 'Chef', 'Santa'];
+const HERO_CROP = {x: 370, y: 630, size: 380, w: 1920, h: 1080};
+function heroNo(){ try { const v = localStorage.getItem('hub-hero'); if (v !== null && +v >= 0 && +v < 10) return +v; } catch (e) {} return 5; }
+function heroSet(n){ try { localStorage.setItem('hub-hero', String(n)); } catch (e) {} heroPick(); const t = SOBO_EL && SOBO_EL.querySelector('img'); if (t) t.src = 'rive/heroes/' + n + '.jpg'; }
+function heroPick(){ try { const i = SOBO && SOBO.stateMachineInputs('STATE MACHINE').find(x => x.name === 'CHHH Selected'); if (i) i.value = heroNo(); } catch (e) {} }
+function heroFit(){ if (!SOBO || !SOBO_EL) return; const cv = SOBO_EL.querySelector('canvas'), n = cv.clientWidth; if (!n) return;
+  const px = Math.min(2, window.devicePixelRatio || 1), N = Math.round(n * px); if (cv.width !== N) { cv.width = cv.height = N; }
+  const k = N / HERO_CROP.size, x0 = -HERO_CROP.x * k, y0 = -HERO_CROP.y * k;
+  SOBO.layout = new rive.Layout({fit: rive.Fit.Fill, minX: x0, minY: y0, maxX: x0 + HERO_CROP.w * k, maxY: y0 + HERO_CROP.h * k}); }
+// tap the hero to choose another one
+function heroChooser(){
+  const old = document.getElementById('heroPickBox'); if (old) return old.remove();
+  const box = document.createElement('div'); box.id = 'heroPickBox'; box.className = 'heropick';
+  box.innerHTML = `<div class="heropickin"><b>Choose your hero</b><div class="heropickgrid">${HEROES.map((nm, n) => `<button data-n="${n}" class="${n === heroNo() ? 'on' : ''}"><img src="rive/heroes/${n}.jpg" alt=""><span>${nm}</span></button>`).join('')}</div>
+    <p class="credit">Characters from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> (CC BY 4.0)</p><button class="btn ghost" data-close>Close</button></div>`;
+  box.onclick = e => { const b = e.target.closest('button'); if (e.target === box || (b && b.hasAttribute('data-close'))) return box.remove(); if (b && b.dataset.n) { heroSet(+b.dataset.n); box.remove(); } };
+  document.body.appendChild(box);
+}
 function soboAttach(slotId, move){
   const slot = $(slotId); if (!slot) return;
   if (!SOBO_EL) {
-    SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin'; const cv = document.createElement('canvas'); SOBO_EL.appendChild(cv);
-    slot.appendChild(SOBO_EL);
+    SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin';
+    SOBO_EL.innerHTML = `<div class="herofr" title="Tap to choose your hero"><img src="rive/heroes/${heroNo()}.jpg" alt=""><canvas></canvas></div>`;
+    SOBO_EL.querySelector('.herofr').onclick = heroChooser;
+    const cv = SOBO_EL.querySelector('canvas'); slot.appendChild(SOBO_EL); SOBO_EL.classList.add('on');
     loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
-      const px = Math.max(2, window.devicePixelRatio || 1); cv.width = 340 * px; cv.height = 340 * px; // big enough to stay sharp in every spot
-      SOBO = new rive.Rive({src: 'rive/sobo.riv', canvas: cv, artboard: 'SOBO-Talk', animations: ['Idle', 'Blink'], autoplay: true,
-        layout: new rive.Layout({fit: rive.Fit.Contain, alignment: rive.Alignment.BottomCenter}),
-        onLoad: () => { SOBO_EL && SOBO_EL.classList.add('on'); if (SOBO_KEY) soboDo(SOBO_KEY.split('|')[1].split(','), +SOBO_KEY.split('|')[2]); },
-        onLoadError: () => { const p = SOBO_EL && SOBO_EL.closest('.sobopanel'); if (p) p.classList.add('nosobo'); }});
-    }).catch(() => { const p = SOBO_EL && SOBO_EL.closest('.sobopanel'); if (p) p.classList.add('nosobo'); });
-  } else slot.appendChild(SOBO_EL);
-  if (move) { const key = move.key + '|' + [].concat(move.anim).join(',') + '|' + (move.hold || 0); if (key !== SOBO_KEY) { SOBO_KEY = key; soboDo([].concat(move.anim), move.hold || 0); } }
+      SOBO = new rive.Rive({src: 'rive/studiorun.riv', canvas: cv, artboard: 'Artboard', stateMachines: 'STATE MACHINE', autoplay: true,
+        onLoad: () => { heroPick(); heroFit(); SOBO_EL && SOBO_EL.classList.add('live'); }});
+    }).catch(() => {});
+  } else { slot.appendChild(SOBO_EL); requestAnimationFrame(heroFit); }
 }
-// play one of Sobo's moves (Idle, Hello, Talk, Listen, Yes, NoBump, Sparkles…); one-shot moves go back to Idle + Blink
-function soboDo(names, holdMs = 1900){
-  if (!SOBO) return; clearTimeout(SOBO_T);
-  try { SOBO.stop(); SOBO.play(names.concat('Blink')); } catch (e) { return; }
-  if (holdMs) SOBO_T = setTimeout(() => { try { SOBO && (SOBO.stop(), SOBO.play(['Idle', 'Blink'])); } catch (e) {} }, holdMs);
-}
+// the hero has no one-shot moves outside its own game, so these just keep it idle
+function soboDo(names){ const f = SOBO_EL && SOBO_EL.querySelector('.herofr'); if (!f || !names) return; const k = names.includes('Yes') ? 'hop' : names.includes('NoBump') ? 'wob' : '';
+  f.classList.remove('hop', 'wob'); if (k) { void f.offsetWidth; f.classList.add(k); } }
 function soboStop(){ clearTimeout(SOBO_T); if (SOBO) { try { SOBO.cleanup(); } catch (e) {} } SOBO = null; SOBO_EL = null; SOBO_KEY = ''; }
 
 // the narrator: a Rive character (rive/narrator.riv, CC BY 4.0 by alinazari) beside the spoken lines; it blinks and follows the pointer
@@ -1924,7 +1952,7 @@ function battle(el){
       <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Correct!</b> +${last.coins} coins${S.combo >= 3 ? ' (streak bonus!)' : ''}` : `<b>Not quite.</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
         ${!last.ok && S.wrongRun >= 2 ? `<div class="fb info"><b>Let's review together:</b><div style="margin-top:.3rem">${sk.learn}</div></div>` : ''}
         <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
-    </div><p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
+    </div><p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
   soboAttach('soboSlot', !S.answered ? (S.i === 0 ? {key: 'hello', anim: 'Hello', hold: 2400} : {key: 'listen' + S.i, anim: 'Listen', hold: 0})
     : last.ok ? {key: 'yes' + S.i, anim: ['Yes', 'Sparkles'], hold: 2400} : {key: 'no' + S.i, anim: 'NoBump', hold: 1800});
   { const say = document.querySelector('.sobopanel .sobosay'), k = S.i + ':' + S.answered; if (say && ttsOn() && S.sayKey !== k) { S.sayKey = k; speak(say.textContent, 'buddy'); } }
@@ -2331,7 +2359,7 @@ function nlsView(el){
       <p class="say"><span id="nlsSay"></span></p>
       <div class="lctl"><button class="icb" onclick="nlsReplay()">⟲ Watch this one again</button><div class="grow"></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Sobo by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, CC BY 4.0 · made with Rive</p></div></div></div>`;
+        <button class="btn sm" id="nlsNext" onclick="nlsNext()" hidden>Next problem ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, CC BY 4.0 · made with Rive</p></div></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect);
   nlsLook(); narrMount();
   soboAttach('soboLesson', {key: 'nls-' + N.id + '-' + Date.now(), anim: 'Hello', hold: 2400});
@@ -2503,7 +2531,7 @@ function lessonView(el){
       <div class="lctl"><button class="icb" onclick="lessonReplay()">⟲ Replay</button><button class="icb" id="lplay" onclick="lessonPause()">⏸ Pause</button>
         <div class="grow ltl"><div class="tsegs" id="tsegs"></div><small class="ttime" id="ttime">0:00 / 0:00</small></div>
         <button class="icb ${ttsOn() ? 'on' : ''}" id="ttsBtn" onclick="toggleTTS()">${ttsOn() ? '🔊 Read aloud: on' : '🔈 Read aloud: off'}</button>${voiceSelect()}
-        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · Sobo by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, CC BY 4.0 · made with Rive</p></div></div>
+        <button class="btn sm" id="lnext" onclick="lessonNext()">Next ▶</button></div><p class="credit">Narrator by <a href="https://rive.app/marketplace/28334-53514-interactive-character-follow/" target="_blank" rel="noopener">alinazari</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, CC BY 4.0 · made with Rive</p></div></div>
     <aside class="lnotes"><div class="ntabs"><button id="ntab0" class="on" onclick="noteTab(0)">📑 Lesson notes</button><button id="ntab1" onclick="noteTab(1)">✏ My notes</button></div>
       <div id="lres"></div><div class="nbody" id="nbody"></div></aside></div></div>`;
   document.querySelectorAll('select.vsel').forEach(fillVoiceSelect); NOTETAB = 0; narrMount();
