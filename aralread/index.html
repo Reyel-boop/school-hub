@@ -34,6 +34,17 @@
   .vocab span{background:var(--brand-soft);color:var(--brand-d);border-radius:2rem;padding:.25rem .7rem}
   .rbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.rbar .grow{flex:1}
   .prog{height:.55rem;border-radius:1rem;background:#f1f5f9;overflow:hidden;min-width:8rem}.prog i{display:block;height:100%;background:var(--grad)}
+  /* your turn: the learner reads the line aloud (speech recognition) */
+  .turn{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;background:#fff;border-radius:1.1rem;padding:1rem 1.2rem;box-shadow:0 0 0 2px #fbcfe8}
+  .turn.pass{box-shadow:0 0 0 2px #86efac;background:#f0fdf4}.turn.miss{box-shadow:0 0 0 2px #fca5a5}
+  .turn .grow{flex:1;min-width:14rem}.turn h3{margin:0 0 .2rem;font-size:1.05rem}.turn p{margin:0;color:#475569}
+  .mic{font:600 1.05rem Poppins,sans-serif;border:0;border-radius:2rem;padding:.8rem 1.4rem;background:var(--grad);color:#fff;cursor:pointer;box-shadow:0 4px 0 #831843}
+  .mic.pulse{animation:micp 1.3s ease-in-out infinite}@keyframes micp{50%{box-shadow:0 4px 0 #831843,0 0 0 8px rgba(236,72,153,.25)}}
+  .mic.on{background:#ef4444;box-shadow:0 4px 0 #991b1b;animation:micp 1s ease-in-out infinite}
+  .btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4)}
+  .heard{font-style:italic;color:#64748b;margin-top:.3rem !important}
+  .acc{font:400 1.8rem 'Lilita One',Poppins,sans-serif}.acc.good{color:#16a34a}.acc.bad{color:#dc2626}
+  .ln.cur .w.ok{color:#15803d;text-decoration:underline 2px #86efac;text-underline-offset:4px}.ln.cur .w.miss{color:#b91c1c;background:#fee2e2;border-radius:.25rem}
   /* quiz */
   .q{font-weight:600;font-size:1.15rem;margin:.2rem 0 .9rem}
   .opts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
@@ -105,6 +116,7 @@ const first = () => esc(String(P.me.name).split(' ')[0]);
 const attemptsOf = (u, id) => P.db.attempts.filter(a => a.u === u && (!id || a.story === id));
 const bestOf = (u, id) => attemptsOf(u, id).reduce((m, a) => Math.max(m, a.score), -1);
 const cleared = (u, id) => bestOf(u, id) >= MIN_PASS;
+const readOf = (u, id) => { const r = attemptsOf(u, id).map(a => a.read).filter(x => x != null); return r.length ? Math.max(...r) : null; };
 const starsFor = s => s >= 4 ? 3 : s >= 3 ? 2 : s >= 2 ? 1 : 0;
 const starsHtml = n => `<span class="stars">${[0, 1, 2].map(i => `<span class="${i < n ? 'on' : ''}">★</span>`).join('')}</span>`;
 const bandStories = b => STORIES.filter(s => s.band === b);
@@ -199,16 +211,61 @@ function reader(el){
     <div class="rbar"><button class="btn ghost sm" onclick="closeStory()">← Library</button><div class="grow"><b>${esc(s.title)}</b><div class="hint">Line ${R.i + 1} of ${n}</div></div>
       <div class="prog"><i style="width:${Math.round(100 * (R.i + 1) / n)}%"></i></div><button class="btn ghost sm" onclick="toggleSound()">${soundOn() ? '🔊' : '🔇'}</button></div>
     ${narrHtml(esc(s.lines[R.i]), 'Reading with you')}
-    <div class="page"><h2>${esc(s.title)}</h2>${s.lines.map((t, k) => `<span class="ln ${k < R.i ? 'done' : k === R.i ? 'cur' : 'todo'}" onclick="${k <= R.i ? `readLine(${k})` : ''}">${esc(t)}</span> `).join('')}
+    <div class="page"><h2>${esc(s.title)}</h2>${s.lines.map((t, k) => `<span class="ln ${k < R.i ? 'done' : k === R.i ? 'cur' : 'todo'}" onclick="${k < R.i ? `readLine(${k})` : ''}">${k === R.i ? curLineHtml(t) : esc(t)}</span> `).join('')}
       ${R.i === n - 1 ? `<div class="vocab"><b>Words to know:</b>${s.vocab.map(([w, m]) => `<span><b>${esc(w)}</b>: ${esc(m)}</span>`).join('')}</div>` : ''}</div>
+    ${turnHtml()}
     <div class="rbar"><button class="btn ghost" onclick="readLine(${Math.max(0, R.i - 1)})" ${R.i ? '' : 'disabled'}>◀ Back</button><button class="btn ghost" onclick="readLine(${R.i})">🔁 Read again</button><div class="grow"></div>
-      ${R.i < n - 1 ? `<button class="btn" onclick="readLine(${R.i + 1})">Next line ▶</button>` : `<button class="btn" onclick="startQuiz()">Answer the questions ▶</button>`}</div>
+      ${R.i < n - 1 ? `<button class="btn" onclick="readLine(${R.i + 1})" ${canGoOn() ? '' : 'disabled title="Read the line out loud first"'}>Next line ▶</button>` : `<button class="btn" onclick="startQuiz()" ${canGoOn() ? '' : 'disabled title="Read the line out loud first"'}>Answer the questions ▶</button>`}</div>
     <p class="credit">${CREDIT}</p></div>`;
   boyMount();
 }
-function readLine(k){ R.i = k; sfx('tap'); P.refresh(); narrate(esc(storyOf(R.id).lines[k])); }
-function closeStory(){ R = null; vstop(); P.refresh(); }
-function startQuiz(){ R.phase = 'quiz'; R.q = 0; R.right = 0; R.picked = null; P.refresh(); narrate(esc(storyOf(R.id).qs[0][0])); }
+/* ================= YOUR TURN: the learner reads the line aloud; the browser's speech recognition checks it ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const PASS = 80, MAX_TRIES = 3; // % of words read right to pass a line; after 3 tries the learner may go on anyway
+let REC = null;
+const words = t => String(t).toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/^'+|'+$/g, ''));
+function lev(a, b){ if (Math.abs(a.length - b.length) > 2) return 9; const d = [...Array(b.length + 1).keys()];
+  for (let i = 1; i <= a.length; i++) { let prev = d[0]; d[0] = i; for (let j = 1; j <= b.length; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; } } return d[b.length]; }
+const same = (a, b) => a === b || (a.length >= 4 && lev(a, b) <= 1) || (a.length >= 7 && lev(a, b) <= 2);
+// line all words of the line up with what was heard, in order (longest common subsequence); returns which line words were read
+function matchWords(line, heard){
+  const L = words(line), H = words(heard), n = L.length, m = H.length, T = Array.from({length: n + 1}, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) T[i][j] = same(L[i], H[j]) ? 1 + T[i + 1][j + 1] : Math.max(T[i + 1][j], T[i][j + 1]);
+  const ok = new Array(n).fill(false); let i = 0, j = 0; while (i < n && j < m) { if (same(L[i], H[j])) { ok[i] = true; i++; j++; } else if (T[i + 1][j] >= T[i][j + 1]) i++; else j++; }
+  return {ok, acc: n ? Math.round(100 * ok.filter(Boolean).length / n) : 0};
+}
+const lineState = () => (R.read = R.read || {})[R.i] || (R.read[R.i] = {tries: 0});
+const canGoOn = () => !isStudent() || !SR || (() => { const st = (R.read || {})[R.i]; return !!st && (st.ok || st.tries >= MAX_TRIES); })();
+function listen(){
+  if (!SR) return; if (REC) { try { REC.stop(); } catch (e) {} return; }
+  vstop(); const st = lineState(), line = storyOf(R.id).lines[R.i], rec = new SR(); let best = {acc: -1}, heard = '';
+  rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 3;
+  rec.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); const h = $('heard'); if (h) h.textContent = '“' + heard + '”';
+    for (const r of e.results) for (const alt of r) { const m = matchWords(line, alt.transcript); if (m.acc > best.acc) best = Object.assign(m, {text: alt.transcript}); }
+    const whole = matchWords(line, heard); if (whole.acc > best.acc) best = Object.assign(whole, {text: heard}); };
+  rec.onerror = e => { st.err = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'mic' : e.error === 'no-speech' ? 'quiet' : 'other'; };
+  rec.onend = () => { REC = null;
+    if (best.acc >= 0) { st.tries++; st.heard = best.text; st.acc = best.acc; st.ok = st.ok || best.acc >= PASS; st.marks = best.ok; st.err = null;
+      sfx(best.acc >= PASS ? 'win' : 'no'); narrate(best.acc >= PASS ? `Great reading, ${first()}!` : 'Almost! Try the red words again.'); }
+    P.refresh(); };
+  try { rec.start(); REC = rec; st.err = null; P.refresh(); } catch (e) { REC = null; }
+}
+function turnHtml(){
+  const st = (R.read || {})[R.i] || {}, n = storyOf(R.id).lines.length;
+  if (!SR) return `<div class="turn"><div class="grow"><h3>🎤 Your turn: read the line out loud</h3><p>This browser can't listen to your reading. Open the School Hub in Chrome or Safari to have your reading checked.</p></div></div>`;
+  const tail = R.i < n - 1 ? 'the next line' : 'the questions';
+  const msg = REC ? 'Listening… read the yellow line now.' : st.err === 'mic' ? 'Please allow the microphone, then tap the button again.' : st.err === 'quiet' ? 'I didn\'t hear anything. Tap the button and read a little louder.'
+    : st.acc == null ? 'Listen to your reading buddy, then tap the button and read the yellow line.' : st.ok ? `You read ${st.acc}% of the words right. On to ${tail}!` : st.tries >= MAX_TRIES ? `You read ${st.acc}% of the words right. Keep practicing! You can go on to ${tail}.` : `You read ${st.acc}% of the words right. Read the red words carefully and try again (try ${st.tries} of ${MAX_TRIES}).`;
+  return `<div class="turn ${st.acc == null || REC ? '' : st.ok ? 'pass' : 'miss'}"><div class="grow"><h3>🎤 Your turn, ${first()}! Read this line out loud.</h3><p>${msg}</p>${st.heard && !REC ? `<p class="heard">I heard: “${esc(st.heard)}”</p>` : REC ? '<p class="heard" id="heard"></p>' : ''}</div>
+    ${st.acc != null && !REC ? `<div class="acc ${st.ok ? 'good' : 'bad'}">${st.acc}%</div>` : ''}
+    <button class="mic ${REC ? 'on' : st.ok ? '' : 'pulse'}" onclick="listen()">${REC ? '■ Stop' : st.acc == null ? '🎤 Read it aloud' : st.ok ? '🎤 Read again' : '🎤 Try again'}</button></div>`;
+}
+// the current line, word by word, colored after the learner reads it
+function curLineHtml(t){ const st = (R.read || {})[R.i]; if (!st || !st.marks) return esc(t); let k = 0;
+  return String(t).split(/(\s+)/).map(part => { if (!part.trim()) return part; const has = words(part).length; const cls = has ? (st.marks[k] ? 'ok' : 'miss') : ''; if (has) k += words(part).length; return `<span class="w ${cls}">${esc(part)}</span>`; }).join(''); }
+function readLine(k){ if (REC) { try { REC.abort(); } catch (e) {} REC = null; } R.i = k; sfx('tap'); P.refresh(); narrate(esc(storyOf(R.id).lines[k])); }
+function closeStory(){ if (REC) { try { REC.abort(); } catch (e) {} REC = null; } R = null; vstop(); P.refresh(); }
+function startQuiz(){ if (REC) { try { REC.abort(); } catch (e) {} REC = null; } R.phase = 'quiz'; R.q = 0; R.right = 0; R.picked = null; P.refresh(); narrate(esc(storyOf(R.id).qs[0][0])); }
 function quiz(el){
   const s = storyOf(R.id);
   if (R.phase === 'done') { const st = starsFor(R.right), pass = R.right >= MIN_PASS, nx = isStudent() ? nextStory(P.me.u) : null;
@@ -228,7 +285,8 @@ function quiz(el){
 function pick(k){ const ans = storyOf(R.id).qs[R.q][2]; R.picked = k; if (k === ans) { R.right++; sfx('ok'); } else sfx('no'); P.refresh(); narrate(k === ans ? 'Correct! Great reading.' : `Not quite. The answer is: ${esc(storyOf(R.id).qs[R.q][1][ans])}.`); }
 function nextQ(){
   if (R.q < 3) { R.q++; R.picked = null; P.refresh(); return narrate(esc(storyOf(R.id).qs[R.q][0])); }
-  if (isStudent()) { P.db.attempts.push({u: P.me.u, story: R.id, score: R.right, t: Date.now()}); P.save(); }
+  if (isStudent()) { const ac = Object.values(R.read || {}).filter(x => x.acc != null).map(x => x.acc), read = ac.length ? Math.round(ac.reduce((a, b) => a + b, 0) / ac.length) : null;
+    P.db.attempts.push({u: P.me.u, story: R.id, score: R.right, read, t: Date.now()}); P.save(); }
   R.phase = 'done'; R.doneMsg = R.right >= MIN_PASS ? `Wonderful, ${first()}! You got ${R.right} out of 4.` : `Good try, ${first()}! You got ${R.right} out of 4. Let's read it again.`;
   sfx(R.right >= MIN_PASS ? 'win' : 'no'); P.refresh(); narrate(R.doneMsg);
 }
@@ -237,22 +295,22 @@ function nextQ(){
 function progress(el){
   const u = P.me.u, list = bandStories(bandOf(u)), done = list.filter(s => cleared(u, s.id)).length;
   el.innerHTML = `<div class="stack"><div class="card"><h2>My reading</h2><p class="hint">${done} of ${list.length} stories cleared · ${attemptsOf(u).length} quizzes taken</p>
-    <div class="tablewrap"><table class="cls"><tr><th>Story</th><th>Best</th><th>Stars</th><th>Tries</th></tr>${list.map(s => { const b = bestOf(u, s.id);
-      return `<tr><td>${esc(s.title)}</td><td>${b >= 0 ? b + ' / 4' : '—'}</td><td>${b >= 0 ? starsHtml(starsFor(b)) : '—'}</td><td>${attemptsOf(u, s.id).length}</td></tr>`; }).join('')}</table></div></div></div>`;
+    <div class="tablewrap"><table class="cls"><tr><th>Story</th><th>Best</th><th>Stars</th><th>🎤 Reading</th><th>Tries</th></tr>${list.map(s => { const b = bestOf(u, s.id), rd = readOf(u, s.id);
+      return `<tr><td>${esc(s.title)}</td><td>${b >= 0 ? b + ' / 4' : '—'}</td><td>${b >= 0 ? starsHtml(starsFor(b)) : '—'}</td><td>${rd != null ? rd + '%' : '—'}</td><td>${attemptsOf(u, s.id).length}</td></tr>`; }).join('')}</table></div></div></div>`;
 }
 
 /* ================= TEACHER: class progress ================= */
 function classView(el){
   const kids = P.usersWith('student');
-  el.innerHTML = `<div class="stack"><div class="card"><h2>Class reading progress</h2><p class="hint">Best quiz score per story (out of 4). A story is cleared at ${MIN_PASS} or more.</p>
+  el.innerHTML = `<div class="stack"><div class="card"><h2>Class reading progress</h2><p class="hint">Best quiz score per story (out of 4); a story is cleared at ${MIN_PASS} or more. 🎤 shows how many words the learner read aloud correctly (best try).</p>
     ${Object.entries(BANDS).map(([b, label]) => { const list = bandStories(b), mine = kids.filter(k => bandOf(k.u) === b); if (!mine.length) return '';
       return `<h3 style="margin:1rem 0 .4rem">${label}</h3><div class="tablewrap"><table class="cls"><tr><th>Learner</th>${list.map(s => `<th>${esc(s.title)}</th>`).join('')}</tr>
-        ${mine.map(k => `<tr><td><b style="font-weight:600">${esc(k.name)}</b><br><small class="hint">${esc(k.pos)}</small></td>${list.map(s => { const v = bestOf(k.u, s.id); return `<td>${v >= 0 ? `${v} / 4 ${starsHtml(starsFor(v))}` : '—'}</td>`; }).join('')}</tr>`).join('')}</table></div>`; }).join('')}</div></div>`;
+        ${mine.map(k => `<tr><td><b style="font-weight:600">${esc(k.name)}</b><br><small class="hint">${esc(k.pos)}</small></td>${list.map(s => { const v = bestOf(k.u, s.id), rd = readOf(k.u, s.id); return `<td>${v >= 0 ? `${v} / 4 ${starsHtml(starsFor(v))}` : '—'}${rd != null ? `<br><small class="hint">🎤 read ${rd}%</small>` : ''}</td>`; }).join('')}</tr>`).join('')}</table></div>`; }).join('')}</div></div>`;
 }
 
 /* ================= ADMIN: voice-over studio (lines shared with Aral Math's recordings) ================= */
 let VREC = null;
-function voiceLines(){ return [['Greetings & help', ["Let's read", 'together', "I'll read each line with you", 'Correct! Great reading.', 'Not quite. The answer is:', 'Wonderful', 'Good try', 'You got', 'out of 4', "Let's read it again", 'You finished every story. Read one again for 3 stars!', 'is still locked', 'first and get 3 questions right']]]
+function voiceLines(){ return [['Greetings & help', ["Let's read", 'together', "I'll read each line with you", 'Correct! Great reading.', 'Not quite. The answer is:', 'Wonderful', 'Good try', 'You got', 'out of 4', "Let's read it again", 'You finished every story. Read one again for 3 stars!', 'is still locked', 'first and get 3 questions right', 'Great reading', 'Almost! Try the red words again.']]]
   .concat(STORIES.map(s => [s.title, [s.title].concat(s.lines, s.qs.map(q => q[0]), s.qs.flatMap(q => q[1]))])); }
 function voiceView(el){
   if (!isHubAdmin()) { el.innerHTML = '<div class="card"><h2>Voice-over</h2><p class="hint">Only the admin account can record the voice-over.</p></div>'; return; }
