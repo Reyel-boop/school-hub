@@ -531,7 +531,7 @@ const ACCESS = {
 };
 // Online systems (they have no row above) that a Hub account may not open.
 const BLOCKED_ONLINE = {
-  student: ['bless', 'inventory'],
+  student: ['bless', 'inventory', 'campus'],   // students use only: Momo Smart, JHS Lab Kiosk, Tuon, Aral Reading, Aral Math, E-Guidance, E-Clinic, Cashiering, Registrar
 };
 const roleOf = () => me.role || me.u;
 const hasAccess = s => !me || (!(BLOCKED_ONLINE[roleOf()] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][roleOf()]));
@@ -843,14 +843,25 @@ function reyelRole(k){
   reyelSay(`Hi${nm ? ', ' + nm : ', ' + ROLE_LABEL[k]}! How can I help you today?`, () => reyelChoices(reyelMenu()));
 }
 
+// the systems a student may use, with what each one is for (in a student's words)
+const STUDENT_SYS = ['momo', 'complab', 'tuon', 'aralread', 'aralmath', 'guidance', 'clinic', 'cashier', 'registrar'];
+const STUDENT_DESC = {
+  cashier: 'Pay your school fees online and see your receipts.',
+  registrar: 'Request your Form 137, Certificate of Enrollment and other school documents.',
+  guidance: 'Talk to the guidance office when you need help or someone to listen.',
+  clinic: 'Visit the school clinic when you feel sick, and see your health records.',
+};
+// who Reyel is talking to: the signed-in account, or the role picked in the welcome
+const reyelWho = () => me ? (me.role === 'student' ? 'student' : me.role === 'admin' || me.role === 'principal' ? 'admin' : 'teacher') : (REYEL_ROLE || 'student');
 // Reyel's guide: what each need maps to
 const REYEL_NEEDS = [
   ['📚 Learn & practice lessons', ['aralmath', 'tuon', 'aralread', 'momo'], 'For lessons and practice, these will help you.'],
   ['📝 My grades & school records', ['registrar', 'momo'], 'Your grades and records are here.'],
+  ['📄 Request Form 137 or a certificate', ['registrar'], 'Request your Form 137, Certificate of Enrollment and other documents at the Registrar.'],
   ['🗂️ Enroll or update enrollment', ['enroll'], 'Enrollment is done here.'],
   ['🤒 I feel sick / clinic', ['clinic'], 'Please go to the E-Clinic. Take care of yourself!'],
   ['💬 I need someone to talk to', ['guidance'], "The guidance office is here for you. You're not alone."],
-  ['💵 Pay school fees', ['cashier'], 'Payments go through the cashier.'],
+  ['💵 Pay school fees', ['cashier'], 'You can pay your school fees online at the Cashiering System.'],
   ['🪪 My school ID', ['idsys'], 'School IDs are made here.'],
   ['💻 Computer or internet problem', ['ict', 'complab'], 'Report it here, and the ICT team will help.'],
   ['🛡️ Campus safety & attendance', ['campus'], 'Gate entry, attendance and safety are here.'],
@@ -864,7 +875,8 @@ function reyelOpenSys(id){ const s = SYSTEMS.find(x => x.id === id); if (!s) ret
   if (!hasAccess(s)) return reyelSay(`Your account can't open ${s.name}. If you need it, please ask the school admin.`, () => reyelChoices([['Help me with something else', reyelFind, true], ['Back', () => reyelChoices(reyelMenu())]]));
   reyelClose(); openSys(id); }
 function reyelFind(){
-  reyelSay('Sure! What do you need help with?', () => reyelChoices(REYEL_NEEDS.map(([label, ids, line]) => [label, () => {
+  const stu = reyelWho() === 'student', needs = REYEL_NEEDS.map(([l, ids, line]) => [l, stu ? ids.filter(id => STUDENT_SYS.includes(id)) : ids, line]).filter(([, ids]) => ids.length);
+  reyelSay('Sure! What do you need help with?', () => reyelChoices(needs.map(([label, ids, line]) => [label, () => {
     const list = ids.filter(id => SYSTEMS.some(s => s.id === id)), ok = list.filter(id => !me || hasAccess(SYSTEMS.find(s => s.id === id)));
     const show = (me ? ok : list).length ? (me ? ok : list) : list;
     reyelSay(line, () => reyelChoices([
@@ -872,9 +884,11 @@ function reyelFind(){
   }]).concat([['Back', () => reyelChoices(reyelMenu())]])));
 }
 function reyelExplain(){
-  const list = me ? SYSTEMS.filter(hasAccess) : SYSTEMS;
-  reyelSay(me ? 'Tap a system and I will tell you what it does.' : 'Here are all the systems. Tap one and I will tell you what it does.', () => reyelChoices(list.map(s => [s.name, () => {
-    const soon = !s.url && !ACCESS[s.id], d = (DESC[s.id] || '').replace(/<[^>]+>/g, '');
+  const who = reyelWho(), stu = who === 'student';
+  const list = stu ? STUDENT_SYS.map(id => SYSTEMS.find(s => s.id === id)).filter(Boolean) : me ? SYSTEMS.filter(hasAccess) : SYSTEMS;
+  const intro = stu ? `As a student, you can use these ${list.length} systems. Tap one and I will tell you what it does.` : who === 'teacher' ? 'Here are the systems for teachers. Tap one and I will tell you what it does.' : 'Here are the systems. Tap one and I will tell you what it does.';
+  reyelSay(intro, () => reyelChoices(list.map(s => [s.name, () => {
+    const soon = !s.url && !ACCESS[s.id], d = ((stu && STUDENT_DESC[s.id]) || DESC[s.id] || '').replace(/<[^>]+>/g, '');
     reyelSay(`${s.name}: ${d}${soon ? ' It is coming soon!' : ''}`, () => reyelChoices([...(soon ? [] : [[`Open ${s.name}`, () => reyelOpenSys(s.id), true]]), ['Another system', reyelExplain], ['Back', () => reyelChoices(reyelMenu())]]));
   }]).concat([['Back', () => reyelChoices(reyelMenu())]])));
 }
