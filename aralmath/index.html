@@ -106,6 +106,10 @@
   .node:hover .disc{transform:scale(1.07)}
   .node .disc svg{width:3.9rem;height:3.9rem}
   .node.caught .disc{background:var(--soft);border-color:var(--c)}
+  .node.locked .disc::after{content:"🔒";position:absolute;right:-.2rem;bottom:-.1rem;font-size:1.05rem;background:#fff;border-radius:50%;width:1.7rem;height:1.7rem;display:grid;place-items:center;box-shadow:0 2px 6px rgba(15,23,42,.2)}
+  .node.locked{opacity:.75}.node.locked:hover .disc{transform:none}
+  .locknote{position:fixed;left:50%;bottom:1.4rem;z-index:400;transform:translate(-50%,150%);background:#0f172a;color:#fff;padding:.8rem 1.2rem;border-radius:1rem;font-weight:500;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.3,1.4,.5,1);max-width:min(92vw,34rem);text-align:center}
+  .locknote.on{transform:translate(-50%,0)}
   .node.next .disc{border-color:#facc15;box-shadow:0 0 0 0 rgba(250,204,21,.7);animation:pulse 1.6s infinite}
   .node.next::before{content:"PLAY";position:absolute;top:-.55rem;z-index:2;background:#facc15;color:#422006;font-size:.6rem;font-weight:700;padding:.05rem .45rem;border-radius:1rem;letter-spacing:.06em}
   .node b{font-size:.74rem;font-weight:500;line-height:1.25}
@@ -576,7 +580,7 @@
   @keyframes herohop{40%{transform:translateX(-50%) translateY(-18%) rotate(-4deg)}}@keyframes herowob{25%{transform:translateX(-56%) rotate(-5deg)}75%{transform:translateX(-44%) rotate(5deg)}}
   .heropick{position:fixed;inset:0;z-index:300;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:1rem}
   .heropickin{background:#fff;border-radius:1.2rem;padding:1.2rem;max-width:34rem;width:100%;text-align:center}
-  .heropickgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin:.8rem 0}
+  .heropickgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;margin:.8rem 0}
   .heropickgrid button{border:0;background:#f1f5f9;border-radius:.9rem;padding:.3rem;font:600 .72rem inherit;cursor:pointer}
   .heropickgrid button.on{background:#facc15}.heropickgrid img{width:100%;aspect-ratio:1;border-radius:.6rem;display:block}
   .heropickgrid span{display:block;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -730,7 +734,7 @@
   .mkhero{position:relative;width:100%;aspect-ratio:1}
   .mkhero .soboin{position:absolute;inset:0}.mkhero .herofr{width:92%;bottom:2%}
   .mkheroname{font:400 22px 'Lilita One',sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.2)}
-  .mkheroes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .mkheroes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
   .mkopt.mkh{display:flex;flex-direction:column;align-items:center;padding:4px;gap:2px;aspect-ratio:auto;min-width:0}.mkh img{width:100%;aspect-ratio:1;border-radius:8px;display:block}
   .mkh span{font:700 10.5px Poppins,sans-serif;color:#0c4a6e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .mkcredit{margin:8px 2px 0;font:500 11px Poppins,sans-serif;color:#0369a1}.mkcredit a{color:inherit}
@@ -1569,7 +1573,7 @@ const PAL = [['#22c55e','#15803d','#dcfce7'],['#a855f7','#6b21a8','#f3e8ff'],['#
   ['#eab308','#a16207','#fef9c3'],['#3b82f6','#1d4ed8','#dbeafe'],['#ef4444','#b91c1c','#fee2e2'],['#14b8a6','#0f766e','#ccfbf1'],['#8b5cf6','#5b21b6','#ede9fe'],['#84cc16','#4d7c0f','#ecfccb']];
 const SYL1 = ['Bo','Ka','Mi','Lu','Ta','Pi','Zo','Ri','Nu','Ga','Do','Bi','Ki','Ya','Tu','Mo'], SYL2 = ['lag','mo','kis','ru','tot','nyo','bit','pay','ling','gon','bun','tik','ray','sing'];
 const monsterOf = seed => {
-  const hr = String(seed).match(/^hero:(\d):(.*)$/); // a StudioRun hero chosen in "Choose your hero"
+  const hr = String(seed).match(/^hero:(\d+):(.*)$/); // a StudioRun hero chosen in "Choose your hero"
   if (hr) return {pal: PAL[3], body: 0, top: 0, eyes: 2, mouth: 0, pat: 0, name: hr[2] || HEROES[+hr[1]], hero: +hr[1]};
   const mk = String(seed).match(/^mk:(\d),(\d+),(\d),(\d),(\d),(\d):(.*)$/); // made in the Monster Maker
   if (mk) { const e = +mk[3]; return {pal: PAL[+mk[2]] || PAL[0], body: +mk[1], top: +mk[5], eyes: [1, 2, 3, 2, 2][e] || 2, eyeStyle: e, mouth: +mk[4], pat: +mk[6], name: mk[7] || 'Buddy'}; }
@@ -1591,7 +1595,7 @@ let SVGN = 0; // unique gradient ids
 const mixHex = (h, w, t) => { const a = parseInt(h.slice(1), 16), b = parseInt(w.slice(1), 16), ch = (x, y, s) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t);
   return '#' + ((1 << 24) | (ch(a, b, 16) << 16) | (ch(a, b, 8) << 8) | ch(a, b, 0)).toString(16).slice(1); };
 function monsterSVG(seed, mood = 'idle', acc = [], cls = 'mon'){
-  { const hr = String(seed).match(/^hero:(\d):/); if (hr) return `<img class="${cls} heroimg" src="rive/heroes/${hr[1]}.jpg" alt="">`; }
+  { const hr = String(seed).match(/^hero:(\d+):/); if (hr) return `<img class="${cls} heroimg" src="rive/heroes/${hr[1]}.jpg" alt="">`; }
   const M = monsterOf(seed), [c, dk, bl] = M.pal, gid = 'mg' + (++SVGN), st = `stroke="${dk}" stroke-width="3" stroke-linejoin="round"`;
   const fillB = `url(#${gid})`;
   const top = [
@@ -1685,6 +1689,13 @@ const streakOf = u => { const days = new Set(myAttempts(u).map(a => ymd(new Date
   if (!days.has(ymd(d))) d.setDate(d.getDate() - 1);
   while (days.has(ymd(d))) { n++; d.setDate(d.getDate() - 1); } return n; };
 const nextSkill = (u, b) => bandSkills(b).find(id => !caught(u, id)) || null;
+// learners clear the stages in order: a stage after the next uncleared one stays locked (teachers can open any)
+const skillLocked = (u, id) => { if (!isStudent()) return false; const b = bandOf(u), list = bandSkills(b), nx = nextSkill(u, b);
+  return !!nx && !caught(u, id) && list.indexOf(id) > list.indexOf(nx); };
+function lockedNote(id){ const nx = nextSkill(P.me.u, bandOf(P.me.u)); sfx('no');
+  let t = document.getElementById('lockNote'); if (!t) { t = document.createElement('div'); t.id = 'lockNote'; t.className = 'locknote'; document.body.appendChild(t); }
+  t.innerHTML = `🔒 <b>${esc(SK[id].title)}</b> is locked. Clear <b>${esc(SK[nx].title)}</b> first (get ${MASTER} right)!`; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
+  clearTimeout(lockedNote.t); lockedNote.t = setTimeout(() => t.classList.remove('on'), 3200); }
 const buddyOf = u => pref(u).buddy || BUDDIES[0];
 const buddySVG = (u, mood = 'idle', cls = 'buddy') => monsterSVG(buddyOf(u), mood, pref(u).wear || [], cls);
 const monName = id => monsterOf('mon-' + id).name;
@@ -1883,7 +1894,8 @@ function map(el){
     return `<div class="island" style="--c:${c};--soft:${soft}"><div class="ihead"><span class="num" style="background:${c}">${ix + 1}</span><div style="flex:1"><span class="ichap">Unit ${ix + 1}</span><h3>${name}</h3></div>${stu ? `<small>${got}/${list.length} friends</small>` : ''}
 </div>
       <div class="path">${list.map(([id, ws]) => { const cg = stu && caught(u, id), show = !stu || cg;
-        return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}">
+        const lk = stu && skillLocked(u, id);
+        return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''} ${lk ? 'locked' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}${lk ? ' (locked)' : ''}">
           <span class="disc">${stu && id === nx ? '<canvas class="skatecv" id="skateCv" aria-label="You are here"></canvas>' : monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
           ${stu ? stars3(starsOf(bestOf(u, id))) : ''}<b>${SK[id].title}</b><small>WS ${ws}</small></button>`; }).join('')}</div></div>`; }).join('');
   const kids = P.usersWith('student').filter(s => bandOf(s.u) === b).map(s => ({s, c: weekCoins(s.u)})).sort((x, y) => y.c - x.c).slice(0, 6);
@@ -1903,7 +1915,7 @@ function map(el){
           <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
           <li>Stuck? Tap <b>🎬 Watch the lesson</b> to see how it's done.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div>
-    <p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
+    <p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · Push from <a href="https://rive.app/community/files/28393-53674-interactive-cute-red-monster/" target="_blank" rel="noopener">ElmerVergara</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
   soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400}); skateMount();
   { const say = document.querySelector('.hudsay, .mapsobo .sobosay'); let seen = false; try { seen = !!sessionStorage.getItem('aralmath-greeted'); sessionStorage.setItem('aralmath-greeted', '1'); } catch (e) {}
     if (say && ttsOn() && !seen) setTimeout(() => speak(say.textContent, 'buddy'), 600); }
@@ -1916,6 +1928,7 @@ function buddyPick(el){
 function chooseBuddy(b){ pref(P.me.u).buddy = b; P.save(); sfx('buy'); P.refresh(); }
 
 function startPractice(id, skipStory, skipLesson){
+  if (skillLocked(P.me.u, id)) return lockedNote(id);
   const sb = bandOf(P.me.u), ix = unitIndex(sb, id);
   if (!skipLesson && !(pref(P.me.u).watched || {})[id] && !myAttempts(P.me.u, id).length) return playLesson(id, () => startPractice(id, true, true));
   S = {id, items: Array.from({length: ITEMS}, () => toChoices(SK[id].gen())), i:0, res:[], answered:false, combo:0, coins:0, hint:{}, wrongRun:0, mood:'idle', anim:null, lvl0: levelOf(xpOf(P.me.u))};
@@ -1930,25 +1943,43 @@ function loadRive(){
   return riveLoading || (riveLoading = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'rive/rive.js';
     sc.onload = () => { try { rive.RuntimeLoader.setWasmUrl('rive/rive.wasm'); ok(); } catch (e) { no(e); } }; sc.onerror = no; document.head.appendChild(sc); }));
 }
-// The buddy is now the learner's hero: a character from "StudioRun" by thelittlelabs (rive/studiorun.riv, Rive Marketplace, CC BY 4.0).
-// The file draws its ten characters inside its own night-sky scene, so the hero is a framed portrait:
-// Rive's layout bounds draw only the hero's 380-unit square of the 1920x1080 game artboard into a small canvas.
-const HEROES = ['Painter', 'Planner', 'Coder', 'Designer', '3D Maker', 'Dreamweaver', 'Builder', 'Writer', 'Chef', 'Santa'];
-const HERO_CROP = {x: 370, y: 630, size: 380, w: 1920, h: 1080};
-function heroNo(){ const b = window.P && P.me && pref(P.me.u).buddy, hm = b && String(b).match(/^hero:(\d):/); if (hm) return +hm[1]; try { const v = localStorage.getItem('hub-hero'); if (v !== null && +v >= 0 && +v < 10) return +v; } catch (e) {} return 5; }
-function heroSet(n){ try { localStorage.setItem('hub-hero', String(n)); } catch (e) {} heroPick(); const t = SOBO_EL && SOBO_EL.querySelector('img'); if (t) t.src = 'rive/heroes/' + n + '.jpg'; }
-function heroPick(){ try { const i = SOBO && SOBO.stateMachineInputs('STATE MACHINE').find(x => x.name === 'CHHH Selected'); if (i) i.value = heroNo(); } catch (e) {} }
+// The buddy is the learner's hero: one of ten characters from "StudioRun" by thelittlelabs (rive/studiorun.riv), or
+// "Push", the pink monster by ElmerVergara (rive/push.riv). Both Rive Marketplace, CC BY 4.0 (credited at the bottom of the page).
+// StudioRun draws its characters inside its own night-sky scene, so the hero is a framed portrait:
+// Rive's layout bounds draw only the hero's square of the artboard into a small canvas.
+const HEROES = ['Painter', 'Planner', 'Coder', 'Designer', '3D Maker', 'Dreamweaver', 'Builder', 'Writer', 'Chef', 'Santa', 'Push'];
+const PUSH_HERO = 10;
+const HERO_CROP = {x: 370, y: 630, size: 380, w: 1920, h: 1080}, PUSH_CROP = {x: 0, y: 40, size: 500, w: 500, h: 559};
+let SOBO_KIND = '';
+function heroNo(){ const b = window.P && P.me && pref(P.me.u).buddy, hm = b && String(b).match(/^hero:(\d+):/); if (hm && +hm[1] < HEROES.length) return +hm[1]; try { const v = localStorage.getItem('hub-hero'); if (v !== null && +v >= 0 && +v < HEROES.length) return +v; } catch (e) {} return 5; }
+const heroKind = n => n === PUSH_HERO ? 'push' : 'studio';
+function heroSet(n){ try { localStorage.setItem('hub-hero', String(n)); } catch (e) {} const t = SOBO_EL && SOBO_EL.querySelector('img'); if (t) t.src = 'rive/heroes/' + n + '.jpg';
+  if (SOBO && SOBO_KIND !== heroKind(n)) heroLoad(); else heroPick(); }
+function heroPick(){ if (SOBO_KIND !== 'studio') return; try { const i = SOBO && SOBO.stateMachineInputs('STATE MACHINE').find(x => x.name === 'CHHH Selected'); if (i) i.value = heroNo(); } catch (e) {} }
 function heroFit(){ if (!SOBO || !SOBO_EL) return; const cv = SOBO_EL.querySelector('canvas'), n = cv.clientWidth; if (!n) { if (cv.isConnected) setTimeout(heroFit, 200); return; }
   const px = Math.min(2, window.devicePixelRatio || 1), N = Math.round(n * px); if (cv.width !== N) { cv.width = cv.height = N; }
-  const k = N / HERO_CROP.size, x0 = -HERO_CROP.x * k, y0 = -HERO_CROP.y * k;
-  SOBO.layout = new rive.Layout({fit: rive.Fit.Fill, minX: x0, minY: y0, maxX: x0 + HERO_CROP.w * k, maxY: y0 + HERO_CROP.h * k}); SOBO_EL.classList.add('live'); }
+  const C = SOBO_KIND === 'push' ? PUSH_CROP : HERO_CROP, k = N / C.size, x0 = -C.x * k, y0 = -C.y * k;
+  SOBO.layout = new rive.Layout({fit: rive.Fit.Fill, minX: x0, minY: y0, maxX: x0 + C.w * k, maxY: y0 + C.h * k}); SOBO_EL.classList.add('live'); }
+// (re)load the Rive file for the chosen hero into the buddy's canvas
+function heroLoad(){
+  if (!SOBO_EL) return; const cv = SOBO_EL.querySelector('canvas'); SOBO_EL.classList.remove('live');
+  if (SOBO) { try { SOBO.cleanup(); } catch (e) {} SOBO = null; }
+  const kind = heroKind(heroNo());
+  loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
+    const cfg = kind === 'push' ? {src: 'rive/push.riv', stateMachines: 'State Machine 1'} : {src: 'rive/studiorun.riv', artboard: 'Artboard', stateMachines: 'STATE MACHINE'};
+    const r = new rive.Rive(Object.assign(cfg, {canvas: cv, autoplay: true, onLoad: () => { if (SOBO !== r) return; heroPick(); heroFit(); }}));
+    SOBO = r; SOBO_KIND = kind;
+    if (!cv._ro) { try { cv._ro = new ResizeObserver(() => heroFit()); cv._ro.observe(cv); } catch (e) {} }
+  }).catch(() => {});
+}
 // tap the hero to choose another one
 function heroChooser(){
   const old = document.getElementById('heroPickBox'); if (old) return old.remove();
   const box = document.createElement('div'); box.id = 'heroPickBox'; box.className = 'heropick';
   box.innerHTML = `<div class="heropickin"><b>Choose your hero</b><div class="heropickgrid">${HEROES.map((nm, n) => `<button data-n="${n}" class="${n === heroNo() ? 'on' : ''}"><img src="rive/heroes/${n}.jpg" alt=""><span>${nm}</span></button>`).join('')}</div>
-    <p class="credit">Characters from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> (CC BY 4.0)</p><button class="btn ghost" data-close>Close</button></div>`;
-  box.onclick = e => { const b = e.target.closest('button'); if (e.target === box || (b && b.hasAttribute('data-close'))) return box.remove(); if (b && b.dataset.n) { heroSet(+b.dataset.n); box.remove(); } };
+    <button class="btn ghost" data-close>Close</button></div>`;
+  box.onclick = e => { const b = e.target.closest('button'); if (e.target === box || (b && b.hasAttribute('data-close'))) return box.remove(); if (b && b.dataset.n) { const n = +b.dataset.n, u = P.me && P.me.u;
+      if (u && /^hero:/.test(pref(u).buddy || '')) { pref(u).buddy = pref(u).buddy.replace(/^hero:\d+:/, `hero:${n}:`); P.save(); } heroSet(n); box.remove(); } };
   document.body.appendChild(box);
 }
 function soboAttach(slotId, move){
@@ -1957,11 +1988,7 @@ function soboAttach(slotId, move){
     SOBO_EL = document.createElement('div'); SOBO_EL.className = 'soboin';
     SOBO_EL.innerHTML = `<div class="herofr" title="Tap to choose your hero"><img src="rive/heroes/${heroNo()}.jpg" alt=""><canvas></canvas></div>`;
     SOBO_EL.querySelector('.herofr').onclick = heroChooser;
-    const cv = SOBO_EL.querySelector('canvas'); slot.appendChild(SOBO_EL); SOBO_EL.classList.add('on');
-    loadRive().then(() => { if (!SOBO_EL || !cv.isConnected) return;
-      SOBO = new rive.Rive({src: 'rive/studiorun.riv', canvas: cv, artboard: 'Artboard', stateMachines: 'STATE MACHINE', autoplay: true,
-        onLoad: () => { heroPick(); heroFit(); try { new ResizeObserver(() => heroFit()).observe(cv); } catch (e) {} }});
-    }).catch(() => {});
+    slot.appendChild(SOBO_EL); SOBO_EL.classList.add('on'); heroLoad();
   } else { slot.appendChild(SOBO_EL); requestAnimationFrame(heroFit); }
 }
 // the hero has no one-shot moves outside its own game, so these just keep it idle
@@ -2005,7 +2032,7 @@ function battle(el){
       <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Correct!</b> +${last.coins} coins${S.combo >= 3 ? ' (streak bonus!)' : ''}` : `<b>Not quite.</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
         ${!last.ok && S.wrongRun >= 2 ? `<div class="fb info"><b>Let's review together:</b><div style="margin-top:.3rem">${sk.learn}</div></div>` : ''}
         <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
-    </div><p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
+    </div><p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · Push from <a href="https://rive.app/community/files/28393-53674-interactive-cute-red-monster/" target="_blank" rel="noopener">ElmerVergara</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
   soboAttach('soboSlot', !S.answered ? (S.i === 0 ? {key: 'hello', anim: 'Hello', hold: 2400} : {key: 'listen' + S.i, anim: 'Listen', hold: 0})
     : last.ok ? {key: 'yes' + S.i, anim: ['Yes', 'Sparkles'], hold: 2400} : {key: 'no' + S.i, anim: 'NoBump', hold: 1800});
   { const say = document.querySelector('.sobopanel .sobosay'), k = S.i + ':' + S.answered; if (say && ttsOn() && S.sayKey !== k) { S.sayKey = k; speak(say.textContent, 'buddy'); } }
@@ -2737,15 +2764,14 @@ function tryAnswer(n){
 // The choice is saved on the learner's account as buddy "hero:N:Name" and shown live everywhere the buddy appears.
 let MK = null;
 function makerView(){
-  if (!MK) { const cur = pref(P.me.u).buddy || '', hm = cur.match(/^hero:(\d):(.*)$/);
+  if (!MK) { const cur = pref(P.me.u).buddy || '', hm = cur.match(/^hero:(\d+):(.*)$/);
     MK = {hero: hm ? +hm[1] : heroNo(), name: hm ? hm[2] : SYL1[Math.floor(Math.random() * SYL1.length)] + SYL2[Math.floor(Math.random() * SYL2.length)]}; }
   setTimeout(() => soboAttach('mkHero'), 0);
   return `<div class="wpanel wide maker"><div class="wtab">Choose your hero</div>
     <div class="mkwrap"><div class="mkprev"><div class="mkhero" id="mkHero"></div><b class="mkheroname">${HEROES[MK.hero]}</b>
         <label class="mkname">Name<input id="mkName" maxlength="14" value="${esc(MK.name)}" oninput="MK.name=this.value"></label>
         <button class="wbtn ghost sm" onclick="mkRandom()">🎲 Surprise me</button></div>
-      <div class="mkgrid"><div class="mkheroes">${HEROES.map((nm, n) => `<button class="mkopt mkh ${MK.hero === n ? 'on' : ''}" onclick="mkSet(${n})" aria-label="${nm}"><img src="rive/heroes/${n}.jpg" alt=""><span>${nm}</span></button>`).join('')}</div>
-        <p class="mkcredit">Characters from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> (CC BY 4.0)</p></div></div>
+      <div class="mkgrid"><div class="mkheroes">${HEROES.map((nm, n) => `<button class="mkopt mkh ${MK.hero === n ? 'on' : ''}" onclick="mkSet(${n})" aria-label="${nm}"><img src="rive/heroes/${n}.jpg" alt=""><span>${nm}</span></button>`).join('')}</div></div></div>
     <button class="wbtn" onclick="mkDone()">Done</button></div>`;
 }
 // update only the inside of the panel, so the panel itself stays steady (no drop-in animation again)
