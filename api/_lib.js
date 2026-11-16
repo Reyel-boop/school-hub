@@ -18,6 +18,7 @@ async function sql(){
   await q`alter table hub_users add column if not exists email text`;
   await q`alter table hub_users add column if not exists status text not null default 'active'`;
   await q`create unique index if not exists hub_users_email on hub_users (lower(email))`;
+  await q`create table if not exists voice_clips (id text primary key, mime text not null, data bytea not null, updated_at timestamptz not null default now(), updated_by text)`;
   await q`create table if not exists email_codes (email text not null, purpose text not null, code text not null, data jsonb, tries integer not null default 0, sent_at timestamptz not null default now(), expires_at timestamptz not null, primary key (email, purpose))`;
   return sqlFn = q;
 }
@@ -195,3 +196,25 @@ export async function body(req){
 }
 export const send = (res, code, obj) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); res.end(JSON.stringify(obj)); };
 export const wrap = fn => async (req, res) => { try { await fn(req, res); } catch (e) { console.error(e); send(res, 500, {error: e.message || 'Server error'}); } };
+
+// ---------- recorded voice-over clips (human recordings, shared by every student) ----------
+const MEMV = globalThis.__hubVoice || (globalThis.__hubVoice = new Map());
+export async function voiceList(){
+  const q = await sql();
+  if (!q) return Object.fromEntries([...MEMV.entries()].map(([id, x]) => [id, x.t]));
+  const rows = await q`select id, extract(epoch from updated_at)::bigint as t from voice_clips`;
+  return Object.fromEntries(rows.map(r => [r.id, Number(r.t)]));
+}
+export async function voiceGet(id){
+  const q = await sql();
+  if (!q) return MEMV.get(id) || null;
+  const rows = await q`select mime, encode(data, 'base64') as b64 from voice_clips where id = ${id}`;
+  return rows[0] ? {mime: rows[0].mime, buf: Buffer.from(rows[0].b64, 'base64')} : null;
+}
+export async function voicePut(id, mime, b64, by){
+  const q = await sql();
+  if (!q) { MEMV.set(id, {mime, buf: Buffer.from(b64, 'base64'), t: Math.floor(Date.now() / 1000)}); return; }
+  await q`insert into voice_clips (id, mime, data, updated_by) values (${id}, ${mime}, decode(${b64}, 'base64'), ${by})
+    on conflict (id) do update set mime = excluded.mime, data = excluded.data, updated_at = now(), updated_by = excluded.updated_by`;
+}
+export async function voiceDel(id){ const q = await sql(); if (!q) { MEMV.delete(id); return; } await q`delete from voice_clips where id = ${id}`; }

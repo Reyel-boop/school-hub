@@ -551,6 +551,19 @@
   @keyframes bulbglow{50%{color:#d97706;text-shadow:0 0 .4em #fff,0 0 .9em #fde047}}
   .soboin:not(.on) .bulbn{opacity:0}
   .soboin:not(.on) .sobo123{opacity:0}
+  /* voice-over studio */
+  .vprog{min-width:11rem;text-align:right;font-size:.85rem}.vprog b{font-size:1.4rem}
+  .vprog .bar{height:.5rem;border-radius:1rem;background:var(--line);overflow:hidden;margin-top:.3rem}.vprog .bar i{display:block;height:100%;background:#22c55e}
+  .vtips{margin:.8rem 0 0 1.1rem;font-size:.85rem;color:var(--muted);line-height:1.6}
+  .vtest{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.8rem}.vtest input{flex:1;min-width:14rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:.6rem;font:inherit}
+  .vgh{font-size:1rem;margin-bottom:.6rem}.vgh small{color:var(--muted);font-weight:500;margin-left:.4rem}
+  .vlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:.5rem}
+  .vrow{display:flex;align-items:center;gap:.4rem;padding:.45rem .6rem;border:1px solid var(--line);border-radius:.7rem;background:#fff}
+  .vrow .vt{flex:1;font-weight:500;font-size:.9rem}
+  .vrow.has{border-color:#86efac;background:#f0fdf4}.vrow.has .vt::before{content:"✓ ";color:#16a34a;font-weight:700}
+  .vrow.rec{border-color:#ef4444;background:#fef2f2;animation:recpulse 1s ease-in-out infinite}
+  .vrow .btn.stop{background:#ef4444}
+  @keyframes recpulse{50%{box-shadow:0 0 0 4px rgba(239,68,68,.25)}}
   /* Sobo practice panel (Rive) */
   .sobopanel{position:relative;display:flex;align-items:center;gap:1rem;border-radius:1rem;padding:.4rem 1.2rem .4rem .6rem;min-height:8.5rem;background:linear-gradient(#bae6fd,#e0f2fe 60%,#dcfce7 61%,#bbf7d0)}
   .soboslot{flex:none;width:17rem;height:17rem;margin:0 -1rem 0 -.5rem}
@@ -1635,11 +1648,120 @@ const SEED = [
   ...seed('student4', [['i-add',8,4],['i-sub',5,3],['i-sub',7,2],['i-mul',4,1]]),
 ];
 
+/* ================= HUMAN VOICE-OVER =================
+   Teachers record short lines and the numbers 0–20 once (Voice-over tab). When a line can be built entirely from
+   real recordings it is played with them, stitched together smoothly; otherwise the device voice reads it, so a
+   sentence never mixes a human and a robot voice. Recordings are trimmed and saved as small WAV files on the server. */
+const VPH = [
+  ['Numbers', [...Array(21).keys()].map(String).concat(['negative', 'plus', 'minus', 'equals', 'is'])],
+  ['Number-line lesson', ["Let's solve", 'together', 'Watch the monsters on the number line', 'Next problem', "Here's another one",
+    'The first monster jumps to', "That's where we start", 'Subtracting', 'is the same as adding', 'So the second monster hops', 'step', 'steps',
+    'to the right', 'to the left', 'Adding', 'means', 'hop', 'hops', 'because it is negative', 'It landed on', 'So', "Now it's your turn",
+    'Where did the second monster land', 'Type your answer and press Check', 'Look, a monster friend joined you', 'We started at', 'and hopped',
+    'The monster landed on', "You're ready to practice", 'Good try', 'Watch it once more, or start practicing and use the steps when you need them']],
+  ['Praise & help', ['Yes', 'Magaling', 'Correct', "That's right", 'Great counting', 'Great job', 'You got it', 'Wonderful', 'Not quite',
+    "Let's look at the steps together", 'You can do this', 'Take your time', 'Read it carefully', 'I believe in you']],
+  ['Greetings', ['Hi', "Let's practice", 'Next up', 'Tap the glowing monster to practice', 'Every monster is your friend now', 'Try a rematch for', 'stars']],
+  ['Lesson names', null],  // filled from the lesson list below
+];
+const vkey = t => String(t).toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+let VCLIPS = null, VLOADING = null, VAC2 = null; const VBUF = new Map(); let VPLAY = [];
+const vphrases = () => { const g = VPH.map(([n, list]) => [n, list || [...new Set(Object.values(SK).map(k => k.title))]]); return g; };
+function voiceLoad(force){
+  if (VCLIPS && !force) return Promise.resolve(VCLIPS);
+  return VLOADING = (async () => { try { const r = await fetch('/api/voice', {credentials: 'same-origin'}); if (r.status !== 200) throw 0;
+    VCLIPS = (await r.json()).clips || {}; } catch (e) { VCLIPS = VCLIPS || {}; VCLIPS.__offline = true; } VLOADING = null; return VCLIPS; })();
+}
+const vac = () => VAC2 || (VAC2 = new (window.AudioContext || window.webkitAudioContext)());
+async function vbuf(id){
+  const k = id + '@' + VCLIPS[id]; if (VBUF.has(k)) return VBUF.get(k);
+  const p = fetch('/api/voice?id=' + encodeURIComponent(id) + '&v=' + VCLIPS[id], {credentials: 'same-origin'}).then(r => r.arrayBuffer()).then(b => vac().decodeAudioData(b));
+  VBUF.set(k, p); p.catch(() => VBUF.delete(k)); return p;
+}
+// cover a line with recorded clips (longest phrases first); null if any word is missing
+function vplan(text){
+  if (!VCLIPS) return null;
+  const first = vkey(((P.me || {}).name || '').split(' ')[0]);
+  const sents = spoken(String(text).replace(/<[^>]+>/g, ' ')).split(/(?<=[.!?])\s+|:\s+/).map(vkey).filter(Boolean), plan = [];
+  for (const sn of sents) { const w = sn.split(' '); let i = 0;
+    while (i < w.length) { let hit = 0;
+      for (let j = Math.min(w.length, i + 16); j > i; j--) if (VCLIPS[w.slice(i, j).join(' ')]) { hit = j; break; }
+      if (hit) { plan.push(w.slice(i, hit).join(' ')); i = hit; } else if (first && w[i] === first) i++; else return null; }
+    plan.push('|'); }
+  return plan.length > 1 ? plan : null;
+}
+function vstop(){ VPLAY.forEach(n => { try { n.stop(); } catch (e) {} }); VPLAY = []; }
+async function vplay(plan){
+  vstop(); const ctx = vac(); try { await ctx.resume(); } catch (e) {}
+  const me = {}; VPLAY.me = me; const bufs = await Promise.all(plan.filter(x => x !== '|').map(vbuf)); if (VPLAY.me !== me) return;
+  let t = ctx.currentTime + .05, b = 0;
+  for (const x of plan) { if (x === '|') { t += .28; continue; } const src = ctx.createBufferSource(); src.buffer = bufs[b++]; src.connect(ctx.destination); src.start(t); VPLAY.push(src); t += src.buffer.duration + .04; }
+  VPLAY.me = me;
+}
+// speak(): real recordings first, device voice otherwise
+const _speakTTS = speak;
+speak = function(text, who){ vstop(); const plan = vplan(text); if (plan) { try { speechSynthesis.cancel(); } catch (e) {} vplay(plan).catch(() => _speakTTS(text, who)); return; } _speakTTS(text, who); };
+try { const _c = speechSynthesis.cancel.bind(speechSynthesis); speechSynthesis.cancel = () => { vstop(); _c(); }; } catch (e) {}
+voiceLoad();
+
+/* ---- the Voice-over tab: teachers record each line ---- */
+let VREC = null;
+function voiceView(el){
+  if (!VCLIPS) { el.innerHTML = '<div class="card"><p class="hint">Loading recordings…</p></div>'; voiceLoad().then(() => P.current === 'voice' && P.refresh()); return; }
+  if (VCLIPS.__offline) { el.innerHTML = `<div class="card"><h2>Voice-over</h2><p class="hint">Recording needs the school server. Open the School Hub at its Vercel address and sign in as a teacher.</p></div>`; return; }
+  const groups = vphrases(), all = groups.flatMap(([, l]) => l), done = all.filter(t => VCLIPS[vkey(t)]).length;
+  el.innerHTML = `<div class="stack"><div class="card"><div class="ptop"><div class="grow"><h2>🎙️ Voice-over</h2>
+      <p class="hint" style="margin:0">Record each line once in your own voice. Every student then hears a real person instead of a computer voice. Lessons stitch these together, so record the numbers too.</p></div>
+      <div class="vprog"><b>${done}</b> of ${all.length} recorded<div class="bar"><i style="width:${Math.round(100 * done / all.length)}%"></i></div></div></div>
+      <ul class="vtips"><li>Use a quiet room and hold the microphone (or laptop) at the same distance each time.</li><li>Tap <b>● Record</b>, wait a moment, say the line naturally and cheerfully, then tap <b>■ Stop</b>. Silence at the start and end is trimmed for you.</li>
+      <li>Say the line exactly as written, like a teacher talking to a child. For numbers, just say the number (for example "seven").</li></ul>
+      <div class="vtest"><input id="vTest" placeholder="Try any line, e.g. It landed on 7. So 3 plus 4 equals 7!"><button class="btn sm" onclick="voiceTry()">▶ Play it</button><span id="vTestMsg" class="hint"></span></div></div>
+    ${groups.map(([name, list]) => `<div class="card"><h3 class="vgh">${esc(name)} <small>${list.filter(t => VCLIPS[vkey(t)]).length}/${list.length}</small></h3>
+      <div class="vlist">${list.map(t => { const k = vkey(t), has = !!VCLIPS[k], rec = VREC && VREC.k === k;
+        return `<div class="vrow ${has ? 'has' : ''} ${rec ? 'rec' : ''}"><span class="vt">${esc(t)}</span>
+          <button class="btn sm ${rec ? 'stop' : ''}" onclick="voiceRec('${esc(k).replace(/'/g, "\\'")}')">${rec ? '■ Stop' : has ? '● Re-record' : '● Record'}</button>
+          ${has ? `<button class="btn ghost sm" onclick="voicePlayKey('${esc(k).replace(/'/g, "\\'")}')">▶</button><button class="btn ghost sm" title="Delete" onclick="voiceDel('${esc(k).replace(/'/g, "\\'")}')">✕</button>` : ''}</div>`; }).join('')}</div></div>`).join('')}</div>`;
+}
+async function voiceRec(k){
+  if (VREC && VREC.k === k) return VREC.stop();
+  if (VREC) VREC.stop();
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}}); }
+  catch (e) { alert('Please allow the microphone so you can record. If you opened Aral Math inside the Hub, try "Open in new tab".'); return; }
+  const mr = new MediaRecorder(stream), chunks = []; mr.ondataavailable = e => chunks.push(e.data);
+  VREC = {k, stop: () => { if (mr.state !== 'inactive') mr.stop(); }}; P.refresh();
+  mr.onstop = async () => { stream.getTracks().forEach(t => t.stop()); VREC = null; P.refresh();
+    try { const wav = await toWav(await new Blob(chunks).arrayBuffer());
+      const b64 = await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result.split(',')[1]); fr.readAsDataURL(new Blob([wav], {type: 'audio/wav'})); });
+      const r = await fetch('/api/voice', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({id: k, b64})});
+      if (r.status !== 200) throw new Error((await r.json().catch(() => ({}))).error || 'Could not save.');
+      await voiceLoad(true); P.refresh(); voicePlayKey(k);
+    } catch (e) { alert(e.message || 'Could not save the recording.'); } };
+  mr.start(); setTimeout(() => VREC && VREC.k === k && VREC.stop(), 30000);
+}
+// decode the recording, trim the silence at both ends, make it mono 22 kHz and save as WAV
+async function toWav(ab){
+  const buf = await vac().decodeAudioData(ab), d = buf.getChannelData(0), sr = buf.sampleRate;
+  let peak = 0; for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+  const th = Math.max(.02, peak * .08); let a = 0, b = d.length - 1; while (a < b && Math.abs(d[a]) < th) a++; while (b > a && Math.abs(d[b]) < th) b--;
+  a = Math.max(0, a - Math.round(sr * .06)); b = Math.min(d.length - 1, b + Math.round(sr * .12));
+  const out = 22050, n = Math.max(1, Math.floor((b - a) * out / sr)), gain = peak > 0 ? Math.min(3, .9 / peak) : 1, view = new DataView(new ArrayBuffer(44 + n * 2));
+  const W = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  W(0, 'RIFF'); view.setUint32(4, 36 + n * 2, true); W(8, 'WAVEfmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, out, true); view.setUint32(28, out * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); W(36, 'data'); view.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const fade = Math.min(1, i / (out * .01), (n - i) / (out * .03)), v = Math.max(-1, Math.min(1, d[a + Math.floor(i * sr / out)] * gain * fade)); view.setInt16(44 + i * 2, v * 32767, true); }
+  return view.buffer;
+}
+function voicePlayKey(k){ vplay([k]); }
+async function voiceDel(k){ if (!confirm('Delete this recording?')) return; await fetch('/api/voice', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({id: k, delete: true})}); await voiceLoad(true); P.refresh(); }
+function voiceTry(){ const t = $('vTest').value.trim(), m = $('vTestMsg'); if (!t) return; const plan = vplan(t);
+  if (plan) { vplay(plan); m.textContent = '✓ Played with your recordings.'; return; }
+  const missing = vkey(spoken(t)).split(' ').filter(w => !VCLIPS[w]); m.textContent = 'Not fully recorded yet' + (missing.length ? ' (missing: ' + [...new Set(missing)].slice(0, 6).join(', ') + ')' : '') + '. Students would hear the device voice for this line.'; }
+
 /* ================= CONFIG ================= */
 const CFG = {
   key:'svnhs-aralmath', title:'Aral Math', subtitle:'ARAL Program · Mathematics', icon:ICON,
   roles:{
-    teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets']]},
+    teacher:{badge:'TEACHER', tagline:'Track learners, preview lessons and print practice sheets.', tabs:[['class','Class Progress'],['learn','Lessons'],['print','Print Worksheets'],['voice','Voice-over']]},
     student:{tagline:'Help the Bilang Monsters by mastering ARAL Math!', tabs:[['learn','Play'],['progress','My Progress']]},
   },
   signup:{roles:[['student','Learner']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 8 – Rizal'}},
@@ -1653,7 +1775,7 @@ const CFG = {
     {u:'student4', p:'student123', name:'Paolo Cruz', pos:'Grade 10 – Molave', role:'student'},
   ],
   data:{attempts: SEED, prefs:{student2:{buddy:'buddy-bituin', wear:['party']}, student3:{buddy:'buddy-ulap', wear:['glasses']}}},
-  views:{learn, progress, class: classView, print: printView},
+  views:{learn, progress, class: classView, print: printView, voice: voiceView},
 };
 
 /* ================= PLAY: MAP, PRACTICE, MONSTER FRIENDS, SHOP ================= */
@@ -1715,6 +1837,8 @@ function map(el){
       </div></div>
     <p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
   soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400});
+  { const say = document.querySelector('.hudsay, .mapsobo .sobosay'); let seen = false; try { seen = !!sessionStorage.getItem('aralmath-greeted'); sessionStorage.setItem('aralmath-greeted', '1'); } catch (e) {}
+    if (say && ttsOn() && !seen) setTimeout(() => speak(say.textContent, 'buddy'), 600); }
 }
 function buddyPick(el){
   el.innerHTML = `<div class="card" style="text-align:center;padding:2rem 1rem"><h2 style="font-size:1.4rem">Choose your math buddy!</h2>
@@ -1800,6 +1924,7 @@ function battle(el){
     </div><p class="credit">Sobo character by <a href="https://rive.app/marketplace/28761-54484-sobo/" target="_blank" rel="noopener">Patgrivet</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive</p></div>`;
   soboAttach('soboSlot', !S.answered ? (S.i === 0 ? {key: 'hello', anim: 'Hello', hold: 2400} : {key: 'listen' + S.i, anim: 'Listen', hold: 0})
     : last.ok ? {key: 'yes' + S.i, anim: ['Yes', 'Sparkles'], hold: 2400} : {key: 'no' + S.i, anim: 'NoBump', hold: 1800});
+  { const say = document.querySelector('.sobopanel .sobosay'), k = S.i + ':' + S.answered; if (say && ttsOn() && S.sayKey !== k) { S.sayKey = k; speak(say.textContent, 'buddy'); } }
   const inp = $('ans');
   if (inp && !S.answered) { inp.focus(); inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); answer(); } }; }
   if (S.answered) $('nextBtn').focus();
@@ -1891,7 +2016,7 @@ function turtleSVG(mood = 'idle', cls = 'mon'){
 }
 const fillText = t => t.replace(/\{name\}/g, esc(P.me.name.split(' ')[0])); // put the learner's first name into lines
 const unitIndex = (b, id) => BANDS[b].units.findIndex(([, list]) => list.some(([x]) => x === id));
-const ttsOn = () => { try { return localStorage.getItem('aralmath-tts') === '1'; } catch (e) { return false; } };
+const ttsOn = () => { try { return localStorage.getItem('aralmath-tts') !== '0'; } catch (e) { return true; } }; // voice-over is on unless turned off
 /* ---- read-aloud with the most natural voice on this device ----
    Picks neural/"Natural" voices first (Edge, Chrome, Apple enhanced voices), prefers Philippine
    English, skips novelty/robotic voices, casts a matching voice per character instead of
