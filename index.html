@@ -816,12 +816,23 @@ function reyelSay(text, done){
 function reyelChoices(list){ const c = document.getElementById('rChoices'); c.classList.remove('on');
   c.innerHTML = list.map(([label, fn, main], k) => `<button class="${main ? 'main' : ''}" data-k="${k}">${label}</button>`).join('');
   [...c.children].forEach((b, k) => b.onclick = list[k][1]); setTimeout(() => c.classList.add('on'), 60); }
+// who is using the Hub (asked in the welcome); shapes Reyel's choices
+const ROLE_LABEL = {student: 'Student', teacher: 'Teacher', admin: 'Admin'};
+let REYEL_ROLE = null; try { REYEL_ROLE = sessionStorage.getItem('hub-reyel-role'); } catch (e) {}
+const callName = () => { if (!me) return ''; const n = me.name.trim(); return /^school\s+/i.test(n) ? n.replace(/^school\s+/i, '') : n.split(/\s+/)[0]; };
 function reyelOpen(mode){
   const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
-  const first = me ? me.name.split(' ')[0] : '';
-  const line = mode === 'help' ? `Hi${first ? ', ' + first : ''}! I'm still here. How can I help you?` : `Hi! I am Reyel, and I am your AI-Companion. How can I help you today?`;
-  document.getElementById('rChoices').classList.remove('on'); document.getElementById('rChoices').innerHTML = '';
-  reyelSay(line, () => reyelChoices(reyelMenu()));
+  if (mode === 'help') { const nm = callName(); return reyelSay(`Hi${nm ? ', ' + nm : ''}! I'm still here. How can I help you?`, () => reyelChoices(reyelMenu())); }
+  // the welcome: greet, then ask who is using the Hub
+  reyelSay('Welcome to the School Hub! I am Reyel, your AI-Companion. Who is using the School Hub today?', () => {
+    const mine = me ? (me.role === 'admin' || me.role === 'principal' ? 'admin' : me.role === 'student' ? 'student' : 'teacher') : null;
+    reyelChoices(['student', 'teacher', 'admin'].map(k => [ROLE_LABEL[k], () => reyelRole(k), k === mine]));
+  });
+}
+function reyelRole(k){
+  REYEL_ROLE = k; try { sessionStorage.setItem('hub-reyel-role', k); } catch (e) {}
+  const nm = callName();
+  reyelSay(`Hi${nm ? ', ' + nm : ', ' + ROLE_LABEL[k]}! How can I help you today?`, () => reyelChoices(reyelMenu()));
 }
 
 // Reyel's guide: what each need maps to
@@ -859,13 +870,19 @@ function reyelExplain(){
     reyelSay(`${s.name}: ${d}${soon ? ' It is coming soon!' : ''}`, () => reyelChoices([...(soon ? [] : [[`Open ${s.name}`, () => reyelOpenSys(s.id), true]]), ['Another system', reyelExplain], ['Back', () => reyelChoices(reyelMenu())]]));
   }]).concat([['Back', () => reyelChoices(reyelMenu())]])));
 }
+function reyelSignup(role){ reyelClose(); showPane('up'); const i = document.querySelector(`#signupForm input[name=role][value=${role}]`); if (i) { i.checked = true; i.dispatchEvent(new Event('change', {bubbles: true})); } }
 function reyelMenu(){
+  const R = REYEL_ROLE || 'student';
   if (!me) return [['Sign in', () => { reyelClose(); showPane('in'); }, true],
-    ...(CLOUD ? [['Create an account', () => { reyelClose(); showPane('up'); }], ['I forgot my password', () => { reyelClose(); showPane('forgot'); }]] : []),
+    ...(CLOUD && R !== 'admin' ? [[R === 'teacher' ? 'Create a teacher account' : 'Create a student account', () => reyelSignup(R === 'teacher' ? 'teacher' : 'student')]] : []),
+    ...(CLOUD ? [['I forgot my password', () => { reyelClose(); showPane('forgot'); }]] : []),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain],
     ['What is the School Hub?', () => reyelSay('The School Hub keeps all your school systems in one place: lessons, grades, the clinic, payments and more. Sign in to start!', () => reyelChoices(reyelMenu()))]];
-  const mine = SYSTEMS.filter(s => hasAccess(s) && ACCESS[s.id]), pick = ['aralmath', 'registrar', 'guidance', 'clinic'].map(id => mine.find(s => s.id === id)).filter(Boolean).slice(0, 3);
-  return [...pick.map((s, k) => [`Open ${s.name}`, () => { reyelClose(); openSys(s.id); }, k === 0]),
+  const mine = SYSTEMS.filter(s => hasAccess(s) && ACCESS[s.id]);
+  const order = R === 'admin' ? ['hr', 'enroll', 'accounting', 'registrar'] : R === 'teacher' ? ['tools', 'aralmath', 'rpms', 'guidance'] : ['aralmath', 'registrar', 'guidance', 'clinic'];
+  const pick = order.map(id => mine.find(s => s.id === id)).filter(Boolean).slice(0, 3);
+  const extra = R === 'admin' && CLOUD && me.role === 'admin' ? [['Approve new accounts', () => { reyelClose(); openAdmin(); }, true]] : [];
+  return [...extra, ...pick.map((s, k) => [`Open ${s.name}`, () => { reyelClose(); openSys(s.id); }, !extra.length && k === 0]),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain], ['Show me all my systems', () => reyelClose()]];
 }
 function reyelClose(){ clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
