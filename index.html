@@ -1063,8 +1063,12 @@ function reyelMenu(){
   return [...extra, ...pick.map((s, k) => [`Open ${s.name}`, () => { reyelClose(); openSys(s.id); }, !extra.length && k === 0]),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain], ['Show me all my systems', () => reyelClose()]];
 }
+// erase what Reyel said, letter by letter (like backspacing), then go on
+function reyelErase(done){ const el = document.getElementById('rSay'); clearInterval(RTYPE);
+  RTYPE = setInterval(() => { el.textContent = el.textContent.slice(0, -2); if (!el.textContent) { clearInterval(RTYPE); done && done(); } }, 28); }
 function reyelLogout(){ const nm = callName(); logout(); REYEL_ROLE = null; try { sessionStorage.removeItem('hub-reyel-role'); } catch (e) {}
-  reyelSay(`Goodbye${nm ? ', ' + nm : ''}! You are signed out. Are you a student?`, () => reyelChoices([["Yes, I'm a student", () => reyelRole('student'), true], ["No, I'm not a student", () => reyelRole('staff')]])); }
+  reyelSay(`Goodbye${nm ? ', ' + nm : ''}!`, () => setTimeout(() => reyelErase(() => reyelSay('Want to sign in?', () => reyelChoices([
+    ["Yes, I'm a student", () => reyelRole('student'), true], ["Yes, I'm a teacher", () => reyelRole('staff')], ['Not now', () => reyelClose()]]))), 1300)); }
 function reyelClose(){ clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
   const b = document.getElementById('reyelBtn'); b.hidden = false; reyelDraw(b); }
 // show Reyel full screen the first time the Hub opens in this browser tab
