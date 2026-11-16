@@ -1781,8 +1781,8 @@ function voiceView(el){
     ${groups.map(([name, list]) => `<div class="card"><h3 class="vgh">${esc(name)} <small>${list.filter(t => VCLIPS[vkey(t)]).length}/${list.length}</small></h3>
       <div class="vlist">${list.map(t => { const k = vkey(t), has = !!VCLIPS[k], rec = VREC && VREC.k === k;
         return `<div class="vrow ${has ? 'has' : ''} ${rec ? 'rec' : ''}"><span class="vt">${esc(t)}</span>
-          <button class="btn sm ${rec ? 'stop' : ''}" onclick="voiceRec('${esc(k).replace(/'/g, "\\'")}')">${rec ? '■ Stop' : has ? '● Re-record' : '● Record'}</button>
-          ${has ? `<button class="btn ghost sm" onclick="voicePlayKey('${esc(k).replace(/'/g, "\\'")}')">▶</button><button class="btn ghost sm" title="Delete" onclick="voiceDel('${esc(k).replace(/'/g, "\\'")}')">✕</button>` : ''}</div>`; }).join('')}</div></div>`).join('')}</div>`;
+          <button class="btn sm ${rec ? 'stop' : ''}" onclick="voiceRec('${esc(k.replace(/\\/g, '\\\\').replace(/'/g, "\\'"))}')">${rec ? '■ Stop' : has ? '● Re-record' : '● Record'}</button>
+          ${has ? `<button class="btn ghost sm" onclick="voicePlayKey('${esc(k.replace(/\\/g, '\\\\').replace(/'/g, "\\'"))}')">▶</button><button class="btn ghost sm" title="Delete" onclick="voiceDel('${esc(k.replace(/\\/g, '\\\\').replace(/'/g, "\\'"))}')">✕</button>` : ''}</div>`; }).join('')}</div></div>`).join('')}</div>`;
 }
 async function voiceRec(k){
   if (VREC && VREC.k === k) return VREC.stop();

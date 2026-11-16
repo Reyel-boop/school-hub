@@ -436,7 +436,7 @@ const SYSTEMS = [
   {id:'inventory', name:'Inventory System',  icon:'box',    bg:'linear-gradient(135deg,#f59e0b,#d9480f)', url:'https://svnhs-property.vercel.app', embed:false},
   {id:'complab',   name:'JHS Lab Kiosk',     logo:'logos/complab.png', mode:'full', bg:'#1d4ed8', url:'https://jhs-complab.vercel.app'},
   {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', still:true, bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
-  {id:'aralread', name:'Aral Reading',      icon:'read',   bg:'linear-gradient(135deg,#ec4899,#9d174d)', url:null},
+  {id:'aralread', name:'Aral Reading',      icon:'read',   bg:'linear-gradient(135deg,#ec4899,#9d174d)', url:'aralread/index.html'},
   {id:'aralmath',  name:'Aral Math',         icon:'math',   bg:'linear-gradient(135deg,#06b6d4,#4338ca)', url:'aralmath/index.html'},
   {id:'idsys',     name:'ID System',         icon:'idcard', bg:'linear-gradient(135deg,#64748b,#1e293b)', url:'idsystem/index.html'},
   {id:'enroll',    name:'Enrollment System', icon:'enroll', bg:'linear-gradient(135deg,#a855f7,#6b21a8)', url:'enrollment/index.html'},
@@ -458,7 +458,7 @@ const DESC = {
   inventory:'Property custodian system: school equipment and supplies, property numbers and labels, issuance to employees, and inventory reports.',
   complab:'Computer lab kiosk: learners time in and out of the JHS computer lab; teachers see who used which PC and when.',
   tuon:'Five-minute lessons in languages, school subjects, money, career, AI, and life skills, with daily streaks and Mata the tarsier.',
-  aralread:'Reading support for the ARAL program: reading levels, remedial sessions, and learner progress. Coming soon.',
+  aralread:'ARAL Reading for Grades 7–10: read short stories line by line with a narrator reading aloud, answer comprehension questions, and unlock the next story. Class progress for teachers.',
   aralmath:'ARAL Math for Grades 7–10: help the Bilang Monsters and make them your friends by mastering lessons that follow the ARAL worksheets. Coins, stars and a buddy to dress up; class progress and printable sheets for teachers.',
   idsys:'School IDs: students and staff apply with a photo, the ID Office approves and prints cards with QR codes, and guards can verify any ID.',
   enroll:'Online enrollment: learners or parents fill out the form, the Registrar checks requirements and assigns sections, and advisers get their class lists.',
@@ -542,6 +542,7 @@ const frames = {}; // keep each system loaded so switching back is instant
 const ACCESS = {
   //            admin         principal     teacher      staff        student
   aralmath:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
+  aralread:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   accounting: {admin:'bookkeeper', principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
   cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:'student'},
   clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:'student'},

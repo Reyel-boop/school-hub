@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../shared/cloud.js" data-mod="aralread"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aral Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lilita+One&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/proto.css">
+<style>
+  :root{--brand:#be185d;--brand-d:#9d174d;--brand-soft:#fce7f3;--grad:linear-gradient(135deg,#ec4899,#9d174d)}
+  /* the narrator: "Little Boy" by Ducks (Rive, CC BY 4.0) */
+  .narr{display:flex;align-items:center;gap:1.2rem;border-radius:1.2rem;padding:1rem;background:linear-gradient(135deg,#fdf2f8,#e0f2fe)}
+  .boy{flex:none;width:clamp(7.5rem,18vw,11rem);aspect-ratio:1;border-radius:1.4rem;overflow:hidden;background:#0596f7;box-shadow:0 0 0 4px #fff,0 10px 24px -10px rgba(15,23,42,.45);position:relative}
+  .boy canvas{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .5s}.boy.on canvas{opacity:1}
+  .boy.talk{animation:boytalk .5s ease-in-out infinite alternate}@keyframes boytalk{to{transform:translateY(-3px) rotate(-1deg)}}
+  .say{position:relative;flex:1;background:#fff;border-radius:1rem;padding:.9rem 1.1rem;font-weight:600;font-size:1.08rem;color:#0f172a;box-shadow:0 6px 18px -10px rgba(15,23,42,.35)}
+  .say::before{content:"";position:absolute;left:-.55rem;top:50%;width:1.1rem;height:1.1rem;background:#fff;transform:translateY(-50%) rotate(45deg);border-radius:.15rem}
+  .say small{display:block;color:var(--brand);font-weight:700;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
+  /* library */
+  .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:1rem}
+  .book{position:relative;text-align:left;border:0;border-radius:1.1rem;padding:1.1rem 1.1rem 1rem;background:#fff;box-shadow:0 1px 0 #e2e8f0,0 8px 20px -14px rgba(15,23,42,.4);cursor:pointer;display:flex;flex-direction:column;gap:.35rem;border-left:.55rem solid var(--c,#ec4899);transition:transform .15s}
+  .book:hover{transform:translateY(-2px)}.book h3{margin:0;font:400 1.35rem 'Lilita One',Poppins,sans-serif;color:#0f172a}
+  .book p{margin:0;color:#475569;font-size:.9rem}.book .meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.3rem}
+  .book.locked{opacity:.6;cursor:not-allowed}.book.locked::after{content:"🔒";position:absolute;right:.9rem;top:.8rem;font-size:1.3rem}
+  .book.next{box-shadow:0 0 0 3px #facc15,0 8px 20px -14px rgba(15,23,42,.4)}.book.next::before{content:"READ NEXT";position:absolute;right:.8rem;top:-.6rem;background:#facc15;color:#422006;font-size:.62rem;font-weight:700;padding:.1rem .5rem;border-radius:1rem;letter-spacing:.06em}
+  .stars{display:inline-flex;gap:1px;color:#cbd5e1;font-size:1rem}.stars .on{color:#f59e0b}
+  /* reader */
+  .page{background:#fffdf7;border-radius:1.2rem;padding:1.4rem 1.6rem;box-shadow:inset 0 0 0 1px #f1e8d6,0 10px 26px -18px rgba(15,23,42,.45);font:400 1.18rem/1.9 Merriweather,Georgia,serif;color:#1e293b}
+  .page h2{font:400 1.7rem 'Lilita One',Poppins,sans-serif;color:var(--brand-d);margin:0 0 .6rem}
+  .ln{display:inline;padding:.12rem .2rem;border-radius:.35rem;transition:background .3s,color .3s;cursor:pointer}
+  .ln.done{color:#475569}.ln.cur{background:#fde68a;color:#0f172a;box-shadow:0 0 0 2px #fde68a}.ln.todo{color:#cbd5e1}
+  .vocab{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;font-family:Poppins,sans-serif;font-size:.85rem}
+  .vocab span{background:var(--brand-soft);color:var(--brand-d);border-radius:2rem;padding:.25rem .7rem}
+  .rbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.rbar .grow{flex:1}
+  .prog{height:.55rem;border-radius:1rem;background:#f1f5f9;overflow:hidden;min-width:8rem}.prog i{display:block;height:100%;background:var(--grad)}
+  /* quiz */
+  .q{font-weight:600;font-size:1.15rem;margin:.2rem 0 .9rem}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .opts button{text-align:left;border:2px solid #e2e8f0;background:#fff;border-radius:.9rem;padding:.8rem 1rem;font:500 1rem Poppins,sans-serif;cursor:pointer;color:#0f172a}
+  .opts button:hover:not(:disabled){border-color:var(--brand);background:var(--brand-soft)}
+  .opts button.right{border-color:#16a34a;background:#dcfce7}.opts button.wrong{border-color:#dc2626;background:#fee2e2}
+  .opts button b{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:#f1f5f9;margin-right:.5rem;font-size:.85rem}
+  .result{text-align:center}.result .big{font:400 3rem 'Lilita One',Poppins,sans-serif;color:var(--brand-d)}
+  .credit{margin-top:.6rem;font-size:.72rem;color:#94a3b8}.credit a{color:inherit}
+  /* voice-over studio (admin only) */
+  .vrow{display:flex;align-items:center;gap:.5rem;padding:.45rem .2rem;border-bottom:1px solid #f1f5f9}.vrow .vt{flex:1}.vrow.has .vt::before{content:"✓ ";color:#16a34a;font-weight:700}
+  .vrow.rec{background:#fef2f2}.btn.stop{background:#ef4444}.vgh small{color:#94a3b8;font-weight:500}
+  table.cls{width:100%;border-collapse:collapse;font-size:.92rem}table.cls th,table.cls td{padding:.55rem .5rem;border-bottom:1px solid #f1f5f9;text-align:left}
+  @media (max-width:640px){.narr{flex-direction:column;text-align:center}.say::before{left:50%;top:-.5rem;transform:translateX(-50%) rotate(45deg)}.opts{grid-template-columns:1fr}.page{padding:1.1rem;font-size:1.05rem}}
+</style>
+</head>
+<body>
+<script src="../shared/proto.js"></script>
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>';
+const MIN_PASS = 3; // right answers (of 4) to clear a story and unlock the next one
+
+/* ================= STORIES (sample starter set: replace or add your own) =================
+   Each story: id, band ('78' = Grades 7–8 book, '910' = Grades 9–10 book), title, blurb, color,
+   lines (read one at a time by the narrator), vocab, and 4 questions [question, [4 options], index of the right one]. */
+const BANDS = {'78': 'Grades 7–8', '910': 'Grades 9–10'};
+const STORIES = [
+  {id:'umbrella', band:'78', title:'The Borrowed Umbrella', color:'#ec4899', blurb:'A rainy afternoon, a kind classmate and a promise.',
+   lines:['The rain fell hard on the roof of the waiting shed.', 'Mila held her bag over her head, but her notebooks were getting wet.', 'Her classmate Jun opened his old blue umbrella and stepped beside her.',
+     '"You can use it," he said. "My house is just across the street."', 'The next morning, Mila brought the umbrella back, dry and neatly folded.', 'Inside it, she tucked a note: "Thank you for keeping my homework safe."'],
+   vocab:[['waiting shed', 'a small roofed place where people wait'], ['neatly', 'in a clean and careful way']],
+   qs:[['Why were Mila\'s notebooks getting wet?', ['She dropped them in a puddle', 'It was raining hard', 'Jun spilled water on them', 'She left them outside'], 1],
+       ['What did Jun do to help?', ['He lent her his umbrella', 'He carried her bag home', 'He called her parents', 'He gave her a new notebook'], 0],
+       ['What does "neatly folded" tell us about Mila?', ['She was in a hurry', 'She was careless', 'She took good care of the umbrella', 'She did not like the umbrella'], 2],
+       ['What is the main lesson of the story?', ['Always bring two bags', 'Rain is dangerous', 'Kindness should be returned with thanks', 'Never borrow things'], 2]]},
+  {id:'garden', band:'78', title:"Lola's Rooftop Garden", color:'#22c55e', blurb:'Tomatoes, patience and a very small space.',
+   lines:['Lola Ising had no yard, only a small rooftop above her sari-sari store.', 'She filled old paint cans with soil and planted tomato seeds in each one.', 'Every morning, Paolo carried water up the stairs for her plants.',
+     'For weeks, nothing seemed to happen, and Paolo almost gave up.', '"Seeds are like learning," Lola said. "The roots grow first, where you cannot see them."', 'By summer, red tomatoes hung over every can, and Lola shared them with the whole street.'],
+   vocab:[['sari-sari store', 'a small neighborhood store'], ['roots', 'the part of a plant that grows under the soil']],
+   qs:[['Where did Lola plant her tomatoes?', ['In a big farm', 'In old paint cans on the rooftop', 'In the school garden', 'Beside the road'], 1],
+       ['What was Paolo\'s job?', ['Selling tomatoes', 'Buying seeds', 'Carrying water for the plants', 'Painting the cans'], 2],
+       ['What did Lola mean by "the roots grow first"?', ['Growth happens even when we cannot see it yet', 'Roots are more important than fruit', 'Plants grow faster at night', 'Tomatoes have no roots'], 0],
+       ['How did the story end?', ['The plants died', 'Lola sold the store', 'Paolo moved away', 'Lola shared the tomatoes with the street'], 3]]},
+  {id:'fisher', band:'910', title:"The Fisherman's Choice", color:'#0ea5e9', blurb:'A good catch, a small net and a hard decision.',
+   lines:['Before sunrise, Mang Ruben pushed his bangka into the calm sea of Batangas.', 'By noon his net was heavy, but half of the fish were still very young.', 'Selling all of them would pay for his son\'s school project.',
+     'Yet he remembered how the reef had once been empty because people took too much, too soon.', 'One by one, he let the young fish slip back into the water.', 'That evening he earned less, but he knew there would be fish for his son\'s children too.'],
+   vocab:[['bangka', 'a small outrigger boat'], ['reef', 'a ridge of rock or coral in the sea where fish live']],
+   qs:[['What problem did Mang Ruben face?', ['His boat was broken', 'Half of his catch were young fish', 'The sea was too rough', 'No one would buy fish'], 1],
+       ['Why was selling all the fish tempting?', ['It would pay for his son\'s school project', 'He wanted a new boat', 'The fish would spoil anyway', 'His friends told him to'], 0],
+       ['What memory helped him decide?', ['A storm that sank his boat', 'His first day of fishing', 'A reef that was once empty from overfishing', 'A fish market that closed'], 2],
+       ['Which word best describes Mang Ruben\'s decision?', ['Careless', 'Selfish', 'Responsible', 'Lucky'], 2]]},
+  {id:'signal', band:'910', title:'Signal in the Storm', color:'#8b5cf6', blurb:'When the power goes out, a radio and a plan.',
+   lines:['The typhoon knocked out the power in Barangay San Isidro just after dinner.', 'Phones lost signal, and the families near the river began to worry.', 'Carla remembered the battery radio her science club had repaired.',
+     'Through the static, a voice from the municipal office warned that the river would rise by midnight.', 'Carla and her brother knocked on doors, telling neighbors to move to the school on the hill.', 'When the water came, every family was safe, and the old radio had a new name: Hero.'],
+   vocab:[['static', 'crackling noise on a radio'], ['municipal', 'belonging to a town or city government']],
+   qs:[['What caused the power outage?', ['A typhoon', 'An earthquake', 'A broken generator', 'A fire'], 0],
+       ['How did Carla get the warning?', ['From a text message', 'From a battery radio', 'From the television', 'From a neighbor'], 1],
+       ['What did Carla and her brother do after hearing the warning?', ['They went to sleep', 'They fixed the power line', 'They warned neighbors to move to higher ground', 'They called the radio station'], 2],
+       ['Why did the radio get the name "Hero"?', ['It was very old', 'It helped keep every family safe', 'It belonged to a hero', 'It won a science contest'], 1]]},
+];
+const storyOf = id => STORIES.find(s => s.id === id);
+
+/* ================= helpers ================= */
+const isStudent = () => P.me && P.me.role === 'student';
+function isHubAdmin(){ return ((window.HUB_ACCOUNT || {}).role) === 'admin'; }
+const gradeOf = u => +((String((P.userOf(u) || {}).pos || '').match(/\b(?:Grade|G)\s*(7|8|9|10)\b/i) || [])[1]) || null;
+const bandOf = u => { const g = gradeOf(u); return g && g >= 9 ? '910' : '78'; };
+const first = () => esc(String(P.me.name).split(' ')[0]);
+const attemptsOf = (u, id) => P.db.attempts.filter(a => a.u === u && (!id || a.story === id));
+const bestOf = (u, id) => attemptsOf(u, id).reduce((m, a) => Math.max(m, a.score), -1);
+const cleared = (u, id) => bestOf(u, id) >= MIN_PASS;
+const starsFor = s => s >= 4 ? 3 : s >= 3 ? 2 : s >= 2 ? 1 : 0;
+const starsHtml = n => `<span class="stars">${[0, 1, 2].map(i => `<span class="${i < n ? 'on' : ''}">★</span>`).join('')}</span>`;
+const bandStories = b => STORIES.filter(s => s.band === b);
+const nextStory = u => bandStories(bandOf(u)).find(s => !cleared(u, s.id)) || null;
+const storyLocked = (u, id) => { if (!isStudent()) return false; const list = bandStories(bandOf(u)), nx = nextStory(u); return !!nx && !cleared(u, id) && list.indexOf(storyOf(id)) > list.indexOf(nx); };
+function sfx(kind){ try { const c = sfx.c || (sfx.c = new (window.AudioContext || window.webkitAudioContext)()), o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+  const f = {ok: [660, 880], no: [300, 220], win: [523, 784], tap: [520, 520]}[kind] || [500, 500];
+  o.frequency.setValueAtTime(f[0], t); o.frequency.exponentialRampToValueAtTime(f[1], t + .15); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .25);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .26); } catch (e) {} }
+const CREDIT = `Narrator: <a href="https://rive.app/community/files/12293-23439-little-boy/" target="_blank" rel="noopener">Little Boy by Ducks</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · made with Rive · voice recorded by the school`;
+
+/* ================= the narrator (Rive "Little Boy" by Ducks, CC BY 4.0) =================
+   One boy is kept alive and moved into each screen's narrator box, so he never reloads. His eyes follow the pointer;
+   "Hover" makes him react, which we use as a little nod each time he starts a new line. */
+let BOY = null, BOY_EL = null, riveP = null;
+function loadRive(){
+  if (window.rive) return Promise.resolve();
+  return riveP || (riveP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = '../aralmath/rive/rive.js';
+    s.onload = () => { try { rive.RuntimeLoader.setWasmUrl('../aralmath/rive/rive.wasm'); ok(); } catch (e) { no(e); } }; s.onerror = no; document.head.appendChild(s); }));
+}
+function boyMount(){
+  const slot = $('boySlot'); if (!slot) return;
+  if (!BOY_EL) { BOY_EL = document.createElement('div'); BOY_EL.className = 'boy'; BOY_EL.innerHTML = '<canvas></canvas>'; const cv = BOY_EL.querySelector('canvas');
+    slot.appendChild(BOY_EL);
+    loadRive().then(() => { const fit = () => { const n = Math.round(cv.clientWidth * Math.min(2, window.devicePixelRatio || 1)); if (n && cv.width !== n) { cv.width = cv.height = n; BOY && BOY.resizeDrawingSurfaceToCanvas && BOY.resizeDrawingSurfaceToCanvas(); } };
+      fit(); BOY = new rive.Rive({src: 'rive/littleboy.riv', canvas: cv, stateMachines: 'State Machine 1', autoplay: true, layout: new rive.Layout({fit: rive.Fit.Cover}),
+        onLoad: () => { fit(); BOY_EL && BOY_EL.classList.add('on'); }});
+      try { new ResizeObserver(fit).observe(cv); } catch (e) {} }).catch(() => {});
+  } else slot.appendChild(BOY_EL);
+}
+function boyNod(){ if (!BOY) return; try { const h = BOY.stateMachineInputs('State Machine 1').find(i => i.name === 'Hover'); if (h) { h.value = true; setTimeout(() => { h.value = false; }, 1200); } } catch (e) {} }
+function narrHtml(text, label){ return `<div class="narr"><div id="boySlot"></div><div class="say" id="say"><small>${label || 'Your reading buddy'}</small><span id="sayText">${text}</span></div></div>`; }
+// say a line: show it, nod, and play the admin's own recording of it (no computer voice; unrecorded lines stay silent)
+function narrate(text){ const t = $('sayText'); if (t) t.innerHTML = text; boyNod(); if (BOY_EL) { BOY_EL.classList.add('talk'); clearTimeout(narrate.t); narrate.t = setTimeout(() => BOY_EL && BOY_EL.classList.remove('talk'), 1800); }
+  speak(String(text).replace(/<[^>]+>/g, '')); }
+
+/* ================= recorded voice-over (shared with Aral Math; the admin records, everyone hears) ================= */
+const vkey = t => String(t).toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+let VCLIPS = null, VAC = null; const VBUF = new Map(); let VPLAY = [];
+async function voiceLoad(force){
+  if (VCLIPS && !force) return VCLIPS;
+  try { const r = await fetch('/api/voice', {credentials: 'same-origin'}); if (r.status !== 200) throw 0; VCLIPS = (await r.json()).clips || {}; } catch (e) { VCLIPS = VCLIPS || {}; VCLIPS.__offline = true; }
+  return VCLIPS;
+}
+const vac = () => VAC || (VAC = new (window.AudioContext || window.webkitAudioContext)());
+function vbuf(id){ const k = id + '@' + VCLIPS[id]; if (VBUF.has(k)) return VBUF.get(k);
+  const p = fetch('/api/voice?id=' + encodeURIComponent(id) + '&v=' + VCLIPS[id], {credentials: 'same-origin'}).then(r => r.arrayBuffer()).then(b => vac().decodeAudioData(b));
+  VBUF.set(k, p); p.catch(() => VBUF.delete(k)); return p; }
+// cover the line with recorded clips (longest phrases first, sentence by sentence); null if anything is missing
+function vplan(text){
+  if (!VCLIPS) return null; const name = vkey(((P.me || {}).name || '').split(' ')[0]), plan = [];
+  for (const sn of String(text).split(/(?<=[.!?])\s+/).map(vkey).filter(Boolean)) { const w = sn.split(' '); let i = 0;
+    while (i < w.length) { let hit = 0; for (let j = Math.min(w.length, i + 30); j > i; j--) if (VCLIPS[w.slice(i, j).join(' ')]) { hit = j; break; }
+      if (hit) { plan.push(w.slice(i, hit).join(' ')); i = hit; } else if (name && w[i] === name) i++; else return null; }
+    plan.push('|'); }
+  return plan.length > 1 ? plan : null;
+}
+function vstop(){ VPLAY.forEach(n => { try { n.stop(); } catch (e) {} }); VPLAY = []; }
+async function vplay(plan){ vstop(); const ctx = vac(); try { await ctx.resume(); } catch (e) {}
+  const me = {}; VPLAY.me = me; const bufs = await Promise.all(plan.filter(x => x !== '|').map(vbuf)); if (VPLAY.me !== me) return;
+  let t = ctx.currentTime + .05, b = 0; for (const x of plan) { if (x === '|') { t += .3; continue; } const s = ctx.createBufferSource(); s.buffer = bufs[b++]; s.connect(ctx.destination); s.start(t); VPLAY.push(s); t += s.buffer.duration + .04; }
+  VPLAY.me = me; }
+function soundOn(){ try { return localStorage.getItem('aralread-sound') !== '0'; } catch (e) { return true; } }
+function toggleSound(){ try { localStorage.setItem('aralread-sound', soundOn() ? '0' : '1'); } catch (e) {} if (!soundOn()) vstop(); P.refresh(); }
+function speak(text){ vstop(); if (!soundOn()) return; const plan = vplan(text); if (plan) vplay(plan).catch(() => {}); }
+voiceLoad();
+
+/* ================= STUDENT: library, reader, quiz ================= */
+let R = null; // the story being read: {id, i (line), phase: 'read'|'quiz'|'done', q, picked, right}
+function library(el){
+  if (R) return R.phase === 'read' ? reader(el) : quiz(el);
+  const u = P.me.u, stu = isStudent(), b = stu ? bandOf(u) : (library.band || '78'), list = bandStories(b), nx = stu ? nextStory(u) : null;
+  const msg = !stu ? `Hello, teacher! Tap any story to read it the way learners see it.` : nx ? `Hi, ${first()}! Let's read <b>${esc(nx.title)}</b> together. I'll read each line with you.` : `Hi, ${first()}! You finished every story. Read one again for 3 stars!`;
+  el.innerHTML = `<div class="stack">${narrHtml(msg)}
+    <div class="card"><div class="rbar"><div class="grow"><h2 style="margin:0">📚 Story library</h2><p class="hint" style="margin:.2rem 0 0">${stu ? `${gradeOf(u) ? 'Grade ' + gradeOf(u) + ' · ' : ''}${BANDS[b]} book. Read a story, then answer 4 questions. Get ${MIN_PASS} right to unlock the next story.` : 'Preview the stories and questions.'}</p></div>
+      ${stu ? '' : `<div class="seg">${Object.entries(BANDS).map(([k, v]) => `<label><input type="radio" name="bnd" ${k === b ? 'checked' : ''} onchange="library.band='${k}';P.refresh()">${v}</label>`).join('')}</div>`}
+      <button class="btn ghost sm" onclick="toggleSound()">${soundOn() ? '🔊 Voice on' : '🔇 Voice off'}</button></div></div>
+    <div class="shelf">${list.map(s => { const best = bestOf(u, s.id), lk = storyLocked(u, s.id);
+      return `<button class="book ${lk ? 'locked' : ''} ${nx && nx.id === s.id ? 'next' : ''}" style="--c:${s.color}" onclick="openStory('${s.id}')">
+        <h3>${esc(s.title)}</h3><p>${esc(s.blurb)}</p>
+        <div class="meta"><span class="pill p-gray">${s.lines.length} lines · 4 questions</span>${stu && best >= 0 ? starsHtml(starsFor(best)) : ''}</div></button>`; }).join('')}</div>
+    <p class="credit">${CREDIT}</p></div>`;
+  boyMount(); if (stu && !library.greeted) { library.greeted = true; narrate(msg); }
+}
+function openStory(id){
+  if (storyLocked(P.me.u, id)) { sfx('no'); const nx = nextStory(P.me.u); return narrate(`<b>${esc(storyOf(id).title)}</b> is still locked. Read <b>${esc(nx.title)}</b> first and get ${MIN_PASS} questions right!`); }
+  sfx('tap'); R = {id, i: 0, phase: 'read'}; P.refresh(); narrate(esc(storyOf(id).lines[0]));
+}
+function reader(el){
+  const s = storyOf(R.id), n = s.lines.length;
+  el.innerHTML = `<div class="stack">
+    <div class="rbar"><button class="btn ghost sm" onclick="closeStory()">← Library</button><div class="grow"><b>${esc(s.title)}</b><div class="hint">Line ${R.i + 1} of ${n}</div></div>
+      <div class="prog"><i style="width:${Math.round(100 * (R.i + 1) / n)}%"></i></div><button class="btn ghost sm" onclick="toggleSound()">${soundOn() ? '🔊' : '🔇'}</button></div>
+    ${narrHtml(esc(s.lines[R.i]), 'Reading with you')}
+    <div class="page"><h2>${esc(s.title)}</h2>${s.lines.map((t, k) => `<span class="ln ${k < R.i ? 'done' : k === R.i ? 'cur' : 'todo'}" onclick="${k <= R.i ? `readLine(${k})` : ''}">${esc(t)}</span> `).join('')}
+      ${R.i === n - 1 ? `<div class="vocab"><b>Words to know:</b>${s.vocab.map(([w, m]) => `<span><b>${esc(w)}</b>: ${esc(m)}</span>`).join('')}</div>` : ''}</div>
+    <div class="rbar"><button class="btn ghost" onclick="readLine(${Math.max(0, R.i - 1)})" ${R.i ? '' : 'disabled'}>◀ Back</button><button class="btn ghost" onclick="readLine(${R.i})">🔁 Read again</button><div class="grow"></div>
+      ${R.i < n - 1 ? `<button class="btn" onclick="readLine(${R.i + 1})">Next line ▶</button>` : `<button class="btn" onclick="startQuiz()">Answer the questions ▶</button>`}</div>
+    <p class="credit">${CREDIT}</p></div>`;
+  boyMount();
+}
+function readLine(k){ R.i = k; sfx('tap'); P.refresh(); narrate(esc(storyOf(R.id).lines[k])); }
+function closeStory(){ R = null; vstop(); P.refresh(); }
+function startQuiz(){ R.phase = 'quiz'; R.q = 0; R.right = 0; R.picked = null; P.refresh(); narrate(esc(storyOf(R.id).qs[0][0])); }
+function quiz(el){
+  const s = storyOf(R.id);
+  if (R.phase === 'done') { const st = starsFor(R.right), pass = R.right >= MIN_PASS, nx = isStudent() ? nextStory(P.me.u) : null;
+    el.innerHTML = `<div class="stack">${narrHtml(R.doneMsg, 'Great reading')}<div class="card result"><div class="big">${R.right} / 4</div><div style="font-size:2rem">${starsHtml(st)}</div>
+      <p>${pass ? (nx && nx.id !== s.id ? `You unlocked <b>${esc(nx.title)}</b>!` : 'Story cleared!') : `Get ${MIN_PASS} right to clear this story. Read it once more, then try again.`}</p>
+      <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="openStory('${s.id}')">📖 Read again</button><button class="btn" onclick="closeStory()">Back to the library</button></div></div><p class="credit">${CREDIT}</p></div>`;
+    return boyMount(); }
+  const [q, opts, ans] = s.qs[R.q];
+  el.innerHTML = `<div class="stack">
+    <div class="rbar"><button class="btn ghost sm" onclick="closeStory()">← Library</button><div class="grow"><b>${esc(s.title)}</b><div class="hint">Question ${R.q + 1} of 4</div></div><div class="prog"><i style="width:${Math.round(100 * (R.q + (R.picked == null ? 0 : 1)) / 4)}%"></i></div></div>
+    ${narrHtml(R.picked == null ? esc(q) : R.picked === ans ? 'Correct! Great reading.' : `Not quite. The answer is: ${esc(opts[ans])}.`, R.picked == null ? 'Question' : R.picked === ans ? 'Yes!' : 'Let\'s check')}
+    <div class="card"><p class="q">${esc(q)}</p><div class="opts">${opts.map((o, k) => `<button onclick="pick(${k})" ${R.picked != null ? 'disabled' : ''} class="${R.picked == null ? '' : k === ans ? 'right' : k === R.picked ? 'wrong' : ''}"><b>${'ABCD'[k]}</b>${esc(o)}</button>`).join('')}</div>
+      ${R.picked != null ? `<div class="actions" style="justify-content:flex-end;margin-top:1rem"><button class="btn" onclick="nextQ()">${R.q < 3 ? 'Next question ▶' : 'See my score ▶'}</button></div>` : ''}</div>
+    <p class="credit">${CREDIT}</p></div>`;
+  boyMount();
+}
+function pick(k){ const ans = storyOf(R.id).qs[R.q][2]; R.picked = k; if (k === ans) { R.right++; sfx('ok'); } else sfx('no'); P.refresh(); narrate(k === ans ? 'Correct! Great reading.' : `Not quite. The answer is: ${esc(storyOf(R.id).qs[R.q][1][ans])}.`); }
+function nextQ(){
+  if (R.q < 3) { R.q++; R.picked = null; P.refresh(); return narrate(esc(storyOf(R.id).qs[R.q][0])); }
+  if (isStudent()) { P.db.attempts.push({u: P.me.u, story: R.id, score: R.right, t: Date.now()}); P.save(); }
+  R.phase = 'done'; R.doneMsg = R.right >= MIN_PASS ? `Wonderful, ${first()}! You got ${R.right} out of 4.` : `Good try, ${first()}! You got ${R.right} out of 4. Let's read it again.`;
+  sfx(R.right >= MIN_PASS ? 'win' : 'no'); P.refresh(); narrate(R.doneMsg);
+}
+
+/* ================= STUDENT: my progress ================= */
+function progress(el){
+  const u = P.me.u, list = bandStories(bandOf(u)), done = list.filter(s => cleared(u, s.id)).length;
+  el.innerHTML = `<div class="stack"><div class="card"><h2>My reading</h2><p class="hint">${done} of ${list.length} stories cleared · ${attemptsOf(u).length} quizzes taken</p>
+    <div class="tablewrap"><table class="cls"><tr><th>Story</th><th>Best</th><th>Stars</th><th>Tries</th></tr>${list.map(s => { const b = bestOf(u, s.id);
+      return `<tr><td>${esc(s.title)}</td><td>${b >= 0 ? b + ' / 4' : '—'}</td><td>${b >= 0 ? starsHtml(starsFor(b)) : '—'}</td><td>${attemptsOf(u, s.id).length}</td></tr>`; }).join('')}</table></div></div></div>`;
+}
+
+/* ================= TEACHER: class progress ================= */
+function classView(el){
+  const kids = P.usersWith('student');
+  el.innerHTML = `<div class="stack"><div class="card"><h2>Class reading progress</h2><p class="hint">Best quiz score per story (out of 4). A story is cleared at ${MIN_PASS} or more.</p>
+    ${Object.entries(BANDS).map(([b, label]) => { const list = bandStories(b), mine = kids.filter(k => bandOf(k.u) === b); if (!mine.length) return '';
+      return `<h3 style="margin:1rem 0 .4rem">${label}</h3><div class="tablewrap"><table class="cls"><tr><th>Learner</th>${list.map(s => `<th>${esc(s.title)}</th>`).join('')}</tr>
+        ${mine.map(k => `<tr><td><b style="font-weight:600">${esc(k.name)}</b><br><small class="hint">${esc(k.pos)}</small></td>${list.map(s => { const v = bestOf(k.u, s.id); return `<td>${v >= 0 ? `${v} / 4 ${starsHtml(starsFor(v))}` : '—'}</td>`; }).join('')}</tr>`).join('')}</table></div>`; }).join('')}</div></div>`;
+}
+
+/* ================= ADMIN: voice-over studio (lines shared with Aral Math's recordings) ================= */
+let VREC = null;
+function voiceLines(){ return [['Greetings & help', ["Let's read", 'together', "I'll read each line with you", 'Correct! Great reading.', 'Not quite. The answer is:', 'Wonderful', 'Good try', 'You got', 'out of 4', "Let's read it again", 'You finished every story. Read one again for 3 stars!', 'is still locked', 'first and get 3 questions right']]]
+  .concat(STORIES.map(s => [s.title, [s.title].concat(s.lines, s.qs.map(q => q[0]), s.qs.flatMap(q => q[1]))])); }
+function voiceView(el){
+  if (!isHubAdmin()) { el.innerHTML = '<div class="card"><h2>Voice-over</h2><p class="hint">Only the admin account can record the voice-over.</p></div>'; return; }
+  if (!VCLIPS) { el.innerHTML = '<div class="card"><p class="hint">Loading recordings…</p></div>'; voiceLoad().then(() => P.current === 'voice' && P.refresh()); return; }
+  if (VCLIPS.__offline) { el.innerHTML = '<div class="card"><h2>Voice-over</h2><p class="hint">Recording needs the school server. Open the School Hub at its Vercel address and sign in as admin.</p></div>'; return; }
+  const groups = voiceLines(), all = groups.flatMap(([, l]) => l), done = all.filter(t => VCLIPS[vkey(t)]).length;
+  const row = t => { const k = vkey(t), has = !!VCLIPS[k], rec = VREC && VREC.k === k, ek = esc(k.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+    return `<div class="vrow ${has ? 'has' : ''} ${rec ? 'rec' : ''}"><span class="vt">${esc(t)}</span><button class="btn sm ${rec ? 'stop' : ''}" onclick="voiceRec('${ek}')">${rec ? '■ Stop' : has ? '● Re-record' : '● Record'}</button>${has ? `<button class="btn ghost sm" onclick="vplay(['${ek}'])">▶</button><button class="btn ghost sm" title="Delete" onclick="voiceDel('${ek}')">✕</button>` : ''}</div>`; };
+  el.innerHTML = `<div class="stack"><div class="card"><h2>🎙️ Voice-over</h2><p class="hint">Record each line in your own voice. Students hear only your recordings; a line you have not recorded stays silent. <b>${done}</b> of ${all.length} recorded.</p></div>
+    ${groups.map(([name, list]) => `<div class="card"><h3 class="vgh">${esc(name)} <small>${list.filter(t => VCLIPS[vkey(t)]).length}/${list.length}</small></h3>${list.map(row).join('')}</div>`).join('')}</div>`;
+}
+async function voiceRec(k){
+  if (VREC && VREC.k === k) return VREC.stop(); if (VREC) VREC.stop();
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}}); } catch (e) { alert('Please allow the microphone so you can record.'); return; }
+  const mr = new MediaRecorder(stream), chunks = []; mr.ondataavailable = e => chunks.push(e.data);
+  VREC = {k, stop: () => { if (mr.state !== 'inactive') mr.stop(); }}; P.refresh();
+  mr.onstop = async () => { stream.getTracks().forEach(t => t.stop()); VREC = null; P.refresh();
+    try { const wav = await toWav(await new Blob(chunks).arrayBuffer()), b64 = await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result.split(',')[1]); fr.readAsDataURL(new Blob([wav], {type: 'audio/wav'})); });
+      const r = await fetch('/api/voice', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({id: k, b64})});
+      if (r.status !== 200) throw new Error((await r.json().catch(() => ({}))).error || 'Could not save.'); await voiceLoad(true); P.refresh(); vplay([k]);
+    } catch (e) { alert(e.message || 'Could not save the recording.'); } };
+  mr.start(); setTimeout(() => VREC && VREC.k === k && VREC.stop(), 60000);
+}
+async function toWav(ab){ // trim the silence, mono 22 kHz WAV
+  const buf = await vac().decodeAudioData(ab), d = buf.getChannelData(0), sr = buf.sampleRate; let peak = 0; for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+  const th = Math.max(.02, peak * .08); let a = 0, b = d.length - 1; while (a < b && Math.abs(d[a]) < th) a++; while (b > a && Math.abs(d[b]) < th) b--;
+  a = Math.max(0, a - Math.round(sr * .06)); b = Math.min(d.length - 1, b + Math.round(sr * .12));
+  const out = 22050, n = Math.max(1, Math.floor((b - a) * out / sr)), gain = peak > 0 ? Math.min(3, .9 / peak) : 1, v = new DataView(new ArrayBuffer(44 + n * 2));
+  const W = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  W(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); W(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, out, true); v.setUint32(28, out * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); W(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const f = Math.min(1, i / (out * .01), (n - i) / (out * .03)); v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[a + Math.floor(i * sr / out)] * gain * f)) * 32767, true); }
+  return v.buffer;
+}
+async function voiceDel(k){ if (!confirm('Delete this recording?')) return; await fetch('/api/voice', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({id: k, delete: true})}); await voiceLoad(true); P.refresh(); }
+
+/* ================= CONFIG ================= */
+const CFG = {
+  key:'svnhs-aralread', title:'Aral Reading', subtitle:'ARAL Program · Reading', icon:ICON,
+  roles:{
+    teacher:{badge:'TEACHER', tagline:'Read along with your learners and follow their progress.', tabs:[['class','Class Progress'],['learn','Stories']].concat(isHubAdmin() ? [['voice','Voice-over']] : [])},
+    student:{tagline:'Read stories with your reading buddy!', tabs:[['learn','Read'],['progress','My Progress']]},
+  },
+  signup:{roles:[['student','Learner']], posLabel:{student:'Grade & section'}, posHint:{student:'e.g. Grade 8 – Rizal'}},
+  demo:[['teacher','teacher123','Reading teacher'],['student','student123','Learner']],
+  sampleUsers:[
+    {u:'teacher', p:'teacher123', name:'Juan Dela Cruz', pos:'Reading Teacher · ARAL', role:'teacher'},
+    {u:'student', p:'student123', name:'Ana Reyes', pos:'Grade 8 – Rizal', role:'student'},
+    {u:'student2', p:'student123', name:'Mark Santos', pos:'Grade 7 – Sampaguita', role:'student'},
+    {u:'student3', p:'student123', name:'Liza Ramos', pos:'Grade 9 – Narra', role:'student'},
+  ],
+  data:{attempts: [{u:'student2', story:'umbrella', score:4, t: Date.now() - 864e5}, {u:'student3', story:'fisher', score:3, t: Date.now() - 2 * 864e5}]},
+  views:{learn: library, progress, class: classView, voice: voiceView},
+};
+P.init(CFG);
+</script>
+<script src="../shared/hublock.js"></script>
+</body>
+</html>

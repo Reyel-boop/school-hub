@@ -144,6 +144,7 @@ export function getSession(req){
 // ---------- who may open which system (same table as the Hub) ----------
 export const ACCESS = {
   aralmath:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
+  aralread:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   accounting: {admin:'bookkeeper', principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
   cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:'student'},
   clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:'student'},
@@ -157,7 +158,7 @@ export const ACCESS = {
   tools:      {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:null},
 };
 // storage key prefix of each system
-export const PREFIX = {aralmath:'svnhs-aralmath-', accounting:'svnhs-acct-', cashier:'svnhs-cash-', clinic:'svnhs-cl-', enroll:'svnhs-en-', guidance:'svnhs-go-',
+export const PREFIX = {aralmath:'svnhs-aralmath-', aralread:'svnhs-aralread-', accounting:'svnhs-acct-', cashier:'svnhs-cash-', clinic:'svnhs-cl-', enroll:'svnhs-en-', guidance:'svnhs-go-',
   hr:'svnhs-hr-', ict:'svnhs-ict-', idsys:'svnhs-id-', registrar:'svnhs-reg-', rpms:'svnhs-rpms-', tools:'svnhs-tt-'};
 export const modOfKey = key => Object.keys(PREFIX).find(m => key.startsWith(PREFIX[m]) && !key.endsWith('-session')) || null;
 // everyone who is not a student may use every system: fill any gap with the admin's account for that system

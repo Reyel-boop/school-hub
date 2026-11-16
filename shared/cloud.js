@@ -7,7 +7,7 @@
    On static hosting (GitHub Pages, opening the file) there is no /api, so nothing changes: data stays in the browser. */
 (function () {
   const me = document.currentScript, MOD = me && me.dataset.mod;
-  const PRE = {aralmath:'svnhs-aralmath-', accounting:'svnhs-acct-', cashier:'svnhs-cash-', clinic:'svnhs-cl-', enroll:'svnhs-en-', guidance:'svnhs-go-',
+  const PRE = {aralmath:'svnhs-aralmath-', aralread:'svnhs-aralread-', accounting:'svnhs-acct-', cashier:'svnhs-cash-', clinic:'svnhs-cl-', enroll:'svnhs-en-', guidance:'svnhs-go-',
     hr:'svnhs-hr-', ict:'svnhs-ict-', idsys:'svnhs-id-', registrar:'svnhs-reg-', rpms:'svnhs-rpms-', tools:'svnhs-tt-'}[MOD];
   if (!PRE || location.protocol === 'file:') return;
 
