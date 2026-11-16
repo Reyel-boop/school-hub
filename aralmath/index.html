@@ -736,11 +736,14 @@
   .mkcredit{margin:8px 2px 0;font:500 11px Poppins,sans-serif;color:#0369a1}.mkcredit a{color:inherit}
   img.heroimg{width:100%;height:auto;max-width:100%;border-radius:22%;object-fit:cover;aspect-ratio:1;display:block}
   @media (max-width:640px){.mkheroes{grid-template-columns:repeat(5,1fr);gap:5px}.mkh span{font-size:9px}.mkhero{width:40%}}
-  /* --- welcome greeting (Rive: learning path + croc) --- */
+  /* skater on the next lesson (Rive) */
+  .disc canvas.skatecv{width:100%;height:100%;border-radius:50%;display:block;background:#fff;opacity:0;transition:opacity .4s}.disc canvas.skatecv.on{opacity:1}
+  /* --- welcome greeting (Rive: pink monster + croc) --- */
   .wpanel.wide.hello{width:min(96vw,820px);gap:14px}
   .hwrap{display:flex;gap:18px;align-items:center}
   .hpath{flex:0 0 40%;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 0 rgba(2,132,199,.35)}
-  .hpath canvas,.hcroc canvas{display:block;width:100%;opacity:0;transition:opacity .5s}.hpath canvas{aspect-ratio:393/310}.hpath canvas.on,.hcroc canvas.on{opacity:1}
+  .hpath canvas,.hcroc canvas{display:block;width:100%;opacity:0;transition:opacity .5s}.hpath canvas{aspect-ratio:500/559}.hpath canvas.on,.hcroc canvas.on{opacity:1}
+  .hpath.hmon{flex-basis:34%;background:#1b0b0e;cursor:pointer}
   .htext{flex:1;min-width:0}.htext h2{font:400 clamp(24px,3.2vw,34px)/1.15 'Lilita One',Poppins,sans-serif;margin:0 0 6px;text-shadow:0 2px 0 rgba(0,0,0,.18)}
   .htext p{margin:0 0 10px;font-weight:600}
   .hsteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -749,7 +752,7 @@
   .hbtns{display:flex;gap:12px;justify-content:space-between}.hbtns .wbtn{width:auto;min-width:0;flex:1}
   .wbtn.pulse{animation:wpulse 1.4s ease-in-out infinite}
   .hq{margin:0;text-align:center;font-weight:700;font-size:clamp(18px,2.4vw,24px)}.hq b{font-size:1.15em;background:#fff;color:#0369a1;border-radius:10px;padding:0 .35em}
-  .hcroc{position:relative;width:100%;max-width:min(100%,500px);margin:0 auto;border-radius:18px;overflow:hidden;background:#6ac315;box-shadow:0 8px 0 rgba(2,132,199,.35)}
+  .hcroc{position:relative;width:100%;max-width:min(100%,380px);margin:0 auto;border-radius:18px;overflow:hidden;background:#6ac315;box-shadow:0 8px 0 rgba(2,132,199,.35)}
   .hcroc canvas{aspect-ratio:794/500}
   .happle{position:absolute;width:13%;aspect-ratio:1;transform:translate(-50%,-50%);border:0;border-radius:50%;background:transparent;cursor:pointer}
   .happle:focus-visible{outline:4px solid #fde047}.happle.a1{left:34.8%;top:17%}.happle.a2{left:50.8%;top:17%}.happle.a3{left:68%;top:17%}
@@ -1860,6 +1863,20 @@ function hud(u, line){
 </div></div>
     <div class="chips"><span class="chip">${COIN} ${coinsOf(u)}</span><span class="chip">${STAR()} ${totalStars(u)}</span><span class="chip">${FLAME} ${streakOf(u)} day${streakOf(u) === 1 ? '' : 's'}</span></div></div>`;
 }
+/* ---- The skater: the learner's marker on the map. It stands on the next lesson's stage.
+   Rive: "Learning Path System animation" by aristote (rive/learnpath.riv, CC BY 4.0, green Math theme);
+   Rive's layout bounds show only the skater on its platform (a 160-unit square of the 393x1084 artboard). ---- */
+let SKATE = null;
+function skateMount(){
+  if (SKATE) { try { SKATE.cleanup(); } catch (e) {} SKATE = null; }
+  const cv = $('skateCv'); if (!cv) return;
+  loadRive().then(() => { if (!cv.isConnected) return; const N = Math.round(cv.clientWidth * Math.min(2, window.devicePixelRatio || 1)); if (!N) return;
+    cv.width = cv.height = N; const k = N / 160, x = 110, y = 418;
+    SKATE = new rive.Rive({src: 'rive/learnpath.riv', canvas: cv, stateMachines: 'State Machine 1', autoplay: true,
+      layout: new rive.Layout({fit: rive.Fit.Fill, minX: -x * k, minY: -y * k, maxX: (393 - x) * k, maxY: (1084 - y) * k}),
+      onLoad: () => { try { const t = SKATE.stateMachineInputs('State Machine 1').find(i => i.name === 'theme'); if (t) t.value = 2; } catch (e) {} cv.classList.add('on'); }});
+  }).catch(() => {});
+}
 function map(el){
   const u = P.me.u, b = bandOf(u), stu = isStudent(), nx = stu ? nextSkill(u, b) : null;
   const islands = BANDS[b].units.map(([name, list], ix) => { const [c, soft] = ISLE[ix % ISLE.length], got = stu ? list.filter(([id]) => caught(u, id)).length : 0;
@@ -1867,7 +1884,7 @@ function map(el){
 </div>
       <div class="path">${list.map(([id, ws]) => { const cg = stu && caught(u, id), show = !stu || cg;
         return `<button class="node ${cg ? 'caught' : ''} ${id === nx ? 'next' : ''}" onclick="startPractice('${id}')" title="${SK[id].title}">
-          <span class="disc">${monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
+          <span class="disc">${stu && id === nx ? '<canvas class="skatecv" id="skateCv" aria-label="You are here"></canvas>' : monsterSVG('mon-' + id, cg ? 'happy' : 'idle', [], show ? 'mini' : 'mini locked')}</span>
           ${stu ? stars3(starsOf(bestOf(u, id))) : ''}<b>${SK[id].title}</b><small>WS ${ws}</small></button>`; }).join('')}</div></div>`; }).join('');
   const kids = P.usersWith('student').filter(s => bandOf(s.u) === b).map(s => ({s, c: weekCoins(s.u)})).sort((x, y) => y.c - x.c).slice(0, 6);
   const first = esc(P.me.name.split(' ')[0]), mapLine = !stu ? 'Hi, teacher! Tap any monster to preview a lesson the way learners see it.'
@@ -1886,8 +1903,8 @@ function map(el){
           <li>Get ${MASTER} right to <b>make friends</b> (${STAR()}${STAR()}). All ${ITEMS} = ${STAR()}${STAR()}${STAR()}.</li>
           <li>Stuck? Tap <b>🎬 Watch the lesson</b> to see how it's done.</li><li>Spend coins on gear for your buddy.</li></ol></div>
       </div></div>
-    <p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
-  soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400});
+    <p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
+  soboAttach('soboMap', {key: 'map', anim: 'Hello', hold: 2400}); skateMount();
   { const say = document.querySelector('.hudsay, .mapsobo .sobosay'); let seen = false; try { seen = !!sessionStorage.getItem('aralmath-greeted'); sessionStorage.setItem('aralmath-greeted', '1'); } catch (e) {}
     if (say && ttsOn() && !seen) setTimeout(() => speak(say.textContent, 'buddy'), 600); }
 }
@@ -1988,7 +2005,7 @@ function battle(el){
       <div id="fb">${S.answered ? `<div class="fb ${last.ok ? 'ok' : 'no'}">${last.ok ? `<b>Correct!</b> +${last.coins} coins${S.combo >= 3 ? ' (streak bonus!)' : ''}` : `<b>Not quite.</b> ${last.note ? last.note + ' ' : ''}The answer is <b>${it.show}</b>.`}</div>
         ${!last.ok && S.wrongRun >= 2 ? `<div class="fb info"><b>Let's review together:</b><div style="margin-top:.3rem">${sk.learn}</div></div>` : ''}
         <div class="actions" style="margin-top:.8rem"><button class="btn" id="nextBtn" onclick="next()">${S.i === ITEMS - 1 ? 'Finish' : 'Next question →'}</button><button class="btn ${last.ok ? 'ghost' : ''}" ${last.ok ? '' : 'style="background:#7c3aed"'} onclick="showSteps()">🪄 ${last.ok ? 'See the steps' : 'Show me the steps'}</button></div>` : (S.err ? `<div class="fb info">${S.err}</div>` : '')}</div>
-    </div><p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
+    </div><p class="credit">Hero from <a href="https://rive.app/community/files/26133-49002-studiorun-a-cosmic-game-by-thelittlelabs/" target="_blank" rel="noopener">StudioRun by thelittlelabs</a> · skater from <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path by aristote</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · tap your hero to change it · made with Rive</p></div>`;
   soboAttach('soboSlot', !S.answered ? (S.i === 0 ? {key: 'hello', anim: 'Hello', hold: 2400} : {key: 'listen' + S.i, anim: 'Listen', hold: 0})
     : last.ok ? {key: 'yes' + S.i, anim: ['Yes', 'Sparkles'], hold: 2400} : {key: 'no' + S.i, anim: 'NoBump', hold: 1800});
   { const say = document.querySelector('.sobopanel .sobosay'), k = S.i + ':' + S.answered; if (say && ttsOn() && S.sayKey !== k) { S.sayKey = k; speak(say.textContent, 'buddy'); } }
@@ -2758,15 +2775,15 @@ let WELCOME_JUMP = false;
 function mapJump(){ WELCOME_JUMP = true; sfx('lvl'); P.refresh(); setTimeout(() => { WELCOME_JUMP = false; pref(P.me.u).mapIntro = true; P.save(); nextOnboard(); }, 1500); }
 
 /* ---- Welcome greeting: shown each time a learner opens Aral Math, before lessons and practice ----
-   Rive art (CC BY 4.0): "Learning Path System animation" by aristote (rive/learnpath.riv, green Math theme)
+   Rive art (CC BY 4.0): "Interactive cute red monster" by ElmerVergara (rive/pinkmonster.riv)
    and "Math is a croc" by Jared_Freitag (rive/croc.riv). Spoken lines use only the admin's own recordings. */
 let HELLO = {step: 'path'}, HELLO_R = [];
 const helloSeen = () => { try { return sessionStorage.getItem('aralmath-hello') === '1'; } catch (e) { return true; } };
-const HELLO_CREDIT = `Animations: <a href="https://rive.app/community/files/27817-52722-learning-path-system-animation/" target="_blank" rel="noopener">Learning Path</a> by aristote · <a href="https://rive.app/community/files/18443-34862-math-is-a-croc/" target="_blank" rel="noopener">Math is a croc</a> by Jared_Freitag · CC BY 4.0 · made with Rive`;
+const HELLO_CREDIT = `Animations: <a href="https://rive.app/community/files/28393-53674-interactive-cute-red-monster/" target="_blank" rel="noopener">Interactive cute red monster</a> by ElmerVergara · <a href="https://rive.app/community/files/18443-34862-math-is-a-croc/" target="_blank" rel="noopener">Math is a croc</a> by Jared_Freitag · CC BY 4.0 · made with Rive`;
 function helloView(){
   const nm = esc(P.me.name.split(' ')[0]); setTimeout(helloMount, 0);
   if (HELLO.step === 'path') return `<div class="wpanel wide hello"><div class="wtab">Welcome!</div>
-    <div class="hwrap"><div class="hpath"><canvas id="helloPath"></canvas></div>
+    <div class="hwrap"><div class="hpath hmon" title="Tap my belly!"><canvas id="helloMon"></canvas></div>
       <div class="htext"><h2 id="helloSay">Hi, ${nm}! Welcome to Aral Math!</h2><p>Here's how your math adventure works:</p>
         <ol class="hsteps"><li><span>🎬</span><b>Watch</b> the lesson</li><li><span>✏️</span><b>Practice</b> 10 questions</li><li><span>⭐</span><b>Get 8 right</b> to make a monster friend</li></ol></div></div>
     <div class="hbtns"><button class="wbtn ghost" onclick="helloDone()">Skip</button><button class="wbtn" onclick="helloStep('croc')">Warm up first ▶</button></div>
@@ -2781,12 +2798,11 @@ function helloStop(){ HELLO_R.forEach(r => { try { r.cleanup(); } catch (e) {} }
 function helloMount(){
   helloStop(); const say = $('helloSay'); if (say && ttsOn()) speak(say.textContent, 'nar');
   loadRive().then(() => {
-    const px = Math.min(2, window.devicePixelRatio || 1), pc = $('helloPath'), cc = $('helloCroc');
-    if (pc && pc.isConnected) { // only the monster on its path: skip the phone's clock, card and buttons
-      const W = Math.round(pc.clientWidth * px), k = W / 393; pc.width = W; pc.height = Math.round(310 * k);
-      const r = new rive.Rive({src: 'rive/learnpath.riv', canvas: pc, stateMachines: 'State Machine 1', autoplay: true,
-        layout: new rive.Layout({fit: rive.Fit.Fill, minX: 0, minY: -410 * k, maxX: W, maxY: (1084 - 410) * k}),
-        onLoad: () => { try { const t = r.stateMachineInputs('State Machine 1').find(i => i.name === 'theme'); if (t) t.value = 2; } catch (e) {} pc.classList.add('on'); }});
+    const px = Math.min(2, window.devicePixelRatio || 1), mc = $('helloMon'), cc = $('helloCroc');
+    if (mc && mc.isConnected) { // the pink monster: eyes follow the pointer, tap its belly to make it giggle
+      mc.width = Math.round(mc.clientWidth * px); mc.height = Math.round(mc.width * 559 / 500);
+      const r = new rive.Rive({src: 'rive/pinkmonster.riv', canvas: mc, stateMachines: 'State Machine 1', autoplay: true, layout: new rive.Layout({fit: rive.Fit.Contain}),
+        onLoad: () => mc.classList.add('on')});
       HELLO_R.push(r);
     }
     if (cc && cc.isConnected) {
