@@ -1722,9 +1722,8 @@ async function vplay(plan){
   for (const x of plan) { if (x === '|') { t += .28; continue; } const src = ctx.createBufferSource(); src.buffer = bufs[b++]; src.connect(ctx.destination); src.start(t); VPLAY.push(src); t += src.buffer.duration + .04; }
   VPLAY.me = me;
 }
-// speak(): real recordings first, device voice otherwise
-const _speakTTS = speak;
-speak = function(text, who){ vstop(); const plan = vplan(text); if (plan) { try { speechSynthesis.cancel(); } catch (e) {} vplay(plan).catch(() => _speakTTS(text, who)); return; } _speakTTS(text, who); };
+// speak(): only the admin's own recordings. A line that isn't fully recorded stays silent (no computer voice).
+speak = function(text, who){ vstop(); try { speechSynthesis.cancel(); } catch (e) {} const plan = vplan(text); if (plan) vplay(plan).catch(() => {}); };
 try { const _c = speechSynthesis.cancel.bind(speechSynthesis); speechSynthesis.cancel = () => { vstop(); _c(); }; } catch (e) {}
 voiceLoad();
 
