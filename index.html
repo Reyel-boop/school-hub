@@ -30,7 +30,7 @@
   .rside{flex:1;max-width:38rem;display:flex;flex-direction:column;gap:1.4rem}
   .rname{display:inline-flex;align-items:center;gap:.5rem;align-self:flex-start;background:#0f172a;color:#fff;font-weight:700;padding:.35rem .9rem;border-radius:2rem;font-size:.95rem}
   .rname i{width:.55rem;height:.55rem;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
-  .rbubble{position:relative;background:#fff;border:3px solid #0f172a;border-radius:1.6rem;padding:1.4rem 1.6rem;font-size:clamp(1.4rem,2.6vw,2.3rem);font-weight:700;line-height:1.3;min-height:6.5em;box-shadow:0 10px 0 #0f172a}
+  .rbubble{position:relative;background:#fff;border:3px solid #0f172a;border-radius:1.6rem;padding:1.4rem 1.6rem;font-size:clamp(1.4rem,2.6vw,2.3rem);font-weight:700;line-height:1.3;min-height:3.9em;box-shadow:0 10px 0 #0f172a}
   .rbubble::before{content:"";position:absolute;left:-1.15rem;top:2.2rem;width:1.8rem;height:1.8rem;background:#fff;border-left:3px solid #0f172a;border-bottom:3px solid #0f172a;transform:rotate(45deg)}
   .rbubble .caret{display:inline-block;width:.12em;height:1em;margin-left:.08em;vertical-align:-.12em;background:#0f172a;animation:rblink .8s steps(1) infinite}
   @keyframes rblink{50%{opacity:0}}
@@ -39,6 +39,14 @@
   .rchoices button{background:#fff;border:2px solid #0f172a;border-radius:2rem;padding:.7rem 1.2rem;font-weight:600;font-size:1rem;box-shadow:0 4px 0 #0f172a;color:#0f172a}
   .rchoices button.main{background:#f5b301}
   .rchoices button:hover{transform:translateY(-2px)}.rchoices button:active{transform:translateY(2px);box-shadow:0 2px 0 #0f172a}
+  .rlogin{display:flex;flex-direction:column;gap:.7rem;width:100%;max-width:30rem}
+  .rlogin input{width:100%;font:500 1.05rem Poppins,sans-serif;padding:.85rem 1rem;border:2px solid #0f172a;border-radius:1rem;background:#fff;color:#0f172a;outline:none;box-shadow:0 4px 0 #0f172a}
+  .rlogin input:focus{border-color:#f5b301;box-shadow:0 4px 0 #b45309}
+  .rpw{position:relative}.rpw input{padding-right:4.5rem}
+  .rshow{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none!important;border:0!important;box-shadow:none!important;color:#64748b!important;font-size:.85rem!important;padding:.3rem .5rem!important}
+  .rerr{background:#fee2e2;color:#991b1b;border-radius:.7rem;padding:.55rem .8rem;font-weight:600;font-size:.9rem}
+  .rrow{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+  .rchoices .rlink{background:none!important;border:0!important;box-shadow:none!important;text-decoration:underline;color:#334155!important;padding:.4rem .3rem!important}
   .rskip{position:absolute;top:1.2rem;right:1.4rem;background:none;border:0;color:#64748b;font-size:.9rem;font-weight:600;cursor:pointer}
   .rcredit{position:absolute;left:0;right:0;bottom:.8rem;text-align:center;font-size:.72rem;color:#94a3b8}.rcredit a{color:inherit}
   #reyelBtn{position:fixed;right:1rem;bottom:1rem;z-index:150;width:4.2rem;height:4.2rem;border-radius:50%;overflow:hidden;background:#fff;border:3px solid #f5b301;box-shadow:0 8px 20px -6px rgba(0,0,0,.5);padding:0}
@@ -852,7 +860,7 @@ const REYEL_NEEDS = [
 ];
 const sysName = id => (SYSTEMS.find(s => s.id === id) || {}).name || id;
 function reyelOpenSys(id){ const s = SYSTEMS.find(x => x.id === id); if (!s) return;
-  if (!me) return reyelSay(`Sign in first, then I can open ${s.name} for you.`, () => reyelChoices([['Sign in', () => { reyelClose(); showPane('in'); }, true], ['Back', () => reyelChoices(reyelMenu())]]));
+  if (!me) return reyelSay(`Sign in first, then I can open ${s.name} for you.`, () => reyelChoices([['Sign in', () => reyelLogin(), true], ['Back', () => reyelChoices(reyelMenu())]]));
   if (!hasAccess(s)) return reyelSay(`Your account can't open ${s.name}. If you need it, please ask the school admin.`, () => reyelChoices([['Help me with something else', reyelFind, true], ['Back', () => reyelChoices(reyelMenu())]]));
   reyelClose(); openSys(id); }
 function reyelFind(){
@@ -870,10 +878,38 @@ function reyelExplain(){
     reyelSay(`${s.name}: ${d}${soon ? ' It is coming soon!' : ''}`, () => reyelChoices([...(soon ? [] : [[`Open ${s.name}`, () => reyelOpenSys(s.id), true]]), ['Another system', reyelExplain], ['Back', () => reyelChoices(reyelMenu())]]));
   }]).concat([['Back', () => reyelChoices(reyelMenu())]])));
 }
+
+// sign in right inside Reyel's screen
+function reyelLogin(msg){
+  reyelSay(msg || 'Please type your username and password.', () => {
+    const c = document.getElementById('rChoices'); c.classList.remove('on');
+    c.innerHTML = `<form class="rlogin" id="rLogin" autocomplete="on">
+      <input name="u" placeholder="Username or email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <div class="rpw"><input name="p" type="password" placeholder="Password" autocomplete="current-password" required><button type="button" class="rshow">Show</button></div>
+      <div class="rerr" id="rErr" hidden></div>
+      <div class="rrow"><button type="submit" class="main">Sign in</button>${CLOUD ? '<button type="button" class="rlink" id="rForgot">I forgot my password</button>' : ''}<button type="button" class="rlink" id="rBack">Back</button></div></form>`;
+    const f = document.getElementById('rLogin'); setTimeout(() => { c.classList.add('on'); f.u.focus(); }, 60);
+    f.querySelector('.rshow').onclick = e => { const i = f.p, sh = i.type === 'password'; i.type = sh ? 'text' : 'password'; e.target.textContent = sh ? 'Hide' : 'Show'; };
+    document.getElementById('rBack').onclick = () => reyelChoices(reyelMenu());
+    const fg = document.getElementById('rForgot'); if (fg) fg.onclick = () => { reyelClose(); showPane('forgot'); };
+    f.onsubmit = async e => { e.preventDefault(); const err = document.getElementById('rErr'), btn = f.querySelector('button[type=submit]'), u = f.u.value.trim().toLowerCase(), pw = f.p.value;
+      const fail = m => { err.textContent = m; err.hidden = false; f.p.select(); };
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      try {
+        let user = null;
+        if (CLOUD) { const r = await fetch('/api/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({u, p: pw})});
+          const j = await r.json().catch(() => ({})); if (r.status !== 200) return fail(j.error || 'Could not sign in. Please try again.'); user = Object.assign(j.user, {accounts: j.accounts}); }
+        else { user = HUB_USERS.find(x => x.u === u && x.p === pw); if (!user) return fail('Wrong username or password.'); }
+        signIn(user); const nm = callName();
+        reyelSay(`Welcome, ${nm}! You're signed in. How can I help you today?`, () => reyelChoices(reyelMenu()));
+      } catch (x) { fail('Can’t reach the school server. Check the internet connection.'); }
+      finally { btn.disabled = false; btn.textContent = 'Sign in'; } };
+  });
+}
 function reyelSignup(role){ reyelClose(); showPane('up'); const i = document.querySelector(`#signupForm input[name=role][value=${role}]`); if (i) { i.checked = true; i.dispatchEvent(new Event('change', {bubbles: true})); } }
 function reyelMenu(){
   const R = REYEL_ROLE || 'student';
-  if (!me) return [['Sign in', () => { reyelClose(); showPane('in'); }, true],
+  if (!me) return [['Sign in', () => reyelLogin(), true],
     ...(CLOUD && R !== 'admin' ? [[R === 'teacher' ? 'Create a teacher account' : 'Create a student account', () => reyelSignup(R === 'teacher' ? 'teacher' : 'student')]] : []),
     ...(CLOUD ? [['I forgot my password', () => { reyelClose(); showPane('forgot'); }]] : []),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain],
