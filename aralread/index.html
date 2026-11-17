@@ -63,6 +63,7 @@
 </head>
 <body>
 <script src="../shared/proto.js"></script>
+<script src="../shared/whatsnew.js"></script>
 <script>
 const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>';
 const MIN_PASS = 3; // right answers (of 4) to clear a story and unlock the next one
@@ -379,6 +380,61 @@ const CFG = {
   data:{attempts: [{u:'student2', story:'umbrella', score:4, t: Date.now() - 864e5}, {u:'student3', story:'fisher', score:3, t: Date.now() - 2 * 864e5}]},
   views:{learn: library, progress, class: classView, voice: voiceView},
 };
+// the "What's new" post shown once after each update (shared/whatsnew.js)
+WhatsNew({
+ "app": "aralread",
+ "id": "2026-11-17",
+ "date": "November 17, 2026",
+ "name": "Aral Reading",
+ "color": "#db2777",
+ "student": [
+  {
+   "icon": "👦",
+   "title": "Meet your reading buddy",
+   "text": "The Little Boy reads each line of the story with you.",
+   "tab": "learn",
+   "cta": "Start reading"
+  },
+  {
+   "icon": "🎤",
+   "title": "Your turn to read aloud",
+   "text": "After he reads a line, you read it into the microphone. It checks your words: read 80% right to go on (or try 3 times)."
+  },
+  {
+   "icon": "📚",
+   "title": "Unlock new stories",
+   "text": "Get at least 3 of the 4 questions right to clear a story and open the next one."
+  },
+  {
+   "icon": "⭐",
+   "title": "See how you're doing",
+   "text": "Your stars, quiz scores and reading % for every story.",
+   "tab": "progress",
+   "cta": "My Progress"
+  }
+ ],
+ "teacher": [
+  {
+   "icon": "📖",
+   "title": "Aral Reading is here",
+   "text": "Short stories with a narrator, read-aloud checking with the microphone, and a 4-question quiz.",
+   "tab": "learn",
+   "cta": "Preview stories"
+  },
+  {
+   "icon": "📊",
+   "title": "Class Progress",
+   "text": "See each learner's best score, stars and reading % (how well they read aloud).",
+   "tab": "class",
+   "cta": "Class Progress"
+  },
+  {
+   "icon": "🎙️",
+   "title": "Recorded narration",
+   "text": "The narrator uses your school's own recordings (the Hub admin records them in the Voice-over tab)."
+  }
+ ]
+});
 P.init(CFG);
 </script>
 <script src="../shared/hublock.js"></script>
