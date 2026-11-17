@@ -627,7 +627,7 @@ function render(){
   }
   frames[id].style.display = '';
 }
-function openSys(id){ location.hash = '#/' + id; }
+function openSys(id){ if (location.hash === '#/' + id) render(); else location.hash = '#/' + id; }
 function goHome(){ location.hash = ''; history.replaceState(null,'',location.pathname); render(); }
 
 // ---------- Hub sign-in (PROTOTYPE: demo accounts, plain-text passwords, session kept per browser tab) ----------
@@ -921,8 +921,16 @@ const REYEL_NEEDS = [
   ['🙏 Praise & worship', ['bless'], 'Bless Praise is for that.'],
 ];
 const sysName = id => (SYSTEMS.find(s => s.id === id) || {}).name || id;
+// a system picked before signing in: opened as soon as the sign-in (or new account) is done
+let REYEL_NEXT = null;
+function reyelAfterSignIn(nm){
+  const id = REYEL_NEXT, s = id && SYSTEMS.find(x => x.id === id); REYEL_NEXT = null;
+  if (s && hasAccess(s)) return reyelSay(`Welcome, ${nm}! Opening ${s.name} for you now…`, () => setTimeout(() => { reyelClose(); openSys(s.id); }, 700));
+  if (s) return reyelSay(`Welcome, ${nm}! Your account can't open ${s.name}. If you need it, please ask the school admin. How else can I help?`, () => reyelChoices(reyelMenu()));
+  reyelSay(`Welcome, ${nm}! You're signed in. How can I help you today?`, () => reyelChoices(reyelMenu()));
+}
 function reyelOpenSys(id){ const s = SYSTEMS.find(x => x.id === id); if (!s) return;
-  if (!me) return reyelSay(`Sign in first, then I can open ${s.name} for you.`, () => reyelChoices([['Sign in', () => reyelLogin(), true], ['Back', () => reyelChoices(reyelMenu())]]));
+  if (!me) { REYEL_NEXT = id; return reyelSay(`Sign in first, then I can open ${s.name} for you.`, () => reyelChoices([['Sign in', () => reyelLogin(), true], ['Back', () => { REYEL_NEXT = null; reyelChoices(reyelMenu()); }]])); }
   if (!hasAccess(s)) return reyelSay(`Your account can't open ${s.name}. If you need it, please ask the school admin.`, () => reyelChoices([['Help me with something else', reyelFind, true], ['Back', () => reyelChoices(reyelMenu())]]));
   reyelClose(); openSys(id); }
 function reyelFind(){
@@ -966,8 +974,7 @@ function reyelLogin(msg, pre){
         if (CLOUD) { const r = await fetch('/api/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({u, p: pw})});
           const j = await r.json().catch(() => ({})); if (r.status !== 200) return fail(j.error || 'Could not sign in. Please try again.'); user = Object.assign(j.user, {accounts: j.accounts}); }
         else { user = HUB_USERS.find(x => x.u === u && x.p === pw); if (!user) return fail('Wrong username or password.'); }
-        signIn(user); const nm = callName();
-        reyelSay(`Welcome, ${nm}! You're signed in. How can I help you today?`, () => reyelChoices(reyelMenu()));
+        signIn(user); reyelAfterSignIn(callName());
       } catch (x) { fail('Can’t reach the school server. Check the internet connection.'); }
       finally { btn.disabled = false; btn.textContent = 'Sign in'; } };
   });
@@ -1044,8 +1051,7 @@ function reyelCode(C){
         if (reset) return reyelSay('Your password is changed! Sign in with your new password now.', () => reyelLoginAs(j.u || C.who));
         RSU = null;
         if (j.pending) return reyelSay(j.message || 'Your account is made! The school admin will check it, then you can sign in.', () => reyelChoices([['Back to sign in', () => reyelLogin(), true], ['What does each system do?', reyelExplain]]));
-        signIn(Object.assign(j.user, {accounts: j.accounts}));
-        reyelSay(`Your account is ready, ${callName()}! You're signed in. How can I help you today?`, () => reyelChoices(reyelMenu()));
+        signIn(Object.assign(j.user, {accounts: j.accounts})); reyelAfterSignIn(callName());
       } finally { sending = false; } }); };
   });
 }
