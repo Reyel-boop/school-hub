@@ -812,7 +812,8 @@ function signIn(acc){
 function logout(){
   REYEL_LOCK = false; const sk = document.querySelector('#reyel .rskip'); if (sk) sk.hidden = false; closeProfile();
   me = null; try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
-  if(CLOUD) fetch('/api/logout', {method:'POST', credentials:'same-origin'}).catch(() => {});
+  // keepalive: the sign-out still reaches the server if the tab is closed or reloaded right away
+  if(CLOUD) { try { fetch('/api/logout', {method:'POST', credentials:'same-origin', keepalive:true}).catch(() => { try { navigator.sendBeacon('/api/logout'); } catch(e) {} }); } catch(e) { try { navigator.sendBeacon('/api/logout'); } catch(x) {} } }
   // close every open system so the next person starts fresh under their own account
   for (const k of Object.keys(frames)) { frames[k].remove(); delete frames[k]; }
   hideTip(); goHome();

@@ -178,9 +178,10 @@ const sign = data => crypto.createHmac('sha256', secret()).update(data).digest('
 export function setSession(req, res, user){
   const data = Buffer.from(JSON.stringify({u: user.u, role: user.role, exp: Date.now() + HOURS * 3600e3})).toString('base64url');
   const secure = req.headers['x-forwarded-proto'] === 'https' || process.env.VERCEL ? '; Secure' : '';
-  res.setHeader('Set-Cookie', `${COOKIE}=${data}.${sign(data)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${HOURS * 3600}${secure}`);
+  // no Max-Age: the cookie ends when the browser closes (shared school computers); the session itself still expires after 12 hours
+  res.setHeader('Set-Cookie', `${COOKIE}=${data}.${sign(data)}; HttpOnly; SameSite=Lax; Path=/${secure}`);
 }
-export function clearSession(res){ res.setHeader('Set-Cookie', `${COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`); }
+export function clearSession(res){ res.setHeader('Set-Cookie', `${COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${process.env.VERCEL ? '; Secure' : ''}`); }
 export function getSession(req){
   const m = String(req.headers.cookie || '').match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`)); if (!m) return null;
   const [data, sig] = m[1].split('.'); if (!data || !sig) return null;
