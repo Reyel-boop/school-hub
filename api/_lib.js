@@ -19,6 +19,8 @@ async function sql(){
   await q`alter table hub_users add column if not exists status text not null default 'active'`;
   await q`create unique index if not exists hub_users_email on hub_users (lower(email))`;
   await q`create table if not exists voice_clips (id text primary key, mime text not null, data bytea not null, updated_at timestamptz not null default now(), updated_by text)`;
+  await q`alter table hub_users add column if not exists remind jsonb not null default '{}'::jsonb`;
+  await q`create table if not exists reminder_runs (day text primary key, at timestamptz not null default now(), sent integer not null default 0, note text)`;
   await q`create table if not exists email_codes (email text not null, purpose text not null, code text not null, data jsonb, tries integer not null default 0, sent_at timestamptz not null default now(), expires_at timestamptz not null, primary key (email, purpose))`;
   return sqlFn = q;
 }
@@ -75,6 +77,44 @@ export async function deleteUser(u){
   return (await q`delete from hub_users where u = ${u} returning u`).length > 0;
 }
 
+// ---------- profile: email address and reminder choices ----------
+export const REMIND_KINDS = ['due', 'missing', 'grades', 'teacher'];
+export const remindOf = x => Object.fromEntries(REMIND_KINDS.map(k => [k, !(x && x.remind && x.remind[k] === false)])); // all on unless turned off
+export async function setEmail(u, email){
+  const q = await sql(), e = String(email || '').trim().toLowerCase();
+  if (!q) { const x = MEM.users.get(u); if (x) x.email = e; return; }
+  await q`update hub_users set email = ${e} where u = ${u}`;
+}
+export async function setRemind(u, prefs){
+  const q = await sql(), v = Object.fromEntries(REMIND_KINDS.map(k => [k, prefs[k] !== false]));
+  if (!q) { const x = MEM.users.get(u); if (x) x.remind = v; return; }
+  await q`update hub_users set remind = ${JSON.stringify(v)}::jsonb where u = ${u}`;
+}
+export async function getRemind(u){
+  const q = await sql(); if (!q) return remindOf(MEM.users.get(u));
+  const [r] = await q`select remind from hub_users where u = ${u}`; return remindOf(r);
+}
+// everyone who can get reminders: active, with an email address
+export async function recipients(){
+  const q = await sql();
+  if (!q) { await getUser('admin'); return [...MEM.users.values()].filter(x => x.status === 'active' && x.email).map(x => ({u: x.u, name: x.name, role: x.role, email: x.email, remind: remindOf(x)})); }
+  const rows = await q`select u, name, role, email, remind from hub_users where status = 'active' and email is not null and email <> ''`;
+  return rows.map(x => ({...x, remind: remindOf(x)}));
+}
+export async function getDoc(key){
+  const q = await sql(); if (!q) { const d = MEM.kv.get(key); return d ? d.value : null; }
+  const [r] = await q`select value from kv where key = ${key}`; return r ? r.value : null;
+}
+// one reminder run per school day: returns false when today's run already happened
+export async function claimRun(day){
+  const q = await sql(); if (!q) { const k = '__run' + day; if (MEM.kv.has(k)) return false; MEM.kv.set(k, {value: 1, v: 1}); return true; }
+  return (await q`insert into reminder_runs (day) values (${day}) on conflict do nothing returning day`).length > 0;
+}
+export async function finishRun(day, sent, note){
+  const q = await sql(); if (q) await q`update reminder_runs set sent = ${sent}, note = ${note || null} where day = ${day}`;
+}
+export async function dropRun(day){ const q = await sql(); if (q) await q`delete from reminder_runs where day = ${day}`; else MEM.kv.delete('__run' + day); }
+
 // ---------- 6-digit email codes (sign-up and forgot password) ----------
 const MEMC = globalThis.__hubCodes || (globalThis.__hubCodes = new Map());
 const codeHash = (email, code) => crypto.createHash('sha256').update(email + ':' + code + ':' + secret()).digest('hex');
@@ -107,8 +147,9 @@ export async function useCode(email, purpose, code){ // returns {ok, data} or {e
 // ---------- sending email through Gmail (GMAIL_USER + GMAIL_APP_PASSWORD) ----------
 export const mailReady = () => !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) || !process.env.VERCEL;
 export async function sendCode(to, code, purpose, name){
-  const title = purpose === 'signup' ? 'Your School Hub sign-up code' : 'Your School Hub password reset code';
-  const intro = purpose === 'signup' ? `Hi ${name || 'there'}! Use this code to finish creating your School Hub account:` : 'Use this code to set a new password for your School Hub account:';
+  const title = purpose === 'signup' ? 'Your School Hub sign-up code' : purpose === 'email' ? 'Your School Hub email code' : 'Your School Hub password reset code';
+  const intro = purpose === 'signup' ? `Hi ${name || 'there'}! Use this code to finish creating your School Hub account:`
+    : purpose === 'email' ? `Hi ${name || 'there'}! Use this code to confirm this email for your School Hub reminders and updates:` : 'Use this code to set a new password for your School Hub account:';
   if (!process.env.GMAIL_USER) { console.log(`[email to ${to}] ${title}: ${code}`); globalThis.__lastCode = code; return; } // local tests
   const nodemailer = (await import('nodemailer')).default;
   const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')}});
@@ -117,6 +158,12 @@ export async function sendCode(to, code, purpose, name){
     html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a"><h2 style="margin:0 0 12px">School Hub</h2><p>${intro}</p>
       <p style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;margin:18px 0">${code}</p>
       <p style="color:#64748b;font-size:13px">The code works for 15 minutes. If you didn't ask for this, you can ignore this email.</p></div>`});
+}
+export async function sendMail(to, subject, text, html){
+  if (!process.env.GMAIL_USER) { console.log(`[email to ${to}] ${subject}\n${text}`); (globalThis.__sent || (globalThis.__sent = [])).push({to, subject, text, html}); return; } // local tests
+  const nodemailer = (await import('nodemailer')).default;
+  const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')}});
+  await t.sendMail({from: `"School Hub" <${process.env.GMAIL_USER.trim()}>`, to, subject, text, html});
 }
 export async function setPassword(u, pw){
   const q = await sql(); const h = hashPw(pw);
@@ -169,7 +216,7 @@ const SEEDED = new Set(SEED.map(x => x.u));
 // everyone else gets their own account ("hub-<username>") created from that template on first visit
 export const accountIn = (user, mod) => { const t = ACCESS[mod] && ACCESS[mod][user.role]; return !t ? null : SEEDED.has(user.u) ? t : 'hub-' + user.u; };
 export const accountsFor = user => Object.fromEntries(Object.keys(ACCESS).map(m => [m, accountIn(user, m)]));
-export const publicUser = x => ({u: x.u, name: x.name, pos: x.pos, role: x.role});
+export const publicUser = x => ({u: x.u, name: x.name, pos: x.pos, role: x.role, email: x.email || null});
 
 // ---------- documents ----------
 export async function listDocs(mod){

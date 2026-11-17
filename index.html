@@ -185,6 +185,11 @@
   .lcard .codebox input{width:2.7rem;height:3.2rem;padding:0;text-align:center;font-size:1.4rem;font-weight:600}
   #adminModal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto}
   #adminModal[hidden]{display:none}
+  #profModal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto}
+  #profModal[hidden]{display:none}
+  .pfield[hidden]{display:none}.pfield{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}.pfield input{flex:1;min-width:12rem;padding:.55rem .7rem;border-radius:.5rem;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  .pchk{display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .2rem;border-top:1px solid var(--line);font-size:.88rem;cursor:pointer}.pchk input{margin-top:.2rem;width:1.05rem;height:1.05rem;accent-color:var(--accent)}
+  .pchk small{display:block;color:var(--muted);font-size:.76rem}.pmsg{font-size:.82rem;margin-top:.5rem}.pmsg.err{color:#fda4af}.pmsg.ok{color:#86efac}
   .amod{width:100%;max-width:46rem;background:var(--bg2);border:1px solid var(--line);border-radius:1rem;padding:1.3rem 1.4rem;box-shadow:0 18px 50px -20px rgba(0,0,0,.6)}
   .amod h2{font-size:1.2rem}
   .amod h3{font-size:.85rem;color:var(--muted);font-weight:600;margin:1.2rem 0 .5rem;text-transform:uppercase;letter-spacing:.05em}
@@ -370,6 +375,7 @@
       <div class="who"><b id="whoName"></b><small id="whoPos"></small></div>
       <div class="av" id="whoAv"></div>
       <button class="out" id="adminBtn" onclick="openAdmin()" hidden>Accounts</button>
+      <button class="out" id="profBtn" onclick="openProfile()" hidden>My profile</button>
       <button class="out" id="pwBtn" onclick="changePw()" hidden>Change password</button>
       <button class="out" onclick="reyelLogout()">Sign out</button>
     </div>
@@ -390,6 +396,11 @@
 <div id="adminModal" hidden onclick="if(event.target===this)closeAdmin()"><div class="amod" role="dialog" aria-modal="true" aria-labelledby="amodT">
   <div style="display:flex;align-items:center;gap:1rem"><h2 id="amodT" style="flex:1">School Hub accounts</h2><button class="out" onclick="closeAdmin()">Close</button></div>
   <div id="adminBody"><p class="sub" style="margin-top:1rem">Loading…</p></div>
+</div></div>
+
+<div id="profModal" hidden onclick="if(event.target===this)closeProfile()"><div class="amod" role="dialog" aria-modal="true" aria-labelledby="pmodT" style="max-width:34rem">
+  <div style="display:flex;align-items:center;gap:1rem"><h2 id="pmodT" style="flex:1">My profile</h2><button class="out" onclick="closeProfile()">Close</button></div>
+  <div id="profBody"><p class="sub" style="margin-top:1rem">Loading…</p></div>
 </div></div>
 
 <!-- ================= APP SHELL ================= -->
@@ -795,8 +806,11 @@ function signIn(acc){
   // start waking the systems that sleep on free servers, so they're ready when opened
   SYSTEMS.filter(x => x.sleeps && hasAccess(x)).forEach(x => { try { fetch(x.url, {mode:'no-cors', cache:'no-store'}).catch(() => {}); } catch(e) {} });
   markAccess(); render();
+  // everyone needs an email for reminders and updates: Reyel asks for it first (signing in through Reyel asks in his own flow)
+  if (CLOUD && !acc.email && !REYEL_SIGNING) setTimeout(reyelRequireEmail, 300);
 }
 function logout(){
+  REYEL_LOCK = false; const sk = document.querySelector('#reyel .rskip'); if (sk) sk.hidden = false; closeProfile();
   me = null; try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
   if(CLOUD) fetch('/api/logout', {method:'POST', credentials:'same-origin'}).catch(() => {});
   // close every open system so the next person starts fresh under their own account
@@ -811,7 +825,7 @@ function logout(){
 window.addEventListener('hashchange', render);
 document.addEventListener('keydown', e => {
   if(!me) return;
-  if(e.target.closest('input,textarea')) return;
+  if(e.target.closest && e.target.closest('input,textarea')) return;
   if(e.key === 'Escape' && document.body.classList.contains('in-app')) goHome();
   if(!document.body.classList.contains('in-app') && /^[0-9]$/.test(e.key)){ const i = e.key==='0' ? 9 : e.key-1; const vis = SYSTEMS.filter(hasAccess); if(vis[i]) openSys(vis[i].id); }
 });
@@ -823,6 +837,7 @@ document.addEventListener('keydown', e => {
     CLOUD = true;
     document.getElementById('demo').hidden = true;      // real accounts: never show passwords on the page
     document.getElementById('pwBtn').hidden = false;
+    document.getElementById('profBtn').hidden = false;
     document.querySelector('#login .foot, .foot') && (document.querySelector('.foot').textContent = 'School Hub · sign in with your school account');
     document.getElementById('adminBtn').dataset.cloud = '1';
     if(r.status === 200) return signIn(Object.assign(j.user, {accounts: j.accounts}));
@@ -882,6 +897,7 @@ const ROLE_LABEL = {student: 'Student', teacher: 'Teacher', admin: 'Admin'};
 let REYEL_ROLE = null; try { REYEL_ROLE = sessionStorage.getItem('hub-reyel-role'); } catch (e) {}
 const callName = () => { if (!me) return ''; const n = me.name.trim(); return /^school\s+/i.test(n) ? n.replace(/^school\s+/i, '') : n.split(/\s+/)[0]; };
 function reyelOpen(mode){
+  if (REYEL_LOCK) return;
   const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
   if (mode === 'help') { const nm = callName(); return reyelSay(`Hi${nm ? ', ' + nm : ''}! I'm still here. How can I help you?`, () => reyelChoices(reyelMenu())); }
   // the welcome: already signed in? greet back. Otherwise ask if they're a student, then sign in.
@@ -924,6 +940,7 @@ const sysName = id => (SYSTEMS.find(s => s.id === id) || {}).name || id;
 // a system picked before signing in: opened as soon as the sign-in (or new account) is done
 let REYEL_NEXT = null;
 function reyelAfterSignIn(nm){
+  if (CLOUD && me && !me.email) return reyelNeedEmail(`Welcome, ${nm}! Before we start: please add your email address so I can send you reminders and school updates.`, () => reyelAfterSignIn(nm));
   const id = REYEL_NEXT, s = id && SYSTEMS.find(x => x.id === id); REYEL_NEXT = null;
   if (s && hasAccess(s)) return reyelSay(`Welcome, ${nm}! Opening ${s.name} for you now…`, () => setTimeout(() => { reyelClose(); openSys(s.id); }, 700));
   if (s) return reyelSay(`Welcome, ${nm}! Your account can't open ${s.name}. If you need it, please ask the school admin. How else can I help?`, () => reyelChoices(reyelMenu()));
@@ -974,7 +991,7 @@ function reyelLogin(msg, pre){
         if (CLOUD) { const r = await fetch('/api/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({u, p: pw})});
           const j = await r.json().catch(() => ({})); if (r.status !== 200) return fail(j.error || 'Could not sign in. Please try again.'); user = Object.assign(j.user, {accounts: j.accounts}); }
         else { user = HUB_USERS.find(x => x.u === u && x.p === pw); if (!user) return fail('Wrong username or password.'); }
-        signIn(user); reyelAfterSignIn(callName());
+        REYEL_SIGNING = true; signIn(user); REYEL_SIGNING = false; reyelAfterSignIn(callName());
       } catch (x) { fail('Can’t reach the school server. Check the internet connection.'); }
       finally { btn.disabled = false; btn.textContent = 'Sign in'; } };
   });
@@ -1051,7 +1068,7 @@ function reyelCode(C){
         if (reset) return reyelSay('Your password is changed! Sign in with your new password now.', () => reyelLoginAs(j.u || C.who));
         RSU = null;
         if (j.pending) return reyelSay(j.message || 'Your account is made! The school admin will check it, then you can sign in.', () => reyelChoices([['Back to sign in', () => reyelLogin(), true], ['What does each system do?', reyelExplain]]));
-        signIn(Object.assign(j.user, {accounts: j.accounts})); reyelAfterSignIn(callName());
+        REYEL_SIGNING = true; signIn(Object.assign(j.user, {accounts: j.accounts})); REYEL_SIGNING = false; reyelAfterSignIn(callName());
       } finally { sending = false; } }); };
   });
 }
@@ -1080,7 +1097,66 @@ function reyelLogout(){ if (!me) return; const nm = callName(); logout();
 // a system inside the Hub was signed out: sign out of the Hub too and come back to Reyel
 const SYS_ORIGINS = new Set(SYSTEMS.filter(x => x.url && /^https?:/.test(x.url)).map(x => new URL(x.url).origin).concat(location.origin));
 window.addEventListener('message', e => { if (e.data && e.data.hub === 'signout' && SYS_ORIGINS.has(e.origin)) reyelLogout(); });
-function reyelClose(){ clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
+// ---- the email for reminders and updates (required) ----
+var REYEL_SIGNING = false, REYEL_LOCK = false;
+function reyelRequireEmail(){ if (!me || me.email) return;
+  const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
+  reyelNeedEmail(`Hi, ${callName()}! Please add your email address. I'll use it to send you reminders and school updates.`, () => reyelSay('Thank you! How can I help you today?', () => reyelChoices(reyelMenu()))); }
+function reyelNeedEmail(msg, then){
+  REYEL_LOCK = true; document.querySelector('#reyel .rskip').hidden = true;
+  const done = () => { REYEL_LOCK = false; document.querySelector('#reyel .rskip').hidden = false; then(); };
+  const ask = (m, pre) => reyelSay(m, () => {
+    const f = reyelForm(`<form class="rlogin" id="rEmailF"><input name="email" type="email" placeholder="Your email address" autocomplete="email" autocapitalize="none" required value="${escH(pre || '')}">
+      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Send me a code</button></div></form>`, 'input[name=email]');
+    f.onsubmit = e => { e.preventDefault(); const email = f.email.value.trim();
+      rBusy(f, async () => { const {status, j} = await api('/api/profile', {step: 'email', email});
+        if (status !== 200) return rErr(f, j.error || 'Something went wrong. Please try again.');
+        if (j.same) { me.email = email; return done(); }
+        code(email); }); }; });
+  const code = email => reyelSay(`I sent a 6-digit code to ${email}. Type it here. (No email? Check Spam.)`, () => {
+    const f = reyelForm(`<form class="rlogin" id="rEmailC"><input name="code" class="rcode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
+      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Save my email</button><button type="button" class="rlink" id="rEmailBack">Use another email</button></div></form>`);
+    document.getElementById('rEmailBack').onclick = () => ask('Okay! Type the email address you want to use.', email);
+    f.code.oninput = () => { f.code.value = f.code.value.replace(/\D/g, '').slice(0, 6); if (f.code.value.length === 6) f.requestSubmit(); };
+    let sending = false;
+    f.onsubmit = e => { e.preventDefault(); if (sending) return; sending = true;
+      rBusy(f, async () => { try { const {status, j} = await api('/api/profile', {step: 'verify', email, code: f.code.value});
+        if (status !== 200) { f.code.value = ''; f.code.focus(); return rErr(f, j.error || 'Something went wrong.'); }
+        me.email = j.email; done(); } finally { sending = false; } }); }; });
+  ask(msg);
+}
+// "My profile": the email and which reminders to get
+const REMIND_LABELS = {due: ['Due tomorrow', 'A morning email when work is due the next day.'], grades: ['New grades', 'When a teacher (or Momo) posts a grade.'],
+  missing: ['Still to do (Mondays)', 'A weekly list of missing work and documents waiting to be claimed.'], teacher: ['My classes (teachers)', 'A school-day summary: students who need help, missing work, grading and attendance.']};
+async function openProfile(){ document.getElementById('profModal').hidden = false; const el = document.getElementById('profBody');
+  let r = null; try { r = await fetch('/api/profile', {credentials: 'same-origin'}); } catch (e) {}
+  const j = r && r.ok ? await r.json() : null; if (!j) { el.innerHTML = '<p class="pmsg err">Can’t load your profile right now.</p>'; return; }
+  const kinds = me.role === 'student' ? ['due', 'grades', 'missing'] : ['teacher', 'due', 'grades', 'missing'];
+  el.innerHTML = `<h3>Email for reminders and updates</h3>
+    <p style="font-size:.9rem">${j.email ? `<b>${escH(j.email)}</b>` : '<span class="pmsg err">No email yet</span>'}</p>
+    <form id="pEmail" class="pfield"><input name="email" type="email" placeholder="${j.email ? 'New email address' : 'Your email address'}" required><button class="abtn go">Send code</button></form>
+    <form id="pCode" class="pfield" hidden><input name="code" inputmode="numeric" maxlength="6" placeholder="6-digit code" required><button class="abtn go">Save email</button></form>
+    <p class="pmsg" id="pMsg" hidden></p>
+    <h3>Send me reminders about</h3>
+    ${kinds.map(k => `<label class="pchk"><input type="checkbox" data-k="${k}" ${j.remind[k] ? 'checked' : ''}><span>${REMIND_LABELS[k][0]}<small>${REMIND_LABELS[k][1]}</small></span></label>`).join('')}
+    <p class="sub" style="font-size:.78rem;margin-top:.8rem">Reminders come once a morning, in one email, only when there's something to tell you.</p>`;
+  const msg = (t, ok) => { const m = document.getElementById('pMsg'); m.textContent = t; m.className = 'pmsg ' + (ok ? 'ok' : 'err'); m.hidden = !t; };
+  let pending = '';
+  document.getElementById('pEmail').onsubmit = e => { e.preventDefault(); const f = e.target, b = f.querySelector('button');
+    busy(b, async () => { const {status, j: x} = await api('/api/profile', {step: 'email', email: f.email.value.trim()});
+      if (status !== 200) return msg(x.error || 'Something went wrong.');
+      if (x.same) return msg('That is already your email.', true);
+      pending = x.email; document.getElementById('pCode').hidden = false; document.getElementById('pCode').code.focus(); msg(`Code sent to ${x.email}. Check your inbox (or Spam).`, true); }); };
+  document.getElementById('pCode').onsubmit = e => { e.preventDefault(); const f = e.target, b = f.querySelector('button');
+    busy(b, async () => { const {status, j: x} = await api('/api/profile', {step: 'verify', email: pending, code: f.code.value});
+      if (status !== 200) return msg(x.error || 'Something went wrong.');
+      me.email = x.email; openProfile(); }); };
+  el.querySelectorAll('.pchk input').forEach(c => c.onchange = async () => {
+    const remind = Object.fromEntries([...el.querySelectorAll('.pchk input')].map(i => [i.dataset.k, i.checked]));
+    const {status} = await api('/api/profile', {step: 'remind', remind}); msg(status === 200 ? 'Saved.' : 'Could not save. Try again.', status === 200); });
+}
+function closeProfile(){ document.getElementById('profModal').hidden = true; }
+function reyelClose(){ if (REYEL_LOCK) return; clearInterval(RTYPE); document.getElementById('reyel').hidden = true; try { sessionStorage.setItem('hub-reyel', '1'); } catch (e) {}
   const b = document.getElementById('reyelBtn'); b.hidden = false; reyelDraw(b); }
 // show Reyel full screen the first time the Hub opens in this browser tab
 setTimeout(() => { let seen = false; try { seen = !!sessionStorage.getItem('hub-reyel'); } catch (e) {} if (seen) reyelClose(); else reyelOpen('hello'); }, 350);
