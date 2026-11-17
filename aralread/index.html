@@ -281,7 +281,7 @@ function quiz(el){
   const s = storyOf(R.id);
   if (R.phase === 'done') { const st = starsFor(R.right), pass = R.right >= MIN_PASS, nx = isStudent() ? nextStory(P.me.u) : null;
     el.innerHTML = `<div class="stack">${narrHtml(R.doneMsg, 'Great reading')}<div class="card result"><div class="big">${R.right} / 4</div><div style="font-size:2rem">${starsHtml(st)}</div>
-      <p>${pass ? (nx && nx.id !== s.id ? `You unlocked <b>${esc(nx.title)}</b>!` : 'Story cleared!') : `Get ${MIN_PASS} right to clear this story. Read it once more, then try again.`}</p>
+      <p>${pass ? (R.unlocked ? `You unlocked <b>${esc(storyOf(R.unlocked).title)}</b>!` : nx ? `Story cleared! Next up: <b>${esc(nx.title)}</b>.` : 'Story cleared!') : `Get ${MIN_PASS} right to clear this story. Read it once more, then try again.`}</p>
       <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="openStory('${s.id}')">📖 Read again</button><button class="btn" onclick="closeStory()">Back to the library</button></div></div><p class="credit">${CREDIT}</p></div>`;
     return boyMount(); }
   const [q, opts, ans] = s.qs[R.q];
@@ -296,8 +296,12 @@ function quiz(el){
 function pick(k){ const ans = storyOf(R.id).qs[R.q][2]; R.picked = k; if (k === ans) { R.right++; sfx('ok'); } else sfx('no'); P.refresh(); narrate(k === ans ? 'Correct! Great reading.' : `Not quite. The answer is: ${esc(storyOf(R.id).qs[R.q][1][ans])}.`); }
 function nextQ(){
   if (R.q < 3) { R.q++; R.picked = null; P.refresh(); return narrate(esc(storyOf(R.id).qs[R.q][0])); }
+  R.unlocked = null;
   if (isStudent()) { const ac = Object.values(R.read || {}).filter(x => x.acc != null).map(x => x.acc), read = ac.length ? Math.round(ac.reduce((a, b) => a + b, 0) / ac.length) : null;
-    P.db.attempts.push({u: P.me.u, story: R.id, score: R.right, read, t: Date.now()}); P.save(); }
+    const before = nextStory(P.me.u);
+    P.db.attempts.push({u: P.me.u, story: R.id, score: R.right, read, t: Date.now()}); P.save();
+    // a new story opens only when this was the story the learner had to clear next
+    const after = nextStory(P.me.u); if (before && before.id === R.id && after && after.id !== R.id) R.unlocked = after.id; }
   R.phase = 'done'; R.doneMsg = R.right >= MIN_PASS ? `Wonderful, ${first()}! You got ${R.right} out of 4.` : `Good try, ${first()}! You got ${R.right} out of 4. Let's read it again.`;
   sfx(R.right >= MIN_PASS ? 'win' : 'no'); P.refresh(); narrate(R.doneMsg);
 }
