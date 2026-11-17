@@ -380,8 +380,35 @@ const CFG = {
   data:{attempts: [{u:'student2', story:'umbrella', score:4, t: Date.now() - 864e5}, {u:'student3', story:'fisher', score:3, t: Date.now() - 2 * 864e5}]},
   views:{learn: library, progress, class: classView, voice: voiceView},
 };
-// the "What's new" post shown once after each update (shared/whatsnew.js)
+// reminders for the welcome post (shared/whatsnew.js): what this reader (or teacher) should do next
+function arReminders(){
+  const out = [], days = t => Math.floor((Date.now() - t) / 864e5);
+  if (isStudent()) {
+    const u = P.me.u, list = bandStories(bandOf(u)), mine = attemptsOf(u), nx = nextStory(u);
+    const last = mine.length ? Math.max(...mine.map(a => a.t)) : null;
+    if (!mine.length) out.push({icon: '👋', text: 'Read your first story today! Your reading buddy is waiting.', tab: 'learn'});
+    else if (days(last) >= 2) out.push({icon: '📆', text: `You last read ${days(last)} days ago. One short story today keeps you reading!`, tab: 'learn', urgent: days(last) >= 7});
+    list.filter(st => attemptsOf(u, st.id).length && !cleared(u, st.id)).slice(0, 2)
+      .forEach(st => out.push({icon: '💪', text: `Try again: ${st.title} (your best is ${bestOf(u, st.id)}/4; get ${MIN_PASS} right to clear it).`, tab: 'learn', urgent: true}));
+    if (nx) out.push({icon: '📖', text: `Your next story: ${nx.title}.`, tab: 'learn'});
+    else out.push({icon: '🏆', text: 'You cleared every story in your level. Read your favourite again for 3 stars!', tab: 'learn'});
+    const done = list.filter(st => cleared(u, st.id)).length;
+    out.push({icon: '⭐', text: `You have cleared ${done} of ${list.length} stories.`, tab: 'progress'});
+  } else {
+    const kids = P.usersWith('student'), wk = Date.now() - 7 * 864e5;
+    const stuck = kids.filter(k => bandStories(bandOf(k.u)).some(st => attemptsOf(k.u, st.id).length && !cleared(k.u, st.id)));
+    const idle = kids.filter(k => !attemptsOf(k.u).some(a => a.t > wk));
+    const weak = kids.filter(k => { const r = attemptsOf(k.u).map(a => a.read).filter(x => x != null); return r.length && Math.max(...r) < 80; });
+    if (stuck.length) out.push({icon: '🚩', text: `${stuck.length} learner${stuck.length === 1 ? ' is' : 's are'} stuck on a story: ${stuck.slice(0, 4).map(k => k.name).join(', ')}${stuck.length > 4 ? '…' : ''}.`, tab: 'class', urgent: true});
+    if (weak.length) out.push({icon: '🎤', text: `${weak.length} learner${weak.length === 1 ? ' reads' : 's read'} aloud under 80%. Read together with them.`, tab: 'class'});
+    if (idle.length) out.push({icon: '😴', text: `${idle.length} learner${idle.length === 1 ? " hasn't" : "s haven't"} read this week.`, tab: 'class'});
+    if (!out.length) out.push({icon: '📊', text: 'See every learner’s scores and reading % in Class Progress.', tab: 'class'});
+  }
+  return out;
+}
+// the welcome post (reminders + what's new) shown each time the system is opened (shared/whatsnew.js)
 WhatsNew({
+ "reminders": arReminders,
  "app": "aralread",
  "id": "2026-11-17",
  "date": "November 17, 2026",

@@ -3022,8 +3022,35 @@ function printSheet(){
   window.print();
 }
 
-// the "What's new" post shown once after each update (shared/whatsnew.js)
+// reminders for the welcome post (shared/whatsnew.js): what this learner (or teacher) should do next
+function amReminders(){
+  const out = [], days = t => Math.floor((Date.now() - t) / 864e5);
+  if (isStudent()) {
+    const u = P.me.u, b = bandOf(u), all = bandSkills(b), mine = myAttempts(u), nx = nextSkill(u, b);
+    const last = mine.length ? Math.max(...mine.map(a => a.at)) : null;
+    if (!mine.length) out.push({icon: '👋', text: 'Start your first lesson today! Your hero is waiting on the map.', tab: 'learn'});
+    else if (days(last) >= 2) out.push({icon: '📆', text: `You last practiced ${days(last)} days ago. A short round today keeps you sharp!`, tab: 'learn', urgent: days(last) >= 7});
+    if (nx) out.push({icon: '🎯', text: `Your next stage: ${SK[nx].title}. Clear it to unlock the next one!`, tab: 'learn'});
+    else out.push({icon: '🏆', text: 'You cleared every stage in your level. Try a rematch for 3 stars!', tab: 'learn'});
+    all.filter(id => { const x = bestOf(u, id); return x != null && x < 5; }).slice(0, 2)
+      .forEach(id => out.push({icon: '💪', text: `Practice again: ${SK[id].title} (your best is ${bestOf(u, id)}/10).`, tab: 'learn', urgent: true}));
+    const stars = all.reduce((n, id) => n + starsOf(bestOf(u, id)), 0), got = all.filter(id => caught(u, id)).length;
+    out.push({icon: '⭐', text: `You have ${stars} star${stars === 1 ? '' : 's'} and ${got} of ${all.length} stages cleared.`, tab: 'progress'});
+  } else {
+    const kids = P.usersWith('student'), wk = Date.now() - 7 * 864e5;
+    const help = kids.filter(k => bandSkills(bandOf(k.u)).filter(id => { const x = bestOf(k.u, id); return x != null && x < 5; }).length >= 2);
+    const idle = kids.filter(k => !myAttempts(k.u).some(a => a.at > wk));
+    if (help.length) out.push({icon: '🚩', text: `${help.length} learner${help.length === 1 ? ' needs' : 's need'} help (2 or more skills under 5/10): ${help.slice(0, 4).map(k => k.name).join(', ')}${help.length > 4 ? '…' : ''}.`, tab: 'class', urgent: true});
+    if (idle.length) out.push({icon: '😴', text: `${idle.length} learner${idle.length === 1 ? " hasn't" : "s haven't"} practiced this week.`, tab: 'class'});
+    const miss = Object.keys(SK).map(id => ({id, n: kids.filter(k => { const x = bestOf(k.u, id); return x != null && x < 5; }).length})).sort((x, y) => y.n - x.n)[0];
+    if (miss && miss.n) out.push({icon: '🧮', text: `Most missed skill: ${SK[miss.id].title} (${miss.n} learner${miss.n === 1 ? '' : 's'}). A quick review in class may help.`, tab: 'class'});
+    out.push({icon: '🖨️', text: 'Print practice worksheets for learners who need extra help.', tab: 'print'});
+  }
+  return out;
+}
+// the welcome post (reminders + what's new) shown each time the system is opened (shared/whatsnew.js)
 WhatsNew({
+ "reminders": amReminders,
  "app": "aralmath",
  "id": "2026-11-17",
  "date": "November 17, 2026",
