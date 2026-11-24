@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>School Hub</title>
+<title>AskReyel</title>
+<meta name="description" content="Reyel, your friendly AI companion for school: lessons, reading and math practice, grades and school services in one place.">
+<meta name="theme-color" content="#121417">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/favicon-48.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -132,6 +137,8 @@
   .hovertip small{display:block;margin-top:.35rem;color:#64748b;font-size:.72rem}
   .badge{position:absolute;top:.45rem;right:.45rem;background:rgba(0,0,0,.55);color:#fff;font-size:.62rem;
     padding:.15rem .45rem;border-radius:1rem;letter-spacing:.04em;text-transform:uppercase}
+  .sys .tile > .cnt{position:absolute;top:.35rem;right:.35rem;z-index:5;min-width:1.6rem;height:1.6rem;padding:0 .45rem;border-radius:1rem;background:#fff;color:#be123c;font-size:.85rem;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .sys .tile > .cnt.urgent{animation:cntPulse 1.4s ease-in-out infinite}@keyframes cntPulse{50%{box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 0 6px rgba(255,255,255,.45)}}
   .sys.noaccess,.switch button.noaccess{display:none} /* systems this account can't use are not shown at all */
   .manage{margin-top:3rem;border:1px solid var(--muted);color:var(--muted);padding:.55rem 1.6rem;
     letter-spacing:.18em;font-size:.8rem;text-transform:uppercase}
@@ -286,14 +293,14 @@
 <section id="login">
   <header class="brand">
     <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
-    <div><b>School Hub</b><span>All your school systems in one place</span></div>
+    <div><b>AskReyel</b><span>All your school systems in one place</span></div>
   </header>
   <main class="stage">
     <div class="lcard">
       <div class="lseal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
       <div id="paneIn">
         <h1>Welcome</h1>
-        <p class="sub">Sign in to open the School Hub</p>
+        <p class="sub">Sign in to open AskReyel</p>
         <form id="loginForm" autocomplete="on">
           <div id="loginErr" class="lerr" hidden></div>
           <div><label for="lu">Username or email</label><input id="lu" name="u" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
@@ -370,7 +377,7 @@
 <section id="landing">
   <header class="brand">
     <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l10-6 10 6-10 6z"/><path d="M6 12.4V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.6"/><path d="M22 10v5"/></svg></div>
-    <div><b>School Hub</b><span>All your school systems in one place</span></div>
+    <div><b>AskReyel</b><span>All your school systems in one place</span></div>
     <div class="user">
       <div class="who"><b id="whoName"></b><small id="whoPos"></small></div>
       <div class="av" id="whoAv"></div>
@@ -394,7 +401,7 @@
 </section>
 
 <div id="adminModal" hidden onclick="if(event.target===this)closeAdmin()"><div class="amod" role="dialog" aria-modal="true" aria-labelledby="amodT">
-  <div style="display:flex;align-items:center;gap:1rem"><h2 id="amodT" style="flex:1">School Hub accounts</h2><button class="out" onclick="closeAdmin()">Close</button></div>
+  <div style="display:flex;align-items:center;gap:1rem"><h2 id="amodT" style="flex:1">AskReyel accounts</h2><button class="out" onclick="closeAdmin()">Close</button></div>
   <div id="adminBody"><p class="sub" style="margin-top:1rem">Loading…</p></div>
 </div></div>
 
@@ -441,12 +448,12 @@ const ICONS = {
   data:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
 };
 const SYSTEMS = [
-  {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', still:true, bg:'#12285e', url:'https://momo-smart.vercel.app'},
+  {id:'momo',      name:'Momo Smart',        logo:'logos/momo.png', mode:'full', still:true, sso:true, bg:'#12285e', url:'https://www.momo-smart.com'},
   {id:'bless',     name:'Bless Praise',      logo:'logos/bless.png', mode:'badge', crop:'background-size:150%;background-position:50% 62%', bg:'linear-gradient(135deg,#1c3a7a,#0e1f4d)', url:'https://reyel-boop.github.io/bless-praise-portal/'},
   {id:'campus',    name:'CampusShield Pro',  logo:'logos/campusshield.png', mode:'full', bg:'#f5a00f', url:'https://campusshieldpro.onrender.com', sleeps:true},
   {id:'inventory', name:'Inventory System',  icon:'box',    bg:'linear-gradient(135deg,#f59e0b,#d9480f)', url:'https://svnhs-property.vercel.app', embed:false},
   {id:'complab',   name:'JHS Lab Kiosk',     logo:'logos/complab.png', mode:'full', bg:'#1d4ed8', url:'https://jhs-complab.vercel.app'},
-  {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', still:true, bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
+  {id:'tuon',      name:'Tuon',              logo:'logos/tuon.svg', mode:'full', still:true, sso:true, bg:'#0E8C8F', url:'https://reyel-boop.github.io/tuon/'},
   {id:'aralread', name:'Aral Reading',      icon:'read',   bg:'linear-gradient(135deg,#ec4899,#9d174d)', url:'aralread/index.html'},
   {id:'aralmath',  name:'Aral Math',         icon:'math',   bg:'linear-gradient(135deg,#06b6d4,#4338ca)', url:'aralmath/index.html'},
   {id:'idsys',     name:'ID System',         icon:'idcard', bg:'linear-gradient(135deg,#64748b,#1e293b)', url:'idsystem/index.html'},
@@ -555,14 +562,14 @@ const ACCESS = {
   aralmath:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   aralread:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   accounting: {admin:'bookkeeper', principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
-  cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:'student'},
-  clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:'student'},
+  cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:null},
+  clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:null},
   enroll:     {admin:'registrar',  principal:'registrar', teacher:'teacher', staff:'registrar', student:null},
-  guidance:   {admin:'counselor',  principal:'counselor', teacher:'teacher', staff:'teacher',   student:'student'},
+  guidance:   {admin:'counselor',  principal:'counselor', teacher:'teacher', staff:'teacher',   student:null},
   hr:         {admin:'hr',         principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
   ict:        {admin:'admin',      principal:'teacher',   teacher:'teacher', staff:'registrar', student:null},
   idsys:      {admin:'idadmin',    principal:'idadmin',   teacher:'teacher', staff:'teacher',   student:null},
-  registrar:  {admin:'registrar',  principal:'registrar', teacher:null,      staff:'registrar', student:'student'},
+  registrar:  {admin:'registrar',  principal:'registrar', teacher:null,      staff:'registrar', student:null},
   rpms:       {admin:'principal',  principal:'principal', teacher:'teacher', staff:null,        student:null},
   tools:      {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:null},
 };
@@ -570,11 +577,14 @@ const ACCESS = {
 for (const sys of Object.values(ACCESS)) for (const role of ['admin', 'principal', 'teacher', 'staff']) if (!sys[role]) sys[role] = sys.admin;
 // Online systems (they have no row above) that a Hub account may not open.
 const BLOCKED_ONLINE = {
-  student: ['bless', 'inventory', 'campus'],   // students use only: Momo Smart, JHS Lab Kiosk, Tuon, Aral Reading, Aral Math, E-Guidance, E-Clinic, Cashiering, Registrar
+  student: ['bless', 'inventory', 'campus'],
 };
+// students see and open only these systems
+const STUDENT_ONLY = ['momo', 'tuon', 'aralread', 'aralmath'];
 const roleOf = () => me.role || me.u;
-const hasAccess = s => !me || (!(BLOCKED_ONLINE[roleOf()] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][roleOf()]));
-const sysUrl = s => s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent((me.accounts && me.accounts[s.id]) || ACCESS[s.id][roleOf()]) : s.url;
+const hasAccess = s => !me || (roleOf() === 'student' ? STUDENT_ONLY.includes(s.id) : !(BLOCKED_ONLINE[roleOf()] || []).includes(s.id) && (!ACCESS[s.id] || !!ACCESS[s.id][roleOf()]));
+// Momo and Tuon: opened through a sign-in pass, so the AskReyel account signs in there too (no separate password)
+const sysUrl = s => s.url && s.sso ? '/api/sso?to=' + s.id : s.url && ACCESS[s.id] ? s.url + '?as=' + encodeURIComponent((me.accounts && me.accounts[s.id]) || ACCESS[s.id][roleOf()]) : s.url;
 function markAccess(){
   document.querySelectorAll('#grid .sys, #switch button').forEach(b => {
     const s = SYSTEMS.find(x => x.id === b.dataset.id); b.classList.toggle('noaccess', !hasAccess(s));
@@ -583,14 +593,14 @@ function markAccess(){
 
 function render(){
   const id = location.hash.replace('#/','');
-  if(!me){ document.title = 'Sign in · School Hub'; return; } // stay on the sign-in screen; open the system after sign-in
+  if(!me){ document.title = 'Sign in · AskReyel'; return; } // stay on the sign-in screen; open the system after sign-in
   // a system this account can't use doesn't exist for them: a link to it just lands on the Hub
   const s = SYSTEMS.find(x => x.id === id && hasAccess(x));
   if(id && !s) history.replaceState(null, '', location.pathname);
   document.body.classList.toggle('in-app', !!s);
-  if(!s){ document.title='School Hub'; return; }
+  if(!s){ document.title='AskReyel'; if (me) ictBadge(); return; }
 
-  document.title = s.name + ' · School Hub';
+  document.title = s.name + ' · AskReyel';
   document.getElementById('curName').textContent = s.name;
   const ci=document.getElementById('curIcon'); ci.style.cssText = tileBg(s); ci.innerHTML = art(s);
   document.querySelectorAll('#switch button').forEach(b => b.classList.toggle('on', b.dataset.id===id));
@@ -796,6 +806,23 @@ async function changePw(){
   const j = await r.json().catch(() => ({}));
   alert(r.status === 200 ? 'Your password was changed.' : (j.error || 'Could not change the password.'));
 }
+// the ICT admin's badge: how many ICT Concerns tickets are still Open (refreshed every minute and on return to the Hub)
+let ICT_TIMER = 0;
+async function ictBadge(){
+  clearTimeout(ICT_TIMER);
+  const tile = document.querySelector('#grid .sys[data-id="ict"] .tile'); if (!tile) return;
+  const old = tile.querySelector('.cnt');
+  if (!CLOUD || !me || me.role !== 'admin') { if (old) old.remove(); return; }
+  try {
+    const r = await fetch('/api/ict-open', {credentials: 'same-origin', cache: 'no-store'});
+    if (r.ok) { const j = await r.json(), el = old || tile.appendChild(Object.assign(document.createElement('span'), {className: 'cnt'}));
+      if (!j.open) el.remove();
+      else { el.textContent = j.open > 99 ? '99+' : j.open; el.classList.toggle('urgent', j.urgent > 0);
+        el.title = `${j.open} open ICT concern${j.open === 1 ? '' : 's'}${j.urgent ? `, ${j.urgent} urgent` : ''}`; } }
+  } catch (e) {}
+  ICT_TIMER = setTimeout(ictBadge, 60000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me) ictBadge(); });
 function signIn(acc){
   me = acc; try { sessionStorage.setItem(SESSION_KEY, acc.u); } catch(e) {}
   document.getElementById('whoName').textContent = acc.name;
@@ -805,11 +832,11 @@ function signIn(acc){
   document.getElementById('adminBtn').hidden = !(CLOUD && me.role === 'admin');
   // start waking the systems that sleep on free servers, so they're ready when opened
   SYSTEMS.filter(x => x.sleeps && hasAccess(x)).forEach(x => { try { fetch(x.url, {mode:'no-cors', cache:'no-store'}).catch(() => {}); } catch(e) {} });
-  markAccess(); render();
+  markAccess(); render(); ictBadge();
   // everyone needs an email for reminders and updates: Reyel asks for it first (signing in through Reyel asks in his own flow)
   if (CLOUD && !acc.email && !REYEL_SIGNING) setTimeout(reyelRequireEmail, 300);
 }
-function logout(){
+function logout(){ try { sessionStorage.removeItem('hub-email-later'); } catch (e) {} clearTimeout(ICT_TIMER); document.querySelectorAll('#grid .tile > .cnt').forEach(x => x.remove());
   REYEL_LOCK = false; const sk = document.querySelector('#reyel .rskip'); if (sk) sk.hidden = false; closeProfile();
   me = null; try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
   // keepalive: the sign-out still reaches the server if the tab is closed or reloaded right away
@@ -819,7 +846,7 @@ function logout(){
   hideTip(); goHome();
   document.body.classList.remove('authed');
   showPane('in'); closeAdmin();
-  document.title = 'Sign in · School Hub';
+  document.title = 'Sign in · AskReyel';
   setTimeout(() => document.getElementById('lu').focus(), 0);
 }
 
@@ -839,7 +866,7 @@ document.addEventListener('keydown', e => {
     document.getElementById('demo').hidden = true;      // real accounts: never show passwords on the page
     document.getElementById('pwBtn').hidden = false;
     document.getElementById('profBtn').hidden = false;
-    document.querySelector('#login .foot, .foot') && (document.querySelector('.foot').textContent = 'School Hub · sign in with your school account');
+    document.querySelector('#login .foot, .foot') && (document.querySelector('.foot').textContent = 'AskReyel · sign in with your school account');
     document.getElementById('adminBtn').dataset.cloud = '1';
     if(r.status === 200) return signIn(Object.assign(j.user, {accounts: j.accounts}));
     render(); document.getElementById('lu').focus(); return;
@@ -902,8 +929,8 @@ function reyelOpen(mode){
   const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
   if (mode === 'help') { const nm = callName(); return reyelSay(`Hi${nm ? ', ' + nm : ''}! I'm still here. How can I help you?`, () => reyelChoices(reyelMenu())); }
   // the welcome: already signed in? greet back. Otherwise ask if they're a student, then sign in.
-  if (me) { const nm = callName(); return reyelSay(`Welcome back to the School Hub, ${nm}! I am Reyel, your AI-Companion. How can I help you today?`, () => reyelChoices(reyelMenu())); }
-  reyelSay('Welcome to the School Hub! I am Reyel, your AI-Companion. Are you a student?', () => reyelChoices([
+  if (me) { const nm = callName(); return reyelSay(`Welcome back to AskReyel, ${nm}! I am Reyel, your AI-Companion. How can I help you today?`, () => reyelChoices(reyelMenu())); }
+  reyelSay('Welcome to AskReyel! I am Reyel, your AI-Companion. Are you a student?', () => reyelChoices([
     ["Yes, I'm a student", () => reyelRole('student'), true], ["No, I'm not a student", () => reyelRole('staff')]]));
 }
 function reyelRole(k){
@@ -912,7 +939,7 @@ function reyelRole(k){
 }
 
 // the systems a student may use, with what each one is for (in a student's words)
-const STUDENT_SYS = ['momo', 'complab', 'tuon', 'aralread', 'aralmath', 'guidance', 'clinic', 'cashier', 'registrar'];
+const STUDENT_SYS = STUDENT_ONLY;
 const STUDENT_DESC = {
   cashier: 'Pay your school fees online and see your receipts.',
   registrar: 'Request your Form 137, Certificate of Enrollment and other school documents.',
@@ -941,7 +968,7 @@ const sysName = id => (SYSTEMS.find(s => s.id === id) || {}).name || id;
 // a system picked before signing in: opened as soon as the sign-in (or new account) is done
 let REYEL_NEXT = null;
 function reyelAfterSignIn(nm){
-  if (CLOUD && me && !me.email) return reyelNeedEmail(`Welcome, ${nm}! Before we start: please add your email address so I can send you reminders and school updates.`, () => reyelAfterSignIn(nm));
+  if (CLOUD && me && !me.email && !emailLater()) return reyelNeedEmail(`Welcome, ${nm}! Before we start: please add your email address so I can send you reminders and school updates.`, () => reyelAfterSignIn(nm));
   const id = REYEL_NEXT, s = id && SYSTEMS.find(x => x.id === id); REYEL_NEXT = null;
   if (s && hasAccess(s)) return reyelSay(`Welcome, ${nm}! Opening ${s.name} for you now…`, () => setTimeout(() => { reyelClose(); openSys(s.id); }, 700));
   if (s) return reyelSay(`Welcome, ${nm}! Your account can't open ${s.name}. If you need it, please ask the school admin. How else can I help?`, () => reyelChoices(reyelMenu()));
@@ -1080,7 +1107,7 @@ function reyelMenu(){
     ["I am a student", () => reyelRole('student')], ["I am a teacher", () => reyelRole('staff')],
     ...(CLOUD ? [['I forgot my password', () => reyelForgot()]] : []),
     ['Help me find a system', reyelFind], ['What does each system do?', reyelExplain],
-    ['What is the School Hub?', () => reyelSay('The School Hub keeps all your school systems in one place: lessons, grades, the clinic, payments and more. Sign in to start!', () => reyelChoices(reyelMenu()))]];
+    ['What is AskReyel?', () => reyelSay('AskReyel keeps all your school systems in one place: lessons, grades, the clinic, payments and more. Sign in to start!', () => reyelChoices(reyelMenu()))]];
   const mine = SYSTEMS.filter(s => hasAccess(s) && ACCESS[s.id]);
   const order = R === 'admin' ? ['hr', 'enroll', 'accounting', 'registrar'] : R === 'teacher' ? ['tools', 'aralmath', 'rpms', 'guidance'] : ['aralmath', 'registrar', 'guidance', 'clinic'];
   const pick = order.map(id => mine.find(s => s.id === id)).filter(Boolean).slice(0, 3);
@@ -1100,15 +1127,20 @@ const SYS_ORIGINS = new Set(SYSTEMS.filter(x => x.url && /^https?:/.test(x.url))
 window.addEventListener('message', e => { if (e.data && e.data.hub === 'signout' && SYS_ORIGINS.has(e.origin)) reyelLogout(); });
 // ---- the email for reminders and updates (required) ----
 var REYEL_SIGNING = false, REYEL_LOCK = false;
+function emailLater(){ try { return !!sessionStorage.getItem('hub-email-later'); } catch (e) { return false; } }
 function reyelRequireEmail(){ if (!me || me.email) return;
+  if (emailLater()) return;
   const box = document.getElementById('reyel'); box.hidden = false; reyelDraw(document.getElementById('rChar'));
   reyelNeedEmail(`Hi, ${callName()}! Please add your email address. I'll use it to send you reminders and school updates.`, () => reyelSay('Thank you! How can I help you today?', () => reyelChoices(reyelMenu()))); }
 function reyelNeedEmail(msg, then){
   REYEL_LOCK = true; document.querySelector('#reyel .rskip').hidden = true;
   const done = () => { REYEL_LOCK = false; document.querySelector('#reyel .rskip').hidden = false; then(); };
+  // No email yet (or can't get the code)? Never block the person: let them in now; Reyel asks again next sign-in.
+  const later = () => { try { sessionStorage.setItem('hub-email-later', '1'); } catch (e) {} done(); };
   const ask = (m, pre) => reyelSay(m, () => {
     const f = reyelForm(`<form class="rlogin" id="rEmailF"><input name="email" type="email" placeholder="Your email address" autocomplete="email" autocapitalize="none" required value="${escH(pre || '')}">
-      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Send me a code</button></div></form>`, 'input[name=email]');
+      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Send me a code</button><button type="button" class="rlink" data-later>I'll do it later</button></div></form>`, 'input[name=email]');
+    f.querySelector('[data-later]').onclick = later;
     f.onsubmit = e => { e.preventDefault(); const email = f.email.value.trim();
       rBusy(f, async () => { const {status, j} = await api('/api/profile', {step: 'email', email});
         if (status !== 200) return rErr(f, j.error || 'Something went wrong. Please try again.');
@@ -1116,7 +1148,8 @@ function reyelNeedEmail(msg, then){
         code(email); }); }; });
   const code = email => reyelSay(`I sent a 6-digit code to ${email}. Type it here. (No email? Check Spam.)`, () => {
     const f = reyelForm(`<form class="rlogin" id="rEmailC"><input name="code" class="rcode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" required>
-      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Save my email</button><button type="button" class="rlink" id="rEmailBack">Use another email</button></div></form>`);
+      <div class="rerr" hidden></div><div class="rrow"><button type="submit" class="main">Save my email</button><button type="button" class="rlink" id="rEmailBack">Use another email</button><button type="button" class="rlink" data-later>I'll do it later</button></div></form>`);
+    f.querySelector('[data-later]').onclick = later;
     document.getElementById('rEmailBack').onclick = () => ask('Okay! Type the email address you want to use.', email);
     f.code.oninput = () => { f.code.value = f.code.value.replace(/\D/g, '').slice(0, 6); if (f.code.value.length === 6) f.requestSubmit(); };
     let sending = false;
@@ -1140,7 +1173,11 @@ async function openProfile(){ document.getElementById('profModal').hidden = fals
     <p class="pmsg" id="pMsg" hidden></p>
     <h3>Send me reminders about</h3>
     ${kinds.map(k => `<label class="pchk"><input type="checkbox" data-k="${k}" ${j.remind[k] ? 'checked' : ''}><span>${REMIND_LABELS[k][0]}<small>${REMIND_LABELS[k][1]}</small></span></label>`).join('')}
-    <p class="sub" style="font-size:.78rem;margin-top:.8rem">Reminders come once a morning, in one email, only when there's something to tell you.</p>`;
+    <p class="sub" style="font-size:.78rem;margin-top:.8rem">Reminders come once a morning, in one email, only when there's something to tell you.</p>
+    ${me.role === 'admin' ? '' : `<h3 style="margin-top:1.4rem">Delete my account</h3>
+    <p class="sub" style="font-size:.82rem">This removes your AskReyel account and sign-in for good. <a href="/delete-account.html" target="_blank" rel="noopener" style="color:inherit">What gets deleted?</a></p>
+    <form id="pDel" class="pfield"><input name="pw" type="password" autocomplete="current-password" placeholder="Type your password to confirm" required><button class="abtn" style="background:#dc2626;color:#fff">Delete account</button></form>
+    <p class="pmsg" id="pDelMsg" hidden></p>`}`;
   const msg = (t, ok) => { const m = document.getElementById('pMsg'); m.textContent = t; m.className = 'pmsg ' + (ok ? 'ok' : 'err'); m.hidden = !t; };
   let pending = '';
   document.getElementById('pEmail').onsubmit = e => { e.preventDefault(); const f = e.target, b = f.querySelector('button');
@@ -1152,6 +1189,13 @@ async function openProfile(){ document.getElementById('profModal').hidden = fals
     busy(b, async () => { const {status, j: x} = await api('/api/profile', {step: 'verify', email: pending, code: f.code.value});
       if (status !== 200) return msg(x.error || 'Something went wrong.');
       me.email = x.email; openProfile(); }); };
+  const del = document.getElementById('pDel');
+  if (del) del.onsubmit = e => { e.preventDefault(); const f = e.target, b = f.querySelector('button'), m = document.getElementById('pDelMsg');
+    if (!confirm('Delete your AskReyel account? This cannot be undone.')) return;
+    busy(b, async () => { const {status, j: x} = await api('/api/profile', {step: 'delete', pw: f.pw.value});
+      if (status !== 200) { m.textContent = x.error || 'Something went wrong.'; m.className = 'pmsg err'; m.hidden = false; return; }
+      alert('Your account has been deleted. Goodbye, and thank you for learning with Reyel!');
+      try { sessionStorage.clear(); } catch (er) {} location.href = '/'; }); };
   el.querySelectorAll('.pchk input').forEach(c => c.onchange = async () => {
     const remind = Object.fromEntries([...el.querySelectorAll('.pchk input')].map(i => [i.dataset.k, i.checked]));
     const {status} = await api('/api/profile', {step: 'remind', remind}); msg(status === 200 ? 'Saved.' : 'Could not save. Try again.', status === 200); });
@@ -1163,5 +1207,6 @@ function reyelClose(){ if (REYEL_LOCK) return; clearInterval(RTYPE); document.ge
 setTimeout(() => { let seen = false; try { seen = !!sessionStorage.getItem('hub-reyel'); } catch (e) {} if (seen) reyelClose(); else reyelOpen('hello'); }, 350);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('reyel').hidden) reyelClose(); });
 </script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));</script>
 </body>
 </html>

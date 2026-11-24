@@ -1,4 +1,4 @@
-// Shared server code for the School Hub API (Vercel Functions).
+// Shared server code for AskReyel API (Vercel Functions).
 // Data model: every system keeps its data as JSON documents under keys like "svnhs-aralmath-attempts".
 // Each document has a version number so two people saving at the same time can't overwrite each other.
 import crypto from 'node:crypto';
@@ -147,15 +147,15 @@ export async function useCode(email, purpose, code){ // returns {ok, data} or {e
 // ---------- sending email through Gmail (GMAIL_USER + GMAIL_APP_PASSWORD) ----------
 export const mailReady = () => !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) || !process.env.VERCEL;
 export async function sendCode(to, code, purpose, name){
-  const title = purpose === 'signup' ? 'Your School Hub sign-up code' : purpose === 'email' ? 'Your School Hub email code' : 'Your School Hub password reset code';
-  const intro = purpose === 'signup' ? `Hi ${name || 'there'}! Use this code to finish creating your School Hub account:`
-    : purpose === 'email' ? `Hi ${name || 'there'}! Use this code to confirm this email for your School Hub reminders and updates:` : 'Use this code to set a new password for your School Hub account:';
+  const title = purpose === 'signup' ? 'Your AskReyel sign-up code' : purpose === 'email' ? 'Your AskReyel email code' : 'Your AskReyel password reset code';
+  const intro = purpose === 'signup' ? `Hi ${name || 'there'}! Use this code to finish creating your AskReyel account:`
+    : purpose === 'email' ? `Hi ${name || 'there'}! Use this code to confirm this email for your AskReyel reminders and updates:` : 'Use this code to set a new password for your AskReyel account:';
   if (!process.env.GMAIL_USER) { console.log(`[email to ${to}] ${title}: ${code}`); globalThis.__lastCode = code; return; } // local tests
   const nodemailer = (await import('nodemailer')).default;
   const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')}});
-  await t.sendMail({from: `"School Hub" <${process.env.GMAIL_USER.trim()}>`, to, subject: `${code} is ${title.toLowerCase().replace('your ', 'your ')}`,
+  await t.sendMail({from: `"AskReyel" <${process.env.GMAIL_USER.trim()}>`, to, subject: `${code} is ${title.toLowerCase().replace('your ', 'your ')}`,
     text: `${intro}\n\n${code}\n\nThe code works for 15 minutes. If you didn't ask for this, you can ignore this email.`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a"><h2 style="margin:0 0 12px">School Hub</h2><p>${intro}</p>
+    html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#0f172a"><h2 style="margin:0 0 12px">AskReyel</h2><p>${intro}</p>
       <p style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;margin:18px 0">${code}</p>
       <p style="color:#64748b;font-size:13px">The code works for 15 minutes. If you didn't ask for this, you can ignore this email.</p></div>`});
 }
@@ -163,7 +163,7 @@ export async function sendMail(to, subject, text, html){
   if (!process.env.GMAIL_USER) { console.log(`[email to ${to}] ${subject}\n${text}`); (globalThis.__sent || (globalThis.__sent = [])).push({to, subject, text, html}); return; } // local tests
   const nodemailer = (await import('nodemailer')).default;
   const t = nodemailer.createTransport({service: 'gmail', auth: {user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')}});
-  await t.sendMail({from: `"School Hub" <${process.env.GMAIL_USER.trim()}>`, to, subject, text, html});
+  await t.sendMail({from: `"AskReyel" <${process.env.GMAIL_USER.trim()}>`, to, subject, text, html});
 }
 export async function setPassword(u, pw){
   const q = await sql(); const h = hashPw(pw);
@@ -194,14 +194,14 @@ export const ACCESS = {
   aralmath:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   aralread:   {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:'student'},
   accounting: {admin:'bookkeeper', principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
-  cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:'student'},
-  clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:'student'},
+  cashier:    {admin:'cashier',    principal:'cashier',   teacher:null,      staff:'cashier',   student:null},
+  clinic:     {admin:'nurse',      principal:'nurse',     teacher:'teacher', staff:'teacher',   student:null},
   enroll:     {admin:'registrar',  principal:'registrar', teacher:'teacher', staff:'registrar', student:null},
-  guidance:   {admin:'counselor',  principal:'counselor', teacher:'teacher', staff:'teacher',   student:'student'},
+  guidance:   {admin:'counselor',  principal:'counselor', teacher:'teacher', staff:'teacher',   student:null},
   hr:         {admin:'hr',         principal:'principal', teacher:'teacher', staff:'teacher',   student:null},
   ict:        {admin:'admin',      principal:'teacher',   teacher:'teacher', staff:'registrar', student:null},
   idsys:      {admin:'idadmin',    principal:'idadmin',   teacher:'teacher', staff:'teacher',   student:null},
-  registrar:  {admin:'registrar',  principal:'registrar', teacher:null,      staff:'registrar', student:'student'},
+  registrar:  {admin:'registrar',  principal:'registrar', teacher:null,      staff:'registrar', student:null},
   rpms:       {admin:'principal',  principal:'principal', teacher:'teacher', staff:null,        student:null},
   tools:      {admin:'teacher',    principal:'teacher',   teacher:'teacher', staff:null,        student:null},
 };
@@ -269,3 +269,49 @@ export async function voicePut(id, mime, b64, by){
     on conflict (id) do update set mime = excluded.mime, data = excluded.data, updated_at = now(), updated_by = excluded.updated_by`;
 }
 export async function voiceDel(id){ const q = await sql(); if (!q) { MEMV.delete(id); return; } await q`delete from voice_clips where id = ${id}`; }
+
+// ---------- ICT Concerns: tell the ICT admin about each new ticket ----------
+export const ICT_TICKETS_KEY = 'svnhs-ict-tickets-v2';
+const escMail = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+// Emails the AskReyel `admin` account (if it has an email) about a new ICT ticket. Never throws.
+export async function ictTicketMail(t){
+  try {
+    if (!t || !mailReady()) return;
+    const admin = await getUser('admin'); if (!admin || !admin.email) return;
+    const tno = 'ICT-' + String(t.no).padStart(4, '0');
+    let from = '';
+    if (t.reporter) from = `${t.reporter.name} (open link)${t.reporter.pos ? ', ' + t.reporter.pos : ''}${t.reporter.contact ? ' · ' + t.reporter.contact : ''}`;
+    else { const u = t.by ? await getUser(String(t.by).replace(/^hub-/, '')) : null; from = u ? `${u.name}${u.pos ? ', ' + u.pos : ''}` : String(t.by || 'a teacher'); }
+    const lines = [`${t.priority === 'Urgent' ? 'URGENT: ' : ''}${t.title}`, `From: ${from}`, `Where: ${t.location}`, `Category: ${t.cat}`, '', t.desc || '', '', 'Open ICT Concerns in AskReyel to update this ticket.'];
+    await sendMail(admin.email, `${t.priority === 'Urgent' ? '[URGENT] ' : ''}New ICT concern ${tno}: ${t.title}`, lines.join('\n'),
+      `<div style="font-family:Arial,sans-serif;max-width:520px;color:#0f172a"><h2 style="margin:0 0 8px">New ICT concern ${tno}</h2>${lines.map(l => `<p style="margin:4px 0">${escMail(l)}</p>`).join('')}</div>`);
+  } catch (e) { console.error('ICT email failed', e.message); }
+}
+
+// ---------- raw database access for features with their own tables (e.g. the Aral Math live game) ----------
+export const hubSql = () => sql();   // null in local memory mode
+export const hubMem = MEM;
+
+// ---------- one AskReyel account for Momo and Tuon (sign-in passes) ----------
+// AskReyel signs a short pass {u, name, email, role, aud, exp} with an Ed25519 key made from SESSION_SECRET.
+// Momo and Tuon trust a pass only if it checks out against the public key at /api/sso?pub.
+let ssoKeys = null;
+function ssoKeyPair(){
+  if (ssoKeys) return ssoKeys;
+  const seed = crypto.createHmac('sha256', secret()).update('askreyel-sso-v1').digest();
+  const priv = crypto.createPrivateKey({key: Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]), format: 'der', type: 'pkcs8'});
+  return (ssoKeys = {priv, pub: crypto.createPublicKey(priv)});
+}
+export const ssoPublicKey = () => ssoKeyPair().pub.export({format: 'der', type: 'spki'}).toString('base64');
+export function ssoPass(user, aud, seconds = 120){
+  const data = Buffer.from(JSON.stringify({u: user.u, name: user.name, email: user.email || null, role: user.role, aud, exp: Date.now() + seconds * 1000})).toString('base64url');
+  return data + '.' + crypto.sign(null, Buffer.from(data), ssoKeyPair().priv).toString('base64url');
+}
+export function ssoCheck(pass, aud){
+  const [data, sig] = String(pass || '').split('.'); if (!data || !sig) return null;
+  try {
+    if (!crypto.verify(null, Buffer.from(data), ssoKeyPair().pub, Buffer.from(sig, 'base64url'))) return null;
+    const p = JSON.parse(Buffer.from(data, 'base64url').toString());
+    return p.aud === aud && p.exp > Date.now() ? p : null;
+  } catch (e) { return null; }
+}
